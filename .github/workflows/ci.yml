@@ -27,13 +27,21 @@ jobs:
         run: node tests/e2e.mock.test.js
       - name: Live upstream integration test
         run: node tests/live.integration.test.js
-      - name: Diagnose production Pages endpoint
+      - name: Probe shareable static endpoints
         run: |
-          echo "PAGES_HTTP=$(curl -sS -o /tmp/page.html -w '%{http_code}' https://skyfinderrescue.github.io/sundowner-intelligence/)"
-          head -c 200 /tmp/page.html || true
-          echo
-          echo "PAGES_API_HTTP=$(curl -sS -o /tmp/pages.json -w '%{http_code}' https://api.github.com/repos/SkyFinderRescue/sundowner-intelligence/pages)"
-          cat /tmp/pages.json
-          echo
-          curl -sS 'https://api.github.com/repos/SkyFinderRescue/sundowner-intelligence/actions/runs?event=push&branch=main&per_page=10' > /tmp/runs.json
-          node -e "const j=require('/tmp/runs.json'); console.log((j.workflow_runs||[]).map(x=>({name:x.name,status:x.status,conclusion:x.conclusion,id:x.id,head_sha:x.head_sha})))"
+          for url in \
+            'https://raw.githack.com/SkyFinderRescue/sundowner-intelligence/main/index.html' \
+            'https://cdn.jsdelivr.net/gh/SkyFinderRescue/sundowner-intelligence@main/index.html'; do
+            echo "URL=$url"
+            curl -fsSL --retry 2 "$url" -o /tmp/host.html
+            grep -q 'Sundowner Intelligence' /tmp/host.html
+            echo "INDEX_PASS"
+          done
+          curl -fsSL --retry 2 'https://raw.githack.com/SkyFinderRescue/sundowner-intelligence/main/core.js' | grep -q 'discoverCountyStations' && echo 'GITHACK_CORE_PASS'
+          curl -fsSL --retry 2 'https://raw.githack.com/SkyFinderRescue/sundowner-intelligence/main/model.js' | grep -q 'gfs_hrrr' && echo 'GITHACK_MODEL_PASS'
+      - name: Inspect historical RAWS archive format
+        run: |
+          curl -fsSL --retry 2 'https://mesonet.agron.iastate.edu/cgi-bin/request/hads.py?station=RHWC1&network=CA_DCP&year1=2025&month1=7&day1=1&hour1=0&minute1=0&year2=2025&month2=7&day2=2&hour2=0&minute2=0&what=txt&delim=comma' -o /tmp/hads.txt
+          echo 'HADS_SAMPLE_BEGIN'
+          head -n 80 /tmp/hads.txt
+          echo 'HADS_SAMPLE_END'
