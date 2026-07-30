@@ -11,6 +11,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -21,9 +22,16 @@ jobs:
           node --check core.js
           node --check model.js
           node --check ui.js
+          node --check tools/validate-fixed-lead.js
       - name: Model and architecture tests
         run: node tests/model.test.js
       - name: Mocked end-to-end application test
         run: node tests/e2e.mock.test.js
       - name: Live upstream integration test
         run: node tests/live.integration.test.js
+      - name: Independent fixed-lead validation — spring 2025
+        env:
+          VALIDATION_START: '2025-03-01'
+          VALIDATION_END: '2025-05-31'
+          VALIDATION_LEADS: '1,2'
+        run: node tools/validate-fixed-lead.js
