@@ -27,3 +27,5 @@ jobs:
         run: node tests/e2e.mock.test.js
       - name: Live upstream integration test
         run: node tests/live.integration.test.js
+      - name: Full Santa Barbara County RAWS catalog audit
+        run: node tests/raws-audit.test.js
