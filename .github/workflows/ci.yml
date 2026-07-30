@@ -25,3 +25,5 @@ jobs:
         run: node tests/model.test.js
       - name: Mocked end-to-end application test
         run: node tests/e2e.mock.test.js
+      - name: Live upstream integration test
+        run: node tests/live.integration.test.js
