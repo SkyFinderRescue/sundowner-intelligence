@@ -14,13 +14,16 @@ const FALLBACK_STATIONS=[
  {id:"GVTC1",name:"Gaviota RAWS",lat:34.4883,lon:-120.2358,type:"RAWS"},
  {id:"RHWC1",name:"Santa Ynez - Refugio Hills RAWS",lat:34.5166,lon:-120.0753,type:"RAWS"},
  {id:"MPWC1",name:"Goleta - San Marcos Pass RAWS",lat:34.4913,lon:-119.7963,type:"RAWS"},
+ {id:"SBVC1",name:"Mission Canyon - Santa Barbara Botanic Garden",lat:34.4558,lon:-119.7056,type:"RAWS"},
+ {id:"CXPC1",name:"Carpinteria RAWS",lat:34.4444,lon:-119.5131,type:"RAWS"},
+ {id:"SYAC1",name:"Santa Ynez Valley - Fire Station",lat:34.6063,lon:-120.0700,type:"RAWS"},
+ {id:"BMFC1",name:"Burton Mesa Fire Station",lat:34.6975,lon:-120.4500,type:"RAWS"},
+ {id:"TSQC1",name:"Santa Maria - Tepusquet RAWS",lat:34.9198,lon:-120.181,type:"RAWS"},
+ {id:"CUVC1",name:"Cuyama Valley RAWS",lat:34.9653,lon:-119.8803,type:"RAWS"},
  {id:"LPOC1",name:"Los Prietos RAWS",lat:34.5444,lon:-119.7914,type:"RAWS"},
- {id:"SBVC1",name:"Santa Barbara Botanic Garden RAWS",lat:34.4558,lon:-119.7056,type:"RAWS"},
- {id:"MOIC1",name:"Montecito RAWS #2",lat:34.4450,lon:-119.62583,type:"RAWS"},
- {id:"MTIC1",name:"Montecito Hills RAWS",lat:34.461,lon:-119.649,type:"RAWS"},
- {id:"CXPC1",name:"Carpinteria RAWS",lat:34.45,lon:-119.54,type:"RAWS"},
  {id:"FGMC1",name:"Figueroa Mountain RAWS",lat:34.7344,lon:-120.0067,type:"RAWS"},
- {id:"TSQC1",name:"Tepusquet RAWS",lat:34.9198,lon:-120.181,type:"RAWS"},
+ {id:"MTIC1",name:"Montecito Hills RAWS",lat:34.461,lon:-119.649,type:"RAWS"},
+ {id:"MOIC1",name:"Montecito RAWS #2",lat:34.4450,lon:-119.62583,type:"RAWS"},
  {id:"VDBC1",name:"Vandenberg RAWS",lat:34.7586,lon:-120.4861,type:"RAWS"},
  {id:"SRIC1",name:"Santa Rosa Island RAWS",lat:33.98,lon:-120.08,type:"RAWS"}
 ];
@@ -51,7 +54,7 @@ async function currentStation(meta){try{let j=await json(`https://mesonet.agron.
  }catch(e){return{...meta,type:isRawsMeta(meta)?"RAWS":(meta.type||"County DCP"),wind:null,gust:null,dir:null,rh:null,temp:null,fuelMoist:null,time:null,status:"Offline",fresh:false,error:String(e.message||e)}}}
 async function discoverCountyStations(){let cached=null;try{cached=JSON.parse(localStorage.getItem("sundowner:countyStations:v2"));if(cached&&Date.now()-cached.saved<864e5&&Array.isArray(cached.items)&&cached.items.length)sourceHealth("County station catalog",`${cached.items.length} cached; refreshing`,"info")}catch(_e){}
  let items=[];try{let gj=await json("https://mesonet.agron.iastate.edu/geojson/network.py?network=CA_DCP",{},2);for(let f of gj.features||[]){let p=f.properties||{},c=f.geometry?.coordinates||[],id=p.sid||p.id||p.station||p.stid,name=p.sname||p.name||p.station_name||id,county=String(p.county||p.county_name||"").trim().toLowerCase(),lon=num(c[0]),lat=num(c[1]);if(!id||!finite(lat)||!finite(lon))continue;let countyMatch=county.includes("santa barbara"),countyMetaKnown=!!county,countyEnvelope=(lat>=34.30&&lat<=35.15&&lon>=-120.75&&lon<=-119.25)||(lat>=33.80&&lat<=34.15&&lon>=-120.70&&lon<=-119.20);if(countyMatch||(!countyMetaKnown&&countyEnvelope))items.push({id:String(id),name:String(name||id),lat:Number(lat),lon:Number(lon),type:/RAWS/i.test(String(name))?"RAWS":"County DCP",archiveEnd:p.archive_end||p.end||null})}
- if(!items.length)throw Error("County field returned no stations");sourceHealth("County station catalog",`${items.length} stations discovered from full CA_DCP catalog`,"good");try{localStorage.setItem("sundowner:countyStations:v2",JSON.stringify({saved:Date.now(),items}))}catch(_e){}
+ if(!items.length)throw Error("County field returned no stations");sourceHealth("County station catalog",`${items.length} stations discovered from full CA_DCP catalog` ,"good");try{localStorage.setItem("sundowner:countyStations:v2",JSON.stringify({saved:Date.now(),items}))}catch(_e){}
  }catch(e){items=cached?.items||[];sourceHealth("County station catalog",items.length?`Discovery failed; ${items.length} cached stations retained`:`Discovery failed; using verified fallback stations`,items.length?"warn":"err")}
  let m=new Map(items.map(s=>[s.id,{...s}]));for(let s of FALLBACK_STATIONS){if(!m.has(s.id))m.set(s.id,{...s,fallback:true});else if(s.type==="RAWS")m.set(s.id,{...m.get(s.id),type:"RAWS"})}
  return [...m.values()].sort((a,b)=>(a.type==="RAWS"?-1:1)-(b.type==="RAWS"?-1:1)||a.name.localeCompare(b.name))}
