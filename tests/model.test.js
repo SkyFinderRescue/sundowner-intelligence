@@ -19,7 +19,8 @@ const assertions = `
   const results=[];
   function check(name, value){ results.push([name, !!value]); if(!value) throw new Error('FAIL: '+name); }
   check('eight terrain forecast zones', Z.length===8);
-  check('verified RAWS fallback set', KNOWN_RAWS.size>=12);
+  check('complete county and partner RAWS fallback set', KNOWN_RAWS.size>=15);
+  check('county fire RAWS fallbacks present', ['GVTC1','RHWC1','MPWC1','SBVC1','CXPC1','SYAC1','BMFC1','TSQC1','CUVC1'].every(id=>KNOWN_RAWS.has(id)));
   check('three-hour observation freshness gate', STALE_MIN===180);
   check('research-informed event signal threshold', EVENT_SIGNAL===18);
   check('research-informed strong signal threshold', STRONG_SIGNAL===17);
