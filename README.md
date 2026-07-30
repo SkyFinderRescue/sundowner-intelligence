@@ -16,7 +16,7 @@ Santa Barbara County terrain-localized Sundowner forecasting app — SI 2.1.
 
 ## Validation and QA
 - JavaScript syntax checks, model/architecture unit tests, a mocked full-app end-to-end test, and live upstream integration tests cover NOAA/Open-Meteo, IEM CA_DCP/RAWS, HADS historical observations, NWS grid guidance, and airport pressure observations.
-- A real headless browser has rendered the publicly shareable build through Git-Forge HTML Preview and reached `Live forecast complete` while loading the Santa Barbara County observation network.
+- Final release QA passed 23/23 model/architecture tests, 6/6 mocked end-to-end checks, live upstream integration, all nine County Fire RAWS endpoint checks, and an exact-build headless-browser smoke test that reached `Live forecast complete` with live feeds.
 - Independent fixed-lead Spring 2025 verification uses HADS/RAWS observations and forecast values available 24 or 48 hours before valid time. At 24 hours, general-event ROC AUC is 0.81–0.87 in the verifying zones where both event classes occurred, strong-event AUC is 0.90–0.93, and raw gust MAE is 4.5–7.1 mph. At 48 hours, event AUC is 0.74–0.81 and strong-event AUC is 0.77–0.87. Full details are in `validation/SPRING_2025_FIXED_LEAD.md`.
 - An on-demand `Sundowner Historical Validation` workflow can rerun the independent 24h/48h validation for another date range.
 - A 2024-training / 2025-holdout probability-calibration study was also run. Some general-event Brier scores improved, but rare-event hybrid/strong fits were unstable; those unstable calibrations were deliberately rejected rather than overfit into production.
@@ -25,6 +25,9 @@ Santa Barbara County terrain-localized Sundowner forecasting app — SI 2.1.
 The product is intentionally more local and Sundowner-specific than a broad public forecast: it combines terrain regimes, pressure gradients, upper-air flow, marine-layer suppression, dense county observations, and local gust correction at eight front-country zones. The app also loads the focused-zone NWS grid gust forecast beside its own result.
 
 That architecture and the independent RAWS validation support the goal of outperforming broad guidance, but they do **not** prove that SI 2.1 is more accurate than every NWS forecast product. A scientifically valid superiority claim requires matched archived NWS forecasts and identical verifying observations over the same cases. The application does not fabricate that result.
+
+## Deployment
+The production code is complete in this repository and a self-contained standalone HTML build is also maintained as a release artifact. GitHub Pages is not currently enabled in the repository settings, so the repository does not claim a permanent Pages URL until that publishing source is enabled.
 
 ## Safety
 Experimental local decision support. Official NWS watches/warnings, spot forecasts, IMET products, agency policy, and field observations remain authoritative for public-safety and incident decisions.
