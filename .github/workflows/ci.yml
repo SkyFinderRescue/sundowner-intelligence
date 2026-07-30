@@ -39,9 +39,19 @@ jobs:
           done
           curl -fsSL --retry 2 'https://raw.githack.com/SkyFinderRescue/sundowner-intelligence/main/core.js' | grep -q 'discoverCountyStations' && echo 'GITHACK_CORE_PASS'
           curl -fsSL --retry 2 'https://raw.githack.com/SkyFinderRescue/sundowner-intelligence/main/model.js' | grep -q 'gfs_hrrr' && echo 'GITHACK_MODEL_PASS'
-      - name: Inspect historical RAWS archive format
+      - name: Real hosted browser smoke test
+        run: |
+          CHROME=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
+          test -n "$CHROME"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=60000 --dump-dom 'https://raw.githack.com/SkyFinderRescue/sundowner-intelligence/main/index.html' > /tmp/dom.html
+          grep -q 'Live forecast complete' /tmp/dom.html
+          grep -q 'fresh county stations' /tmp/dom.html
+          grep -q 'Localized peak gust' /tmp/dom.html
+          grep -q 'Santa Barbara County observation network' /tmp/dom.html
+          echo 'HOSTED_BROWSER_PASS'
+      - name: Historical RAWS archive smoke test
         run: |
           curl -fsSL --retry 2 'https://mesonet.agron.iastate.edu/cgi-bin/request/hads.py?stations=RHWC1&network=CA_DCP&sts=2025-07-01T00:00Z&ets=2025-07-02T00:00Z&what=txt&delim=comma' -o /tmp/hads.txt
-          echo 'HADS_SAMPLE_BEGIN'
-          head -n 80 /tmp/hads.txt
-          echo 'HADS_SAMPLE_END'
+          grep -q 'USIRGZZ' /tmp/hads.txt
+          grep -q 'UDIRGZZ' /tmp/hads.txt
+          echo 'HISTORICAL_RAWS_PASS'
