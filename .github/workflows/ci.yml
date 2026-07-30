@@ -33,26 +33,32 @@ jobs:
             'https://raw.githack.com/SkyFinderRescue/sundowner-intelligence/main/index.html' \
             'https://cdn.jsdelivr.net/gh/SkyFinderRescue/sundowner-intelligence@main/index.html'; do
             echo "URL=$url"
+            curl -fsSLI --retry 2 "$url" | grep -iE 'HTTP/|content-type' | tail -3
             curl -fsSL --retry 2 "$url" -o /tmp/host.html
             grep -q 'Sundowner Intelligence' /tmp/host.html
             echo "INDEX_PASS"
           done
           curl -fsSL --retry 2 'https://raw.githack.com/SkyFinderRescue/sundowner-intelligence/main/core.js' | grep -q 'discoverCountyStations' && echo 'GITHACK_CORE_PASS'
           curl -fsSL --retry 2 'https://raw.githack.com/SkyFinderRescue/sundowner-intelligence/main/model.js' | grep -q 'gfs_hrrr' && echo 'GITHACK_MODEL_PASS'
-      - name: Diagnose real hosted browser
+      - name: Diagnose real hosted browsers
         run: |
           CHROME=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
           test -n "$CHROME"
-          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=90000 --dump-dom 'https://raw.githack.com/SkyFinderRescue/sundowner-intelligence/main/index.html' > /tmp/dom.html 2>/tmp/chrome.err || true
-          echo 'STATUS_LINES'
-          grep -n 'id="status"' /tmp/dom.html | head -3 || true
-          echo 'CARD_COUNT'
-          grep -o 'class="card ' /tmp/dom.html | wc -l
-          echo 'ERROR_LINES'
-          grep -E 'Load error|Model unavailable|Historical calibration|ERR_|blocked|CORS' /tmp/dom.html /tmp/chrome.err | tail -30 || true
-          echo 'DOM_BYTES'
-          wc -c /tmp/dom.html
-          grep -q 'Sundowner Intelligence' /tmp/dom.html
+          for host in \
+            'https://raw.githack.com/SkyFinderRescue/sundowner-intelligence/main/index.html' \
+            'https://cdn.jsdelivr.net/gh/SkyFinderRescue/sundowner-intelligence@main/index.html'; do
+            safe=$(echo "$host" | tr '/:@?&=' '_')
+            "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=90000 --dump-dom "$host" > "/tmp/${safe}.html" 2>"/tmp/${safe}.err" || true
+            echo "BROWSER_URL=$host"
+            echo 'DOM_HEAD'
+            head -n 6 "/tmp/${safe}.html" || true
+            echo 'STATUS'
+            grep -n 'id="status"' "/tmp/${safe}.html" | head -2 || true
+            echo 'CARDS'
+            grep -o 'class="card ' "/tmp/${safe}.html" | wc -l || true
+            echo 'ERRORS'
+            grep -E 'Load error|ERR_|blocked|CORS|Refused|Failed' "/tmp/${safe}.html" "/tmp/${safe}.err" | tail -20 || true
+          done
       - name: Historical RAWS archive smoke test
         run: |
           curl -fsSL --retry 2 'https://mesonet.agron.iastate.edu/cgi-bin/request/hads.py?stations=RHWC1&network=CA_DCP&sts=2025-07-01T00:00Z&ets=2025-07-02T00:00Z&what=txt&delim=comma' -o /tmp/hads.txt
