@@ -6,7 +6,7 @@ Santa Barbara County terrain-localized Sundowner forecasting app — SI 2.1.
 - 48-hour NOAA GFS/HRRR seamless guidance, with explicit HRRR overlay where available and NBM surface-gust blending when available.
 - Observed and forecast SBA–BFL / SBA–SMX pressure gradients.
 - Full Santa Barbara County CA_DCP station-catalog discovery without an `only_online` filter. Every discovered county station remains visible; every fresh wind-capable station can contribute to localization. The latest live integration QA discovered 147 Santa Barbara County stations by catalog metadata.
-- Known RAWS fallback coverage includes Gaviota, Refugio Hills, San Marcos Pass, Los Prietos, Santa Barbara Botanic Garden, Montecito, Montecito Hills, Carpinteria, Figueroa Mountain, Tepusquet, Vandenberg, and Santa Rosa Island. Dynamically discovered additional county RAWS are retained automatically.
+- Explicit fallback coverage now includes all nine Santa Barbara County Fire RAWS locations: Gaviota, Refugio, San Marcos Pass, Mission Canyon/Santa Barbara Botanic Garden, Carpinteria foothills, Santa Ynez Valley, Burton Mesa, Tepusquet, and Cuyama Valley. Partner/other county RAWS fallbacks include Los Prietos, Figueroa Mountain, Montecito, Montecito #2, Vandenberg, and Santa Rosa Island. Dynamically discovered additional county stations are retained automatically.
 - Three-hour observation freshness gate, distance/freshness weighting, extra RAWS weighting, and terrain-relative wind components.
 - Western, eastern, and hybrid Sundowner regimes from Gaviota through Carpinteria.
 - Research-based strong-event anchors: western SBA–SMX gradient near −3.4 hPa, eastern SBA–BFL near −4.2 hPa, and a significant-gust anchor near 35 mph.
