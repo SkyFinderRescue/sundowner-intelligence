@@ -23,3 +23,5 @@ jobs:
           node --check ui.js
       - name: Model and architecture tests
         run: node tests/model.test.js
+      - name: Mocked end-to-end application test
+        run: node tests/e2e.mock.test.js
