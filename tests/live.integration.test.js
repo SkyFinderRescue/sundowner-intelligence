@@ -4,7 +4,7 @@ async function getJson(url, timeoutMs=20000){
   const ctl=new AbortController();
   const timer=setTimeout(()=>ctl.abort(),timeoutMs);
   try{
-    const r=await fetch(url,{signal:ctl.signal,headers:{'User-Agent':'Sundowner-Intelligence-QA/2.0'}});
+    const r=await fetch(url,{signal:ctl.signal,headers:{'User-Agent':'Sundowner-Intelligence-QA/2.1'}});
     assert.ok(r.ok, `${r.status} ${url}`);
     return await r.json();
   } finally { clearTimeout(timer); }
@@ -40,18 +40,18 @@ function omUrl(lat,lon,model,vars){
   const sb=net.features.filter(f=>String(f.properties?.county||f.properties?.county_name||'').toLowerCase().includes('santa barbara'));
   assert.ok(sb.length>0,'Santa Barbara county station catalog empty');
   const ids=new Set(sb.map(f=>String(f.properties?.sid||f.properties?.id||f.properties?.station||f.properties?.stid||'')));
-  assert.ok(ids.has('RHWC1')||ids.has('MPWC1'),'Core Santa Barbara RAWS not found in live catalog');
-  console.log(`PASS IEM CA_DCP catalog (${sb.length} Santa Barbara county stations by metadata)`);
+  const countyFireRaws=['GVTC1','RHWC1','MPWC1','SBVC1','CXPC1','SYAC1','BMFC1','TSQC1','CUVC1'];
+  assert.ok(countyFireRaws.every(id=>ids.has(id)),`County Fire RAWS missing from catalog: ${countyFireRaws.filter(id=>!ids.has(id)).join(',')}`);
+  console.log(`PASS IEM CA_DCP catalog (${sb.length} Santa Barbara county stations by metadata; all ${countyFireRaws.length} County Fire RAWS present)`);
 
-  const sampleIds=['RHWC1','MPWC1','MOIC1','FGMC1','TSQC1','VDBC1'];
   let sampleReporting=0;
-  for(const id of sampleIds){
+  for(const id of countyFireRaws){
     const current=await getJson(`https://mesonet.agron.iastate.edu/json/current.py?station=${id}&network=CA_DCP`);
     assert.ok(current && typeof current==='object',`${id} current endpoint missing`);
     if(current.last_ob&&Object.keys(current.last_ob).length)sampleReporting++;
   }
-  assert.ok(sampleReporting>=1,'No sampled Santa Barbara RAWS current observations returned');
-  console.log(`PASS IEM sampled county RAWS endpoints (${sampleReporting}/${sampleIds.length} reporting)`);
+  assert.ok(sampleReporting>=1,'No Santa Barbara County Fire RAWS current observations returned');
+  console.log(`PASS all County Fire RAWS endpoints (${sampleReporting}/${countyFireRaws.length} currently reporting observations)`);
 
   const point=await getJson('https://api.weather.gov/points/34.45,-119.63');
   assert.ok(point.properties?.forecastGridData,'NWS grid-data URL missing');
@@ -66,7 +66,7 @@ function omUrl(lat,lon,model,vars){
   }
   console.log('PASS live airport pressure-gradient endpoints');
 
-  const hads=await fetch('https://mesonet.agron.iastate.edu/cgi-bin/request/hads.py?stations=RHWC1&network=CA_DCP&sts=2025-07-01T00:00Z&ets=2025-07-02T00:00Z&what=txt&delim=comma',{headers:{'User-Agent':'Sundowner-Intelligence-QA/2.0'}});
+  const hads=await fetch('https://mesonet.agron.iastate.edu/cgi-bin/request/hads.py?stations=RHWC1&network=CA_DCP&sts=2025-07-01T00:00Z&ets=2025-07-02T00:00Z&what=txt&delim=comma',{headers:{'User-Agent':'Sundowner-Intelligence-QA/2.1'}});
   assert.ok(hads.ok,`HADS history ${hads.status}`);
   const text=await hads.text();
   assert.ok(text.includes('UDIRGZZ')&&text.includes('USIRGZZ'),'Historical RAWS wind fields missing');
