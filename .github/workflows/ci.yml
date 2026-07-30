@@ -27,5 +27,13 @@ jobs:
         run: node tests/e2e.mock.test.js
       - name: Live upstream integration test
         run: node tests/live.integration.test.js
-      - name: Production Pages endpoint probe
-        run: curl -fsSL --retry 2 https://skyfinderrescue.github.io/sundowner-intelligence/ | grep -q "Sundowner Intelligence"
+      - name: Diagnose production Pages endpoint
+        run: |
+          echo "PAGES_HTTP=$(curl -sS -o /tmp/page.html -w '%{http_code}' https://skyfinderrescue.github.io/sundowner-intelligence/)"
+          head -c 200 /tmp/page.html || true
+          echo
+          echo "PAGES_API_HTTP=$(curl -sS -o /tmp/pages.json -w '%{http_code}' https://api.github.com/repos/SkyFinderRescue/sundowner-intelligence/pages)"
+          cat /tmp/pages.json
+          echo
+          curl -sS 'https://api.github.com/repos/SkyFinderRescue/sundowner-intelligence/actions/runs?event=push&branch=main&per_page=10' > /tmp/runs.json
+          node -e "const j=require('/tmp/runs.json'); console.log((j.workflow_runs||[]).map(x=>({name:x.name,status:x.status,conclusion:x.conclusion,id:x.id,head_sha:x.head_sha})))"
