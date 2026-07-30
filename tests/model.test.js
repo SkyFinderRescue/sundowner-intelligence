@@ -21,6 +21,9 @@ const assertions = `
   check('eight terrain forecast zones', Z.length===8);
   check('verified RAWS fallback set', KNOWN_RAWS.size>=12);
   check('three-hour observation freshness gate', STALE_MIN===180);
+  check('research-informed event signal threshold', EVENT_SIGNAL===18);
+  check('research-informed strong signal threshold', STRONG_SIGNAL===17);
+  check('risk category uses event signal threshold', cat(EVENT_SIGNAL)==='ELEVATED');
   check('north component retained', dirComponent(0,0)>.999);
   check('opposite wind suppressed', dirComponent(180,0)===0);
   check('western offshore gradient increases signal', sig((-(-3)-1.8)/.8)>sig((-(0)-1.8)/.8));
@@ -50,7 +53,9 @@ const assertions = `
   check('strong western research threshold embedded', source.includes('-3.4'));
   check('strong eastern research threshold embedded', source.includes('-4.2'));
   check('significant gust anchor embedded', source.includes('localG-35'));
+  check('station temperature parser returns value', coreSource.includes('temp:temp?temp.v:null'));
   console.log('Sundowner Intelligence tests: '+results.length+'/'+results.length+' passed');
 })();`;
 sandbox.modelSource = model;
+sandbox.coreSource = core;
 vm.runInContext(core + '\n' + model + '\n' + assertions, sandbox, { timeout: 5000 });
