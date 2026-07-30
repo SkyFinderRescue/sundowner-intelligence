@@ -23,13 +23,17 @@ function omUrl(lat,lon,model,vars){
   assert.ok(seamless.hourly.wind_speed_850hPa?.some(Number.isFinite),'NOAA upper wind missing');
   console.log('PASS Open-Meteo NOAA seamless 48h source');
 
-  const hrrr=await getJson(omUrl(34.45,-119.63,'gfs_hrrr',['temperature_2m','relative_humidity_2m','pressure_msl','wind_gusts_10m','shortwave_radiation']));
+  const hrrr=await getJson(omUrl(34.45,-119.63,'gfs_hrrr',fullVars));
   assert.ok(hrrr.hourly?.time?.length>0,'HRRR source missing');
-  console.log('PASS Open-Meteo HRRR source');
+  assert.ok(hrrr.hourly.wind_gusts_10m?.some(Number.isFinite),'HRRR gusts missing');
+  assert.ok(hrrr.hourly.wind_speed_850hPa?.some(Number.isFinite),'HRRR 850-mb winds missing');
+  console.log('PASS Open-Meteo HRRR production request');
 
-  const nbm=await getJson(omUrl(34.45,-119.63,'ncep_nbm_conus',['temperature_2m','relative_humidity_2m','wind_speed_10m','wind_direction_10m']));
+  const nbmVars=['temperature_2m','relative_humidity_2m','wind_speed_10m','wind_direction_10m','wind_gusts_10m'];
+  const nbm=await getJson(omUrl(34.45,-119.63,'ncep_nbm_conus',nbmVars));
   assert.ok(nbm.hourly?.time?.length>0,'NBM source missing');
-  console.log('PASS Open-Meteo NBM source');
+  assert.ok(nbm.hourly.wind_gusts_10m?.some(Number.isFinite),'NBM gusts missing');
+  console.log('PASS Open-Meteo NBM production request');
 
   const net=await getJson('https://mesonet.agron.iastate.edu/geojson/network.py?network=CA_DCP');
   assert.ok(Array.isArray(net.features)&&net.features.length>100,'CA_DCP catalog missing');
@@ -39,9 +43,15 @@ function omUrl(lat,lon,model,vars){
   assert.ok(ids.has('RHWC1')||ids.has('MPWC1'),'Core Santa Barbara RAWS not found in live catalog');
   console.log(`PASS IEM CA_DCP catalog (${sb.length} Santa Barbara county stations by metadata)`);
 
-  const raws=await getJson('https://mesonet.agron.iastate.edu/json/current.py?station=RHWC1&network=CA_DCP');
-  assert.ok(raws && typeof raws==='object','RHWC1 current endpoint missing');
-  console.log('PASS IEM current RAWS endpoint');
+  const sampleIds=['RHWC1','MPWC1','MOIC1','FGMC1','TSQC1','VDBC1'];
+  let sampleReporting=0;
+  for(const id of sampleIds){
+    const current=await getJson(`https://mesonet.agron.iastate.edu/json/current.py?station=${id}&network=CA_DCP`);
+    assert.ok(current && typeof current==='object',`${id} current endpoint missing`);
+    if(current.last_ob&&Object.keys(current.last_ob).length)sampleReporting++;
+  }
+  assert.ok(sampleReporting>=1,'No sampled Santa Barbara RAWS current observations returned');
+  console.log(`PASS IEM sampled county RAWS endpoints (${sampleReporting}/${sampleIds.length} reporting)`);
 
   const point=await getJson('https://api.weather.gov/points/34.45,-119.63');
   assert.ok(point.properties?.forecastGridData,'NWS grid-data URL missing');
@@ -55,5 +65,12 @@ function omUrl(lat,lon,model,vars){
     assert.ok(Number.isFinite(Number(p.seaLevelPressure?.value??p.barometricPressure?.value)),`${id} pressure missing`);
   }
   console.log('PASS live airport pressure-gradient endpoints');
+
+  const hads=await fetch('https://mesonet.agron.iastate.edu/cgi-bin/request/hads.py?stations=RHWC1&network=CA_DCP&sts=2025-07-01T00:00Z&ets=2025-07-02T00:00Z&what=txt&delim=comma',{headers:{'User-Agent':'Sundowner-Intelligence-QA/2.0'}});
+  assert.ok(hads.ok,`HADS history ${hads.status}`);
+  const text=await hads.text();
+  assert.ok(text.includes('UDIRGZZ')&&text.includes('USIRGZZ'),'Historical RAWS wind fields missing');
+  console.log('PASS historical RAWS archive endpoint');
+
   console.log('Live upstream integration test: PASS');
 })().catch(e=>{console.error(e);process.exit(1)});
