@@ -41,9 +41,13 @@ jobs:
           grep -q 'SI 2.1' /tmp/dom.html
           if grep -q 'Load error:' /tmp/dom.html; then exit 1; fi
           echo 'SI_2_1_EXACT_BUILD_BROWSER_PASS'
-      - name: Public preview availability
+      - name: Immutable public browser smoke test
         run: |
-          URL='https://html-preview.github.io/?url=https://github.com/SkyFinderRescue/sundowner-intelligence/blob/main/index.html'
-          curl -fsSL --retry 3 "$URL" -o /tmp/public.html
-          grep -q 'Sundowner Intelligence' /tmp/public.html
-          echo 'PUBLIC_PREVIEW_AVAILABLE'
+          CHROME=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
+          URL='https://raw.githack.com/SkyFinderRescue/sundowner-intelligence/d92b3eeaa23eec809de62b0bea3a87dbc3d6ad56/index.html'
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=90000 --dump-dom "$URL" > /tmp/public-dom.html 2>/tmp/public-chrome.err
+          grep -q 'Live forecast complete' /tmp/public-dom.html
+          grep -q 'Santa Barbara County observation network' /tmp/public-dom.html
+          grep -q 'SI 2.1' /tmp/public-dom.html
+          if grep -q 'Load error:' /tmp/public-dom.html; then exit 1; fi
+          echo 'SI_2_1_PUBLIC_BROWSER_PASS'
