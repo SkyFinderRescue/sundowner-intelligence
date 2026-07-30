@@ -41,7 +41,7 @@ jobs:
           curl -fsSL --retry 2 'https://raw.githack.com/SkyFinderRescue/sundowner-intelligence/main/model.js' | grep -q 'gfs_hrrr' && echo 'GITHACK_MODEL_PASS'
       - name: Inspect historical RAWS archive format
         run: |
-          curl -fsSL --retry 2 'https://mesonet.agron.iastate.edu/cgi-bin/request/hads.py?station=RHWC1&network=CA_DCP&year1=2025&month1=7&day1=1&hour1=0&minute1=0&year2=2025&month2=7&day2=2&hour2=0&minute2=0&what=txt&delim=comma' -o /tmp/hads.txt
+          curl -fsSL --retry 2 'https://mesonet.agron.iastate.edu/cgi-bin/request/hads.py?stations=RHWC1&network=CA_DCP&sts=2025-07-01T00:00Z&ets=2025-07-02T00:00Z&what=txt&delim=comma' -o /tmp/hads.txt
           echo 'HADS_SAMPLE_BEGIN'
           head -n 80 /tmp/hads.txt
           echo 'HADS_SAMPLE_END'
