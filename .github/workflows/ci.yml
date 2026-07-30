@@ -1,0 +1,25 @@
+name: Sundowner Intelligence QA
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: JavaScript syntax
+        run: |
+          node --check core.js
+          node --check model.js
+          node --check ui.js
+      - name: Model and architecture tests
+        run: node tests/model.test.js
