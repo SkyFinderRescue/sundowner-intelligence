@@ -1,0 +1,48 @@
+const fs=require('fs');
+const assert=require('assert');
+
+const START=process.env.VALIDATION_START||'2025-03-01';
+const END=process.env.VALIDATION_END||'2025-05-31';
+const LEADS=(process.env.VALIDATION_LEADS||'1,2').split(',').map(Number).filter(x=>x>=1&&x<=2);
+const PAIRS=[
+  {name:'Gaviota',station:'GVTC1',lat:34.48,lon:-120.23,regime:'western',targetDir:345},
+  {name:'Refugio',station:'RHWC1',lat:34.49,lon:-120.07,regime:'western',targetDir:355},
+  {name:'San Marcos Pass',station:'MPWC1',lat:34.51,lon:-119.80,regime:'hybrid',targetDir:10},
+  {name:'Montecito',station:'MTIC1',lat:34.45,lon:-119.63,regime:'eastern',targetDir:20},
+  {name:'Carpinteria',station:'CXPC1',lat:34.42,lon:-119.52,regime:'eastern',targetDir:25}
+];
+const BASE_VARS=['relative_humidity_2m','wind_speed_10m','wind_direction_10m','wind_gusts_10m','shortwave_radiation'];
+const AIRPORTS={sba:[34.4262,-119.8404],bfl:[35.4336,-119.0568],smx:[34.8993,-120.4576]};
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),sig=x=>1/(1+Math.exp(-x)),rad=x=>x*Math.PI/180;
+const dirComponent=(dir,target)=>Math.max(0,Math.cos(rad((((Number(dir)-target)+540)%360)-180)));
+
+async function text(url,attempts=3){let last;for(let i=0;i<attempts;i++){const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),30000);try{const r=await fetch(url,{signal:ctl.signal,headers:{'User-Agent':'Sundowner-Intelligence-Validation/2.0'}});clearTimeout(tm);if(!r.ok)throw Error(`${r.status} ${await r.text()}`);return await r.text()}catch(e){clearTimeout(tm);last=e;if(i+1<attempts)await new Promise(r=>setTimeout(r,1000*(i+1)))}}throw last}
+async function json(url){return JSON.parse(await text(url))}
+function csvRows(s){const lines=s.trim().split(/\r?\n/);if(lines.length<2)return[];const h=lines[0].split(',');return lines.slice(1).map(line=>{const v=line.split(','),o={};h.forEach((k,i)=>o[k]=v[i]??'');return o})}
+async function hads(station){const u=new URL('https://mesonet.agron.iastate.edu/cgi-bin/request/hads.py');u.search=new URLSearchParams({stations:station,network:'CA_DCP',sts:`${START}T00:00Z`,ets:`${END}T23:59Z`,what:'txt',delim:'comma'});const rows=csvRows(await text(u));const out=new Map();for(const r of rows){const speed=Number(r.USIRGZZ),gust=Number(r.UPHRGZZ),dir=Number(r.UDIRGZZ);if(!r.utc_valid||!Number.isFinite(speed)||!Number.isFinite(dir))continue;const t=new Date(r.utc_valid.replace(' ','T')+'Z').toISOString().slice(0,13);out.set(t,{speed,gust:Number.isFinite(gust)?gust:null,dir});}return out}
+function prevUrl(lat,lon,varName,lead,model){const u=new URL('https://previous-runs-api.open-meteo.com/v1/forecast');u.search=new URLSearchParams({latitude:String(lat),longitude:String(lon),start_date:START,end_date:END,hourly:`${varName}_previous_day${lead}`,wind_speed_unit:'mph',timezone:'GMT',models:model});return u}
+async function previousOne(lat,lon,varName,lead,model){return json(prevUrl(lat,lon,varName,lead,model))}
+async function previous(lat,lon,vars,lead,model){let merged={hourly:{time:null}};for(const v of vars){const j=await previousOne(lat,lon,v,lead,model);if(!merged.hourly.time)merged.hourly.time=j.hourly?.time||[];merged.hourly[`${v}_previous_day${lead}`]=j.hourly?.[`${v}_previous_day${lead}`]||[];}return merged}
+function series(j,v,lead){return j.hourly?.[`${v}_previous_day${lead}`]||[]}
+function makeIndex(j){return new Map((j.hourly?.time||[]).map((t,i)=>[t.slice(0,13),i]))}
+function auc(pairs){const a=pairs.filter(x=>Number.isFinite(x.p)).sort((a,b)=>b.p-a.p),pos=a.filter(x=>x.y).length,neg=a.length-pos;if(!pos||!neg)return null;let rank=0,tp=0;for(const r of a){if(r.y)tp++;else rank+=tp}return rank/(pos*neg)}
+function metrics(pairs,cut=.5){let TP=0,FN=0,FP=0,TN=0;for(const r of pairs){const y=r.p>=cut;if(y&&r.y)TP++;else if(!y&&r.y)FN++;else if(y&&!r.y)FP++;else TN++}return{n:pairs.length,events:TP+FN,auc:auc(pairs),pod:TP/(TP+FN||1),far:FP/(TP+FP||1),specificity:TN/(TN+FP||1)}}
+function coreProbability(v,z){let westP=sig((-v.s-1.8)/.8),eastP=sig((-v.b-1.2)/1.0),press=z.regime==='western'?westP:z.regime==='eastern'?eastP:Math.max(westP,eastP),surf=clamp((v.g*dirComponent(v.d,z.targetDir)-12)/34,0,1),dry=clamp((36-v.rh)/29,0,1),hour=Number(v.time.slice(11,13)),eve=(hour>=16||hour<=5)?1:0,tw=eve?1:clamp((350-v.sol)/350,0,1);return sig(-4.05+1.9*press+.72*surf+.52*dry+.52*tw+.28*eve)}
+function strongCoreProbability(v,p,z){let westGrad=sig((-v.s-3.4)/.45),eastGrad=sig((-v.b-4.2)/.55),grad=z.regime==='western'?westGrad:z.regime==='eastern'?eastGrad:Math.max(westGrad,eastGrad),gust=sig((v.g-35)/3.8),base=clamp((p-.12)/.72,0,1);return sig(-4.25+1.75*grad+1.55*gust+.35*base)}
+
+(async()=>{
+ const report={generated:new Date().toISOString(),period:{start:START,end:END},method:'Independent RAWS verification against Open-Meteo Previous Runs at true fixed lead. 24h uses HRRR; 48h uses the seamless GFS/HRRR source because HRRR alone is a short-range model. This validates the pressure-gradient/surface-wind/dryness/time core; upper-air and live-observation production enhancements are intentionally excluded to prevent observation leakage.',leads:{}};
+ for(const lead of LEADS){
+  const forecastModel=lead===1?'gfs_hrrr':'gfs_seamless';
+  const ap={};for(const [k,[lat,lon]] of Object.entries(AIRPORTS))ap[k]=await previous(lat,lon,['pressure_msl'],lead,forecastModel);
+  const ai={};for(const [k,j] of Object.entries(ap))ai[k]=makeIndex(j);
+  report.leads[`${lead*24}h`]={model:forecastModel,zones:{}};
+  for(const z of PAIRS){
+   const obs=await hads(z.station),m=await previous(z.lat,z.lon,BASE_VARS,lead,forecastModel),mi=makeIndex(m),pairs=[],strongPairs=[],gustErrors=[];
+   for(const [t,o] of obs){const i=mi.get(t);if(i==null)continue;const pi=ai.sba.get(t),bi=ai.bfl.get(t),si=ai.smx.get(t);if(pi==null||bi==null||si==null)continue;const val=(v)=>Number(series(m,v,lead)[i]);const sba=Number(series(ap.sba,'pressure_msl',lead)[pi]),bfl=Number(series(ap.bfl,'pressure_msl',lead)[bi]),smx=Number(series(ap.smx,'pressure_msl',lead)[si]);const v={time:t,b:sba-bfl,s:sba-smx,rh:val('relative_humidity_2m'),g:val('wind_gusts_10m'),d:val('wind_direction_10m'),sol:val('shortwave_radiation')};if(![v.b,v.s,v.rh,v.g,v.d,v.sol].every(Number.isFinite))continue;const p=coreProbability(v,z),sp=strongCoreProbability(v,p,z),actualComp=o.speed*dirComponent(o.dir,z.targetDir),y=actualComp>=20,sy=(Math.max(o.gust||0,o.speed)>=35)&&dirComponent(o.dir,z.targetDir)>.5;pairs.push({p,y});strongPairs.push({p:sp,y:sy});if(Number.isFinite(o.gust)&&Number.isFinite(v.g))gustErrors.push(Math.abs(v.g-o.gust));}
+   const event=metrics(pairs,.18),strong=metrics(strongPairs,.5),mae=gustErrors.length?gustErrors.reduce((a,b)=>a+b,0)/gustErrors.length:null;report.leads[`${lead*24}h`].zones[z.name]={station:z.station,event,strong,gustMAE:mae};console.log(`${lead*24}h ${forecastModel} ${z.name}/${z.station}: n=${event.n} events=${event.events} AUC=${event.auc?.toFixed(3)} POD=${event.pod.toFixed(3)} FAR=${event.far.toFixed(3)} strongAUC=${strong.auc?.toFixed(3)} gustMAE=${mae?.toFixed(1)}`);
+  }
+ }
+ fs.mkdirSync('validation',{recursive:true});fs.writeFileSync('validation/fixed-lead-latest.json',JSON.stringify(report,null,2)+'\n');
+ const all=[];for(const l of Object.values(report.leads))for(const z of Object.values(l.zones))all.push(z.event);assert.ok(all.some(x=>x.n>100),'Validation produced too few matched observations');console.log(JSON.stringify(report));
+})().catch(e=>{console.error(e);process.exit(1)});
