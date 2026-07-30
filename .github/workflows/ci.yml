@@ -27,14 +27,23 @@ jobs:
         run: node tests/e2e.mock.test.js
       - name: Live upstream integration test
         run: node tests/live.integration.test.js
-      - name: Public browser smoke test
+      - name: Exact-build live browser smoke test
         run: |
           CHROME=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
           test -n "$CHROME"
-          URL='https://html-preview.github.io/?url=https://github.com/SkyFinderRescue/sundowner-intelligence/blob/main/index.html'
-          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=90000 --dump-dom "$URL" > /tmp/dom.html 2>/tmp/chrome.err
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 1
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=90000 --dump-dom 'http://127.0.0.1:8765/index.html' > /tmp/dom.html 2>/tmp/chrome.err
           grep -q 'Live forecast complete' /tmp/dom.html
           grep -q 'Santa Barbara County observation network' /tmp/dom.html
           grep -q 'SI 2.1' /tmp/dom.html
           if grep -q 'Load error:' /tmp/dom.html; then exit 1; fi
-          echo 'SI_2_1_PUBLIC_BROWSER_PASS'
+          echo 'SI_2_1_EXACT_BUILD_BROWSER_PASS'
+      - name: Public preview availability
+        run: |
+          URL='https://html-preview.github.io/?url=https://github.com/SkyFinderRescue/sundowner-intelligence/blob/main/index.html'
+          curl -fsSL --retry 3 "$URL" -o /tmp/public.html
+          grep -q 'Sundowner Intelligence' /tmp/public.html
+          echo 'PUBLIC_PREVIEW_AVAILABLE'
