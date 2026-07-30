@@ -22,7 +22,6 @@
 </header>
 <main>
 <div id="status"><span><span class="dot"></span>Starting…</span><span id="stamp"></span></div>
-
 <div id="forecast" class="view on">
 <div class="layout">
 <div id="map"></div>
@@ -45,7 +44,6 @@
 </div>
 <div id="cards" class="cards"></div>
 </div>
-
 <div id="stations" class="view">
 <div class="panel"><h2>Santa Barbara County observation network</h2>
 <div class="section-note">The station inventory is dynamically discovered from the full CA_DCP catalog without an “online only” filter. Every county station is retained in the table; every station with fresh usable wind data can contribute to localization. Known RAWS are force-retained as fallbacks if catalog discovery fails. Stale observations never affect the forecast.</div>
@@ -53,7 +51,6 @@
 <div class="legend"><span><i class="swatch" style="background:#63aafc"></i>County station</span><span><i class="swatch" style="background:#b98cff"></i>Known / detected RAWS</span><span><i class="swatch" style="background:#35c98a"></i>Fresh ≤ 3 h</span></div>
 <div class="scroll" style="margin-top:10px"><table><thead><tr><th>Station</th><th>Type</th><th>Status</th><th>Wind</th><th>RH</th><th>Temp</th><th>Fuel M.</th><th>Age</th></tr></thead><tbody id="stationRows"></tbody></table></div>
 </div></div>
-
 <div id="validation" class="view">
 <div class="panel"><h2>Validation & comparison</h2>
 <div class="section-note"><b>Goal:</b> outperform broad public forecasts through local terrain/regime logic, dense observation assimilation, and explicit pressure-gradient handling. This screen separates published research benchmarks from this app's own diagnostics so the app never labels someone else's score as its own.</div>
@@ -73,13 +70,13 @@
 <h2 style="margin-top:14px">Architecture QA</h2>
 <div id="qaDetails"></div>
 </div></div>
-
 <div id="health" class="view">
 <div class="panel"><h2>Data-source health</h2><div id="healthList"></div>
 <div class="footer-note">Operational caution: this is experimental local decision support. Official NWS watches/warnings, spot forecasts, IMET products, agency policy, and field observations remain authoritative for public safety and incident decisions.</div>
 </div></div>
 </main>
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="app.js"></script>
+<script src="core.js"></script>
+<script src="model.js"></script>
+<script src="ui.js"></script>
 </body></html>
