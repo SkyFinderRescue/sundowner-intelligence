@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07111e">
+<title>Sundowner Intelligence</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="styles.css"></head>
+<body>
+<header>
+<h1>Sundowner Intelligence</h1>
+<div class="sub">Santa Barbara County • HRRR + NBM surface guidance • observed SBA–BFL / SBA–SMX pressure gradients • every discoverable county DCP/RAWS station • terrain-localized Sundowner guidance</div>
+<div class="controls">
+<select id="zone"><option value="ALL">All forecast zones</option></select>
+<button id="refresh">Refresh live data</button>
+<button data-view="forecast" class="tab on">Forecast</button>
+<button data-view="stations" class="tab">Stations</button>
+<button data-view="validation" class="tab">Validation</button>
+<button data-view="health" class="tab">Data Health</button>
+</div>
+</header>
+<main>
+<div id="status"><span><span class="dot"></span>Starting…</span><span id="stamp"></span></div>
+
+<div id="forecast" class="view on">
+<div class="layout">
+<div id="map"></div>
+<div class="panel">
+<h2 id="focusTitle">County overview</h2>
+<div class="metrics">
+<div class="metric"><div class="k">Sundowner</div><div class="v" id="mP">—</div></div>
+<div class="metric"><div class="k">Strong event</div><div class="v" id="mStrong">—</div></div>
+<div class="metric"><div class="k">Localized peak gust</div><div class="v" id="mG">—</div></div>
+<div class="metric"><div class="k">Confidence</div><div class="v" id="mC">—</div></div>
+<div class="metric"><div class="k">Fire weather</div><div class="v" id="mFire">—</div></div>
+<div class="metric"><div class="k">Peak window</div><div class="v smallv" id="mPeak">—</div></div>
+<div class="metric"><div class="k">SBA–BFL</div><div class="v" id="mB">—</div></div>
+<div class="metric"><div class="k">SBA–SMX</div><div class="v" id="mS">—</div></div>
+</div>
+<div id="eventSummary" class="eventbox">Building event guidance…</div>
+<h2>Drivers</h2><div id="drivers"></div>
+<h2>48-hour probability</h2><div id="timeline"></div>
+</div>
+</div>
+<div id="cards" class="cards"></div>
+</div>
+
+<div id="stations" class="view">
+<div class="panel"><h2>Santa Barbara County observation network</h2>
+<div class="section-note">The station inventory is dynamically discovered from the full CA_DCP catalog without an “online only” filter. Every county station is retained in the table; every station with fresh usable wind data can contribute to localization. Known RAWS are force-retained as fallbacks if catalog discovery fails. Stale observations never affect the forecast.</div>
+<div id="stationSummary" class="metrics"></div>
+<div class="legend"><span><i class="swatch" style="background:#63aafc"></i>County station</span><span><i class="swatch" style="background:#b98cff"></i>Known / detected RAWS</span><span><i class="swatch" style="background:#35c98a"></i>Fresh ≤ 3 h</span></div>
+<div class="scroll" style="margin-top:10px"><table><thead><tr><th>Station</th><th>Type</th><th>Status</th><th>Wind</th><th>RH</th><th>Temp</th><th>Fuel M.</th><th>Age</th></tr></thead><tbody id="stationRows"></tbody></table></div>
+</div></div>
+
+<div id="validation" class="view">
+<div class="panel"><h2>Validation & comparison</h2>
+<div class="section-note"><b>Goal:</b> outperform broad public forecasts through local terrain/regime logic, dense observation assimilation, and explicit pressure-gradient handling. This screen separates published research benchmarks from this app's own diagnostics so the app never labels someone else's score as its own.</div>
+<div class="comparegrid">
+<div class="metric"><div class="k">Model version</div><div class="v smallv">SI 2.0</div></div>
+<div class="metric"><div class="k">Self-tests</div><div class="v" id="selfTest">—</div></div>
+<div class="metric"><div class="k">Fresh station coverage</div><div class="v" id="valCoverage">—</div></div>
+<div class="metric"><div class="k">Current gust cross-check MAE</div><div class="v" id="valMAE">—</div></div>
+</div>
+<h2 style="margin-top:14px">Published Sundowner research benchmark</h2>
+<div class="factor"><span>Montecito SWEX logistic model ROC AUC</span><b>0.90</b></div>
+<div class="factor"><span>SWEX probability threshold / POD / FAR</span><b>18% / 0.93 / 0.22</b></div>
+<div class="factor"><span>HRRR-input variant ROC AUC / POD / FAR</span><b>0.88 / 0.89 / 0.23</b></div>
+<div class="tiny warn" style="margin-top:9px">Published values are reference benchmarks from Fovell & Brewer's Montecito SWEX work, not measured skill scores for Sundowner Intelligence.</div>
+<h2 style="margin-top:14px">Focused-zone NWS reference</h2>
+<div id="nwsCompare" class="section-note">Select a forecast zone to load the NWS grid reference. It is shown for comparison, not treated as ground truth.</div>
+<h2 style="margin-top:14px">Architecture QA</h2>
+<div id="qaDetails"></div>
+</div></div>
+
+<div id="health" class="view">
+<div class="panel"><h2>Data-source health</h2><div id="healthList"></div>
+<div class="footer-note">Operational caution: this is experimental local decision support. Official NWS watches/warnings, spot forecasts, IMET products, agency policy, and field observations remain authoritative for public safety and incident decisions.</div>
+</div></div>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="app.js"></script>
+</body></html>
