@@ -35,3 +35,26 @@ jobs:
           VALIDATION_END: '2025-05-31'
           VALIDATION_LEADS: '1,2'
         run: node tools/validate-fixed-lead.js
+  deployprobe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Browser-check HTML preview hosts
+        run: |
+          CHROME=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
+          test -n "$CHROME"
+          ok=0
+          for url in \
+            'https://html-preview.github.io/?url=https://github.com/SkyFinderRescue/sundowner-intelligence/blob/main/index.html' \
+            'https://htmlpreview.github.io/?https://github.com/SkyFinderRescue/sundowner-intelligence/blob/main/index.html'; do
+            echo "CHECK=$url"
+            "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=60000 --dump-dom "$url" > /tmp/page.html 2>/tmp/chrome.err || true
+            if grep -q 'Live forecast complete' /tmp/page.html && grep -q 'Santa Barbara County observation network' /tmp/page.html; then
+              echo "PREVIEW_PASS=$url"
+              ok=1
+              break
+            fi
+            grep -n 'id="status"' /tmp/page.html | head -1 || true
+            tail -8 /tmp/chrome.err || true
+          done
+          test "$ok" -eq 1
