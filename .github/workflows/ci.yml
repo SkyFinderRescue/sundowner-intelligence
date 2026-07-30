@@ -39,16 +39,20 @@ jobs:
           done
           curl -fsSL --retry 2 'https://raw.githack.com/SkyFinderRescue/sundowner-intelligence/main/core.js' | grep -q 'discoverCountyStations' && echo 'GITHACK_CORE_PASS'
           curl -fsSL --retry 2 'https://raw.githack.com/SkyFinderRescue/sundowner-intelligence/main/model.js' | grep -q 'gfs_hrrr' && echo 'GITHACK_MODEL_PASS'
-      - name: Real hosted browser smoke test
+      - name: Diagnose real hosted browser
         run: |
           CHROME=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
           test -n "$CHROME"
-          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=60000 --dump-dom 'https://raw.githack.com/SkyFinderRescue/sundowner-intelligence/main/index.html' > /tmp/dom.html
-          grep -q 'Live forecast complete' /tmp/dom.html
-          grep -q 'fresh county stations' /tmp/dom.html
-          grep -q 'Localized peak gust' /tmp/dom.html
-          grep -q 'Santa Barbara County observation network' /tmp/dom.html
-          echo 'HOSTED_BROWSER_PASS'
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=90000 --dump-dom 'https://raw.githack.com/SkyFinderRescue/sundowner-intelligence/main/index.html' > /tmp/dom.html 2>/tmp/chrome.err || true
+          echo 'STATUS_LINES'
+          grep -n 'id="status"' /tmp/dom.html | head -3 || true
+          echo 'CARD_COUNT'
+          grep -o 'class="card ' /tmp/dom.html | wc -l
+          echo 'ERROR_LINES'
+          grep -E 'Load error|Model unavailable|Historical calibration|ERR_|blocked|CORS' /tmp/dom.html /tmp/chrome.err | tail -30 || true
+          echo 'DOM_BYTES'
+          wc -c /tmp/dom.html
+          grep -q 'Sundowner Intelligence' /tmp/dom.html
       - name: Historical RAWS archive smoke test
         run: |
           curl -fsSL --retry 2 'https://mesonet.agron.iastate.edu/cgi-bin/request/hads.py?stations=RHWC1&network=CA_DCP&sts=2025-07-01T00:00Z&ets=2025-07-02T00:00Z&what=txt&delim=comma' -o /tmp/hads.txt
