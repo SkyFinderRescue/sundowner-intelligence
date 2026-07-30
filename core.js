@@ -1,5 +1,5 @@
 "use strict";
-const TZ="America/Los_Angeles", APP_VERSION="SI-2.0.0", STALE_MIN=180;
+const TZ="America/Los_Angeles", APP_VERSION="SI-2.1.0", STALE_MIN=180, EVENT_SIGNAL=18, STRONG_SIGNAL=17;
 const Z=[
  {name:"Gaviota",lat:34.48,lon:-120.23,regime:"western",targetDir:345,obsRadius:32},
  {name:"Refugio",lat:34.49,lon:-120.07,regime:"western",targetDir:355,obsRadius:28},
@@ -30,7 +30,7 @@ let map=null,zoneMarkers={},stationMarkers=[],R=[],ST=[],CATALOG=[],PS=null,OBS_
 const $=x=>document.getElementById(x), clamp=(x,a,b)=>Math.max(a,Math.min(b,x)), sig=x=>1/(1+Math.exp(-x)), rad=x=>x*Math.PI/180;
 function finite(x){return Number.isFinite(Number(x))}function num(x){let n=Number(x);return Number.isFinite(n)?n:null}
 function dirComponent(dir,target){if(!finite(dir))return 0;return Math.max(0,Math.cos(rad((((Number(dir)-target)+540)%360)-180)))}
-function cat(p){return p>=85?"EXTREME":p>=70?"HIGH":p>=50?"ELEVATED":"LOW"}function col(p){return p>=85?"#eb5757":p>=70?"#f2994a":p>=50?"#f2c94c":"#35c98a"}
+function cat(p){return p>=60?"EXTREME":p>=35?"HIGH":p>=EVENT_SIGNAL?"ELEVATED":"LOW"}function col(p){return p>=60?"#eb5757":p>=35?"#f2994a":p>=EVENT_SIGNAL?"#f2c94c":"#35c98a"}
 function compass(d){if(!finite(d))return"—";let a=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];return a[Math.round(((Number(d)%360)+360)%360/22.5)%16]}
 function ft(t){if(!t)return"—";return new Date(t).toLocaleString("en-US",{weekday:"short",hour:"numeric",minute:"2-digit",timeZone:TZ})}
 function ageMinutes(t){if(!t)return Infinity;let d=new Date(t);return Number.isFinite(d.getTime())?Math.max(0,(Date.now()-d.getTime())/60000):Infinity}
@@ -47,7 +47,7 @@ async function currentStation(meta){try{let j=await json(`https://mesonet.agron.
  let wsp=choose(o,[/^windspeed\[kt\]$/i,/wind.*speed.*\[kt\]/i]), gust=choose(o,[/^gust\[kt\]$/i,/windgust\[kt\]/i,/gust.*\[kt\]/i]), dir=choose(o,[/winddirection\[deg\]/i,/wind.*dir/i,/^UD/i]), rh=choose(o,[/relativehumidity/i,/relh/i,/^XR/i]), temp=choose(o,[/airtemp\[F\]/i,/air.*temp/i,/^TA/i]), fm=choose(o,[/fuel.*moist/i,/moist.*fuel/i,/^MM/i]);
  if(!wsp)wsp=choose(o,[/^US/i,/wind.*speed/i]);if(!gust)gust=choose(o,[/^UP/i,/peak.*wind/i,/gust/i]);let wind=wsp?wsp.v:null,g=wsp&&/\[kt\]|knot/i.test(wsp.k)?wind*1.15078:wind;let gg=gust?gust.v:null;if(gust&&/\[kt\]|knot/i.test(gust.k))gg*=1.15078;
  let t=chooseTime(o),mins=ageMinutes(t),status=Number.isFinite(mins)?(mins<=STALE_MIN?"Fresh":"Stale"):"Offline";let detectedRaws=isRawsMeta(meta)||(!!fm&&finite(g)&&finite(dir?.v));
- return{...meta,type:detectedRaws?"RAWS":(meta.type||"County DCP"),wind:g,gust:gg,dir:dir?dir.v:null,rh:rh?rh.v:null,temp:temp?temp.v:null,fuelMoist:fm?fm.v:null,time:t,status,fresh:status==="Fresh"&&finite(g)&&finite(dir?.v)}
+ return{...meta,type:detectedRaws?"RAWS":(meta.type||"County DCP"),wind:g,gust:gg,dir:dir?dir.v:null,rh:rh?rh.v:null,temp:temp?v:null,fuelMoist:fm?fm.v:null,time:t,status,fresh:status==="Fresh"&&finite(g)&&finite(dir?.v)}
  }catch(e){return{...meta,type:isRawsMeta(meta)?"RAWS":(meta.type||"County DCP"),wind:null,gust:null,dir:null,rh:null,temp:null,fuelMoist:null,time:null,status:"Offline",fresh:false,error:String(e.message||e)}}}
 async function discoverCountyStations(){let cached=null;try{cached=JSON.parse(localStorage.getItem("sundowner:countyStations:v2"));if(cached&&Date.now()-cached.saved<864e5&&Array.isArray(cached.items)&&cached.items.length)sourceHealth("County station catalog",`${cached.items.length} cached; refreshing`,"info")}catch(_e){}
  let items=[];try{let gj=await json("https://mesonet.agron.iastate.edu/geojson/network.py?network=CA_DCP",{},2);for(let f of gj.features||[]){let p=f.properties||{},c=f.geometry?.coordinates||[],id=p.sid||p.id||p.station||p.stid,name=p.sname||p.name||p.station_name||id,county=String(p.county||p.county_name||"").trim().toLowerCase(),lon=num(c[0]),lat=num(c[1]);if(!id||!finite(lat)||!finite(lon))continue;let countyMatch=county.includes("santa barbara"),countyMetaKnown=!!county,countyEnvelope=(lat>=34.30&&lat<=35.15&&lon>=-120.75&&lon<=-119.25)||(lat>=33.80&&lat<=34.15&&lon>=-120.70&&lon<=-119.20);if(countyMatch||(!countyMetaKnown&&countyEnvelope))items.push({id:String(id),name:String(name||id),lat:Number(lat),lon:Number(lon),type:/RAWS/i.test(String(name))?"RAWS":"County DCP",archiveEnd:p.archive_end||p.end||null})}
