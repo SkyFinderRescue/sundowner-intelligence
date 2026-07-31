@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Documented 2022 Sundowner Winds Experiment intensive-observation-period truth set for event-level analog and validation context.",
+  "source": "Witte et al. 2026 Geoscience Data Journal, doi:10.1002/gdj3.70074; Carvalho et al. 2024 BAMS, doi:10.1175/BAMS-D-22-0171.1",
+  "source_url": "https://doi.org/10.1002/gdj3.70074",
+  "events": [
+    {"event_id":"SWEX-IOP1","date":"2022-04-04","end_date":"2022-04-05","start_utc":"2022-04-04T17:00:00Z","end_utc":"2022-04-05T14:00:00Z","tier":"A","regime":"eastern","fire_associated":false,"notes":"SWEX IOP1."},
+    {"event_id":"SWEX-IOP2","date":"2022-04-05","end_date":"2022-04-06","start_utc":"2022-04-05T23:00:00Z","end_utc":"2022-04-06T08:00:00Z","tier":"A","regime":"eastern","fire_associated":false,"notes":"SWEX IOP2; April 4-5/5-6 eastern-regime case extensively analyzed with strong MSLP forcing, mountain waves and marine-layer termination."},
+    {"event_id":"SWEX-IOP3","date":"2022-04-13","end_date":"2022-04-14","start_utc":"2022-04-13T17:00:00Z","end_utc":"2022-04-14T14:00:00Z","tier":"A","regime":"western","fire_associated":false,"notes":"SWEX IOP3."},
+    {"event_id":"SWEX-IOP4","date":"2022-04-18","end_date":"2022-04-19","start_utc":"2022-04-18T17:00:00Z","end_utc":"2022-04-19T14:00:00Z","tier":"A","regime":"western","fire_associated":false,"notes":"SWEX IOP4."},
+    {"event_id":"SWEX-IOP5","date":"2022-04-23","end_date":"2022-04-24","start_utc":"2022-04-23T17:00:00Z","end_utc":"2022-04-24T14:00:00Z","tier":"A","regime":"eastern","fire_associated":false,"notes":"SWEX IOP5."},
+    {"event_id":"SWEX-IOP6","date":"2022-04-28","end_date":"2022-04-29","start_utc":"2022-04-28T17:00:00Z","end_utc":"2022-04-29T08:00:00Z","tier":"A","regime":"western","fire_associated":false,"notes":"SWEX IOP6."},
+    {"event_id":"SWEX-IOP7","date":"2022-05-07","end_date":"2022-05-08","start_utc":"2022-05-07T23:00:00Z","end_utc":"2022-05-08T05:30:00Z","tier":"A","regime":"western","fire_associated":false,"notes":"SWEX IOP7."},
+    {"event_id":"SWEX-IOP8","date":"2022-05-08","end_date":"2022-05-09","start_utc":"2022-05-08T17:00:00Z","end_utc":"2022-05-09T14:00:00Z","tier":"A","regime":"western","fire_associated":false,"notes":"SWEX IOP8."},
+    {"event_id":"SWEX-IOP9","date":"2022-05-10","end_date":"2022-05-11","start_utc":"2022-05-10T17:00:00Z","end_utc":"2022-05-11T14:00:00Z","tier":"A","regime":"western","fire_associated":false,"notes":"SWEX IOP9."},
+    {"event_id":"SWEX-IOP10","date":"2022-05-12","end_date":"2022-05-13","start_utc":"2022-05-12T23:00:00Z","end_utc":"2022-05-13T14:00:00Z","tier":"A","regime":"eastern/hybrid","fire_associated":false,"notes":"Final SWEX IOP. Instrument summary table labels the case western; BAMS describes the event as eastern/hybrid with unusually large KSBA-KBFL forcing. Preserve this regime ambiguity rather than forcing one label."}
+  ]
+}
