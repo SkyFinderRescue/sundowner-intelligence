@@ -4,12 +4,10 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      - '.github/pages-deploy-status.txt'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -26,79 +24,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
-      - name: Probe or enable Pages
-        id: probe
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set +e
-          API="https://api.github.com/repos/${GITHUB_REPOSITORY}/pages"
-          GET_CODE=$(curl -sS -o /tmp/pages-get.json -w '%{http_code}' \
-            -H 'Accept: application/vnd.github+json' \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            -H 'X-GitHub-Api-Version: 2026-03-10' \
-            "$API")
-          CREATE_CODE="not-needed"
-          if [ "$GET_CODE" = "404" ]; then
-            CREATE_CODE=$(curl -sS -o /tmp/pages-create.json -w '%{http_code}' \
-              -X POST \
-              -H 'Accept: application/vnd.github+json' \
-              -H "Authorization: Bearer ${GH_TOKEN}" \
-              -H 'X-GitHub-Api-Version: 2026-03-10' \
-              "$API" \
-              -d '{"build_type":"workflow"}')
-          fi
-          echo "get_code=$GET_CODE" >> "$GITHUB_OUTPUT"
-          echo "create_code=$CREATE_CODE" >> "$GITHUB_OUTPUT"
-          echo "GET $GET_CODE" > /tmp/pages-probe.txt
-          echo "CREATE $CREATE_CODE" >> /tmp/pages-probe.txt
-          [ -f /tmp/pages-get.json ] && cat /tmp/pages-get.json >> /tmp/pages-probe.txt
-          [ -f /tmp/pages-create.json ] && { echo; cat /tmp/pages-create.json; } >> /tmp/pages-probe.txt
-          exit 0
-
       - name: Setup Pages
-        id: setup
-        continue-on-error: true
         uses: actions/configure-pages@v5
-
       - name: Upload artifact
-        id: upload
-        if: steps.setup.outcome == 'success'
-        continue-on-error: true
         uses: actions/upload-pages-artifact@v4
         with:
           path: '.'
-
       - name: Deploy to GitHub Pages
         id: deployment
-        if: steps.setup.outcome == 'success' && steps.upload.outcome == 'success'
-        continue-on-error: true
         uses: actions/deploy-pages@v4
-
-      - name: Verify and record deployment status
-        if: always()
-        shell: bash
-        run: |
-          set +e
-          LIVE_URL="https://skyfinderrescue.github.io/sundowner-intelligence/"
-          LIVE_CODE=$(curl -L -sS -o /tmp/live.html -w '%{http_code}' "$LIVE_URL")
-          {
-            echo "Sundowner Intelligence GitHub Pages deployment probe"
-            echo "commit=${GITHUB_SHA}"
-            echo "pages_get=${{ steps.probe.outputs.get_code }}"
-            echo "pages_create=${{ steps.probe.outputs.create_code }}"
-            echo "setup=${{ steps.setup.outcome }}"
-            echo "upload=${{ steps.upload.outcome }}"
-            echo "deploy=${{ steps.deployment.outcome }}"
-            echo "live_http=${LIVE_CODE}"
-            echo "live_url=${LIVE_URL}"
-            echo
-            cat /tmp/pages-probe.txt 2>/dev/null || true
-          } > .github/pages-deploy-status.txt
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add .github/pages-deploy-status.txt
-          git commit -m 'Record Pages deployment status [skip ci]' || exit 0
-          git push origin HEAD:main
