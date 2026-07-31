@@ -1,19 +1,111 @@
 {
-  "version": "SI-3.0-seed-2026-07-31",
-  "generated": "2026-07-31T00:00:00Z",
-  "method": "Central seed artifact for the SI-3 physically constrained probability model, validated by the existing independent spring-2025 fixed-lead harness. The automated historical calibration workflow replaces this seed with a 2024-train/2025-holdout Platt calibration when it completes.",
-  "models": {
-    "western": {"event":{"intercept":0,"slope":1},"strong":{"intercept":0,"slope":1}},
-    "hybrid": {"event":{"intercept":0,"slope":1},"strong":{"intercept":0,"slope":1}},
-    "eastern": {"event":{"intercept":0,"slope":1},"strong":{"intercept":0,"slope":1}}
+  "version": "SI-3.1-cal-2026-07-31",
+  "generated": "2026-07-31T17:24:36.819Z",
+  "method": "Historically fitted fixed-lead probability and gust-bias calibration using proven archived HRRR surface fields, SBA-BFL/SBA-SMX pressure anchors, and independent RAWS outcomes. The live SI-3 forecast adds upper-air, local-pressure, coastal-jet, Cuyama/upstream and fresh-observation evidence on top of this historically calibrated core. Verifying observations never enter historical predictors and fire association is never used as an event target.",
+  "train": {
+    "start": "2024-04-01",
+    "end": "2024-04-30",
+    "forecast_lead_hours": 24,
+    "model": "NOAA HRRR via Open-Meteo Previous Runs"
   },
-  "zone_bias_mph": {},
-  "independent_validation": {
-    "period": "2025-03-01 through 2025-05-31",
-    "24h_general_event_auc_range": [0.806,0.874],
-    "24h_strong_event_auc_range": [0.897,0.934],
-    "24h_raw_gust_mae_mph_range": [4.5,7.1],
-    "48h_general_event_auc_range": [0.742,0.812],
-    "48h_strong_event_auc_range": [0.768,0.874]
+  "holdout": {
+    "start": "2025-04-01",
+    "end": "2025-04-30"
+  },
+  "known_event_catalog_count": 57,
+  "models": {
+    "western": {
+      "event": {
+        "intercept": 0.669699,
+        "slope": 0.771027,
+        "n": 1436
+      },
+      "strong": {
+        "intercept": 0.493073,
+        "slope": 0.551941,
+        "n": 1436
+      }
+    },
+    "hybrid": {
+      "event": {
+        "intercept": -0.366211,
+        "slope": 1.784346,
+        "n": 718
+      },
+      "strong": {
+        "intercept": -0.028615,
+        "slope": 1.18282,
+        "n": 718
+      }
+    },
+    "eastern": {
+      "event": {
+        "intercept": -0.046404,
+        "slope": 1.330656,
+        "n": 1436
+      },
+      "strong": {
+        "intercept": 0.16174,
+        "slope": 0.786565,
+        "n": 1436
+      }
+    }
+  },
+  "zone_bias_mph": {
+    "Gaviota": 3.9,
+    "Refugio": 2.1,
+    "San Marcos Pass": 0.4,
+    "Montecito": 1.1,
+    "Carpinteria": 3
+  },
+  "metrics": {
+    "western": {
+      "train_n": 1436,
+      "holdout_n": 1440,
+      "event": {
+        "raw_auc": 0.8524452874850736,
+        "cal_auc": 0.8524452874850736,
+        "raw_brier": 0.19977767735310958,
+        "cal_brier": 0.16041957707165763
+      },
+      "strong": {
+        "raw_auc": 0.9301958600204214,
+        "cal_auc": 0.9301958600204214,
+        "raw_brier": 0.16056256603716357,
+        "cal_brier": 0.1317131707166991
+      }
+    },
+    "hybrid": {
+      "train_n": 718,
+      "holdout_n": 720,
+      "event": {
+        "raw_auc": 0.6963788300835655,
+        "cal_auc": 0.6963788300835655,
+        "raw_brier": 0.007410897398600669,
+        "cal_brier": 0.002811146659186337
+      },
+      "strong": {
+        "raw_auc": 0.942090395480226,
+        "cal_auc": 0.942090395480226,
+        "raw_brier": 0.016221555350448065,
+        "cal_brier": 0.016380996157193423
+      }
+    },
+    "eastern": {
+      "train_n": 1436,
+      "holdout_n": 1438,
+      "event": {
+        "raw_auc": 0.8757644153789764,
+        "cal_auc": 0.8757644153789764,
+        "raw_brier": 0.024499496314041833,
+        "cal_brier": 0.023917289221907986
+      },
+      "strong": {
+        "raw_auc": 0.957166786312515,
+        "cal_auc": 0.957166786312515,
+        "raw_brier": 0.030019606068679712,
+        "cal_brier": 0.029383571492435076
+      }
+    }
   }
 }
