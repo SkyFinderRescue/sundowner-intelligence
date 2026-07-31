@@ -31,20 +31,24 @@ jobs:
           TRAIN_END: '2024-04-30'
           TEST_START: '2025-04-01'
           TEST_END: '2025-04-30'
-        run: node tools/build-calibration.js
+        run: |
+          set -o pipefail
+          node tools/build-calibration.js 2>&1 | tee /tmp/calibration-build.log
       - name: Validate fit
         if: steps.build.outcome == 'success'
         run: node -e "const c=require('./calibration.json'); if(!c.metrics||String(c.version).includes('seed')) process.exit(1);"
-      - name: Preserve outputs
+      - name: Preserve outputs and diagnostics
         if: always()
         env:
           OUTCOME: ${{ steps.build.outcome }}
           SHA: ${{ github.sha }}
         run: |
           mkdir -p /tmp/si-qcal
+          tail -c 5000 /tmp/calibration-build.log > /tmp/si-qcal/build-tail.txt 2>/dev/null || true
           node - <<'NODE'
           const fs=require('fs');
-          fs.writeFileSync('/tmp/si-qcal/status.json',JSON.stringify({checked_at:new Date().toISOString(),source_commit:process.env.SHA,outcome:process.env.OUTCOME,train:['2024-04-01','2024-04-30'],holdout:['2025-04-01','2025-04-30'],lead_hours:24},null,2)+'\n');
+          let log=''; try{log=fs.readFileSync('/tmp/si-qcal/build-tail.txt','utf8')}catch{}
+          fs.writeFileSync('/tmp/si-qcal/status.json',JSON.stringify({checked_at:new Date().toISOString(),source_commit:process.env.SHA,outcome:process.env.OUTCOME,train:['2024-04-01','2024-04-30'],holdout:['2025-04-01','2025-04-30'],lead_hours:24,diagnostic_tail:log},null,2)+'\n');
           NODE
           if [ "$OUTCOME" = "success" ]; then cp calibration.json /tmp/si-qcal/calibration.json; fi
       - name: Publish current-main calibration
