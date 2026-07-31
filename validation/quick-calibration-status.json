@@ -1,6 +1,6 @@
 {
-  "checked_at": "2026-07-31T17:19:40.710Z",
-  "source_commit": "182bf74f10b20a2cf5c6b0ffba62d688b9639d40",
+  "checked_at": "2026-07-31T17:22:57.290Z",
+  "source_commit": "ae9fceb66cdd7f2f005de28cc48875085ff7bf17",
   "outcome": "failure",
   "train": [
     "2024-04-01",
@@ -11,5 +11,5 @@
     "2025-04-30"
   ],
   "lead_hours": 24,
-  "diagnostic_tail": "Error: 400 {\"reason\":\"Data corrupted at path ''. Cannot initialize SurfacePressureAndHeightVariable<VariableAndPreviousDay, VariableOrSpread<ForecastPressureVariable>, ForecastHeightVariable>\n    at text (/home/runner/work/sundowner-intelligence/sundowner-intelligence/tools/build-calibration.js:7:281)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async json (/home/runner/work/sundowner-intelligence/sundowner-intelligence/tools/build-calibration.js:8:42)\n    at async previous (/home/runner/work/sundowner-intelligence/sundowner-intelligence/tools/build-calibration.js:12:325)\n    at async dataset (/home/runner/work/sundowner-intelligence/sundowner-intelligence/tools/build-calibration.js:18:404)\n    at async /home/runner/work/sundowner-intelligence/sundowner-intelligence/tools/build-calibration.js:19:24\n"
+  "diagnostic_tail": "Error: 400 {\"reason\":\"Data corrupted at path ''. Cannot initialize SurfacePressureAndHeightVariable<VariableAndPreviousDay, VariableOrSpread<ForecastPressureVariable>, ForecastHeightVariable>\n    at text (/home/runner/work/sundowner-intelligence/sundowner-intelligence/tools/build-calibration.js:8:281)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async json (/home/runner/work/sundowner-intelligence/sundowner-intelligence/tools/build-calibration.js:9:42)\n    at async previous (/home/runner/work/sundowner-intelligence/sundowner-intelligence/tools/build-calibration.js:13:325)\n    at async dataset (/home/runner/work/sundowner-intelligence/sundowner-intelligence/tools/build-calibration.js:19:404)\n    at async /home/runner/work/sundowner-intelligence/sundowner-intelligence/tools/build-calibration.js:20:24\n"
 }
