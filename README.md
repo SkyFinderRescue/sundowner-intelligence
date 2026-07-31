@@ -1,33 +1,40 @@
 # Sundowner Intelligence
 
-Santa Barbara County terrain-localized Sundowner forecasting app — SI 2.1.
+Experimental hyperlocal Sundowner decision-support beta for Santa Barbara County.
 
-## Production model
-- 48-hour NOAA GFS/HRRR seamless guidance, with explicit HRRR overlay where available and NBM surface-gust blending when available.
-- Observed and forecast SBA–BFL / SBA–SMX pressure gradients.
-- Full Santa Barbara County CA_DCP station-catalog discovery without an `only_online` filter. Every discovered county station remains visible; every fresh wind-capable station can contribute to localization. The latest live integration QA discovered 147 Santa Barbara County stations by catalog metadata.
-- Explicit fallback coverage now includes all nine Santa Barbara County Fire RAWS locations: Gaviota, Refugio, San Marcos Pass, Mission Canyon/Santa Barbara Botanic Garden, Carpinteria foothills, Santa Ynez Valley, Burton Mesa, Tepusquet, and Cuyama Valley. Partner/other county RAWS fallbacks include Los Prietos, Figueroa Mountain, Montecito, Montecito #2, Vandenberg, and Santa Rosa Island. Dynamically discovered additional county stations are retained automatically.
-- Three-hour observation freshness gate, distance/freshness weighting, extra RAWS weighting, and terrain-relative wind components.
-- Western, eastern, and hybrid Sundowner regimes from Gaviota through Carpinteria.
-- Research-based strong-event anchors: western SBA–SMX gradient near −3.4 hPa, eastern SBA–BFL near −4.2 hPa, and a significant-gust anchor near 35 mph.
-- 18% elevated-event and 17% strong-event research signal thresholds for earlier guidance rather than arbitrary 50% onset logic.
-- NWS grid forecast reference for side-by-side comparison.
-- Built-in source-health monitoring, self-tests, retries/timeouts, stale-data rejection, and degraded operation when one feed fails.
+## Public beta
 
-## Validation and QA
-- JavaScript syntax checks, model/architecture unit tests, a mocked full-app end-to-end test, and live upstream integration tests cover NOAA/Open-Meteo, IEM CA_DCP/RAWS, HADS historical observations, NWS grid guidance, and airport pressure observations.
-- Final release QA passed 23/23 model/architecture tests, 6/6 mocked end-to-end checks, live upstream integration, all nine County Fire RAWS endpoint checks, and an exact-build headless-browser smoke test that reached `Live forecast complete` with live feeds.
-- Independent fixed-lead Spring 2025 verification uses HADS/RAWS observations and forecast values available 24 or 48 hours before valid time. At 24 hours, general-event ROC AUC is 0.81–0.87 in the verifying zones where both event classes occurred, strong-event AUC is 0.90–0.93, and raw gust MAE is 4.5–7.1 mph. At 48 hours, event AUC is 0.74–0.81 and strong-event AUC is 0.77–0.87. Full details are in `validation/SPRING_2025_FIXED_LEAD.md`.
-- An on-demand `Sundowner Historical Validation` workflow can rerun the independent 24h/48h validation for another date range.
-- A 2024-training / 2025-holdout probability-calibration study was also run. Some general-event Brier scores improved, but rare-event hybrid/strong fits were unstable; those unstable calibrations were deliberately rejected rather than overfit into production.
+Primary deployment target: GitHub Pages from `main`.
 
-## NWS comparison
-The product is intentionally more local and Sundowner-specific than a broad public forecast: it combines terrain regimes, pressure gradients, upper-air flow, marine-layer suppression, dense county observations, and local gust correction at eight front-country zones. The app also loads the focused-zone NWS grid gust forecast beside its own result.
+Once Pages is enabled for this public repository, the expected URL is:
 
-That architecture and the independent RAWS validation support the goal of outperforming broad guidance, but they do **not** prove that SI 2.1 is more accurate than every NWS forecast product. A scientifically valid superiority claim requires matched archived NWS forecasts and identical verifying observations over the same cases. The application does not fabricate that result.
+`https://skyfinderrescue.github.io/sundowner-intelligence/`
 
-## Deployment
-The production code is complete in this repository and a self-contained standalone HTML build is also maintained as a release artifact. GitHub Pages is not currently enabled in the repository settings, so the repository does not claim a permanent Pages URL until that publishing source is enabled.
+A no-configuration CDN preview is also possible from the public `main` branch after `index.html` is pushed:
 
-## Safety
-Experimental local decision support. Official NWS watches/warnings, spot forecasts, IMET products, agency policy, and field observations remain authoritative for public-safety and incident decisions.
+`https://raw.githack.com/SkyFinderRescue/sundowner-intelligence/main/index.html`
+
+## Architecture
+
+- Live NOAA HRRR/GFS seamless atmospheric fields
+- KSBA–KBFL and KSBA–KSMX pressure gradients
+- Western/eastern/hybrid Sundowner regimes
+- Live Santa Barbara County DCP/RAWS weather observations
+- Upstream Cuyama / interior / southern Kern precursor observations
+- Terrain-relative 850/700 hPa wind support
+- Boundary-layer, low-cloud/marine proxy, stability, RH and solar/time signals
+- Separate fire-weather consequence score
+- Central `calibration.json` generated from archived model fields with observed RAWS labels
+- Weekly calibration refresh via GitHub Actions
+
+## Calibration targets
+
+- Western: Refugio Hills RAWS (`RHWC1`)
+- Eastern: Montecito RAWS #2 (`MOIC1`)
+- Training years: 2022–2024
+- Holdout year: 2025
+- Observed target wind is used only as the label and is excluded from model predictors.
+
+## Important
+
+Experimental only. Does not replace NWS watches/warnings, Red Flag Warnings, spot forecasts, IMET products, or field observations.
