@@ -1,0 +1,14 @@
+{
+  "checked_at": "2026-07-31T17:17:38.476Z",
+  "source_commit": "76322595251db5d0f1315fcf11d0c1f9da21d9c2",
+  "outcome": "failure",
+  "train": [
+    "2024-04-01",
+    "2024-04-30"
+  ],
+  "holdout": [
+    "2025-04-01",
+    "2025-04-30"
+  ],
+  "lead_hours": 24
+}
