@@ -1,0 +1,66 @@
+name: Sundowner Production Browser QA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - "tools/production-browser-qa.mjs"
+      - ".github/workflows/browser-qa.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sundowner-browser-qa
+  cancel-in-progress: true
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Install Chromium browser harness
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Run live desktop/mobile QA
+        id: browser
+        continue-on-error: true
+        run: node tools/production-browser-qa.mjs
+      - name: Preserve status and screenshots
+        if: always()
+        env:
+          OUTCOME: ${{ steps.browser.outcome }}
+          SHA: ${{ github.sha }}
+        run: |
+          mkdir -p /tmp/si-browser
+          cp validation/browser-qa-status.json /tmp/si-browser/status.json 2>/dev/null || echo '{"pass":false,"error":"browser harness did not create status"}' > /tmp/si-browser/status.json
+          cp validation/production-*.png /tmp/si-browser/ 2>/dev/null || true
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sundowner-production-browser-qa
+          path: /tmp/si-browser/
+          retention-days: 30
+      - name: Publish browser QA status
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git reset --hard origin/main
+          mkdir -p validation
+          cp /tmp/si-browser/status.json validation/browser-qa-status.json
+          git add validation/browser-qa-status.json
+          git commit -m "Record production browser QA [skip ci]" || exit 0
+          git push origin HEAD:main
+      - name: Fail if production QA failed
+        if: steps.browser.outcome != 'success'
+        run: exit 1
