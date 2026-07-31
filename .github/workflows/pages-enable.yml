@@ -51,6 +51,7 @@ jobs:
           GET_AFTER=$(curl -sS -o /tmp/pages-after.json -w '%{http_code}' \
             -H "Authorization: Bearer $TOKEN" -H 'Accept: application/vnd.github+json' \
             "https://api.github.com/repos/$REPO/pages")
+          export GET_BEFORE CREATE_CODE GET_AFTER
           node - <<'NODE'
           const fs=require('fs');
           const read=p=>{try{return fs.readFileSync(p,'utf8')}catch{return ''}};
@@ -61,20 +62,6 @@ jobs:
           echo "get_before=$GET_BEFORE" >> "$GITHUB_OUTPUT"
           echo "create_code=$CREATE_CODE" >> "$GITHUB_OUTPUT"
           echo "get_after=$GET_AFTER" >> "$GITHUB_OUTPUT"
-        env:
-          GET_BEFORE: ${{ steps.enable.outputs.get_before }}
-      - name: Rewrite status with shell outcomes
-        if: always()
-        env:
-          GET_BEFORE: ${{ steps.enable.outputs.get_before }}
-          CREATE_CODE: ${{ steps.enable.outputs.create_code }}
-          GET_AFTER: ${{ steps.enable.outputs.get_after }}
-        run: |
-          node - <<'NODE'
-          const fs=require('fs'); let o={}; try{o=JSON.parse(fs.readFileSync('validation/pages-enable-status.json'))}catch{}
-          o.get_before=process.env.GET_BEFORE||o.get_before||null;o.create_http=process.env.CREATE_CODE||o.create_http||null;o.get_after=process.env.GET_AFTER||o.get_after||null;
-          fs.writeFileSync('validation/pages-enable-status.json',JSON.stringify(o,null,2)+'\n');
-          NODE
       - name: Publish Pages enablement status
         if: always()
         run: |
