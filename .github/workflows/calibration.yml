@@ -1,0 +1,49 @@
+name: Build Sundowner Calibration
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - "tools/build-calibration.js"
+      - "data/known-sundowner-events.json"
+      - ".github/workflows/calibration.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sundowner-calibration
+  cancel-in-progress: true
+
+jobs:
+  calibrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Validate calibration builder
+        run: node --check tools/build-calibration.js
+      - name: Build chronological historical calibration
+        env:
+          TRAIN_START: '2024-01-01'
+          TRAIN_END: '2024-12-31'
+          TEST_START: '2025-01-01'
+          TEST_END: '2025-12-31'
+        run: node tools/build-calibration.js
+      - name: Validate generated artifact
+        run: node -e "const c=require('./calibration.json'); if(!c.models||!c.metrics) process.exit(1); console.log(c.version)"
+      - name: Publish refreshed calibration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add calibration.json
+          if git diff --cached --quiet; then
+            echo "Calibration unchanged"
+          else
+            git commit -m "Refresh historical calibration [skip ci]"
+            git push
+          fi
