@@ -1,0 +1,23 @@
+Sundowner Intelligence GitHub Pages deployment probe
+commit=70acc440791cb4c531b2ad6fc1200ac7b4badeb8
+pages_get=404
+pages_create=403
+setup=failure
+upload=skipped
+deploy=skipped
+live_http=404
+live_url=https://skyfinderrescue.github.io/sundowner-intelligence/
+
+GET 404
+CREATE 403
+{
+  "message": "Not Found",
+  "documentation_url": "https://docs.github.com/rest/pages/pages#get-a-apiname-pages-site",
+  "status": "404"
+}
+
+{
+  "message": "Resource not accessible by integration",
+  "documentation_url": "https://docs.github.com/rest/pages/pages#create-a-apiname-pages-site",
+  "status": "403"
+}
