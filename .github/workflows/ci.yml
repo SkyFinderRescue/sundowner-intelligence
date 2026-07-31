@@ -11,6 +11,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -21,6 +22,11 @@ jobs:
           node --check core.js
           node --check model.js
           node --check ui.js
+          node --check tools/validate-fixed-lead.js
+          node --check tools/build-calibration.js
+      - name: Static artifact checks
+        run: |
+          node -e "const fs=require('fs'); JSON.parse(fs.readFileSync('calibration.json')); const e=JSON.parse(fs.readFileSync('data/known-sundowner-events.json')); if(!Array.isArray(e.events)||e.events.length<20) process.exit(1);"
       - name: Model and architecture tests
         run: node tests/model.test.js
       - name: Mocked end-to-end application test
