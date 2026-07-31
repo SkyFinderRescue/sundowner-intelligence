@@ -30,6 +30,7 @@ jobs:
           node --check ui.js
           node --check tools/build-calibration.js
           node --check tools/validate-fixed-lead.js
+          node --check tools/reconstruct-events.js
           node -e "const fs=require('fs'); const c=JSON.parse(fs.readFileSync('calibration.json')); const e=JSON.parse(fs.readFileSync('data/known-sundowner-events.json')); if(!c.models||!Array.isArray(e.events)||e.events.length<30) process.exit(1)"
       - name: Model tests
         run: node tests/model.test.js
@@ -41,24 +42,27 @@ jobs:
         id: pages
         continue-on-error: true
         run: curl --fail --location --max-time 30 --silent --show-error https://skyfinderrescue.github.io/sundowner-intelligence/ -o /tmp/pages.html && grep -q "Sundowner Intelligence" /tmp/pages.html
-      - name: Write verification status
+      - name: Preserve verification status
         if: always()
         env:
           JOB_STATUS: ${{ job.status }}
           PAGES_OUTCOME: ${{ steps.pages.outcome }}
           SHA: ${{ github.sha }}
         run: |
-          mkdir -p validation
           node - <<'NODE'
           const fs=require('fs');
           const o={verified_at:new Date().toISOString(),commit:process.env.SHA,code_and_live_api_qa:process.env.JOB_STATUS,pages_probe:process.env.PAGES_OUTCOME,model_version:'SI-3.0.0'};
-          fs.writeFileSync('validation/release-status.json',JSON.stringify(o,null,2)+'\n');
+          fs.writeFileSync('/tmp/release-status.json',JSON.stringify(o,null,2)+'\n');
           NODE
-      - name: Publish verification record
+      - name: Publish verification record on current main
         if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git reset --hard origin/main
+          mkdir -p validation
+          cp /tmp/release-status.json validation/release-status.json
           git add validation/release-status.json
           git commit -m "Record release verification [skip ci]" || exit 0
-          git push
+          git push origin HEAD:main
