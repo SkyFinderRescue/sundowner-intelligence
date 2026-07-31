@@ -6,6 +6,7 @@ on:
     branches: ["main"]
     paths:
       - ".github/workflows/quick-calibration.yml"
+      - "tools/build-calibration.js"
 
 permissions:
   contents: write
