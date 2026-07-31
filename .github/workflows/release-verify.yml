@@ -23,7 +23,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '22'
-      - name: Syntax and artifact validation
+      - name: Syntax and release-artifact validation
         run: |
           node --check core.js
           node --check model.js
@@ -31,17 +31,34 @@ jobs:
           node --check tools/build-calibration.js
           node --check tools/validate-fixed-lead.js
           node --check tools/reconstruct-events.js
-          node -e "const fs=require('fs'); const c=JSON.parse(fs.readFileSync('calibration.json')); const e=JSON.parse(fs.readFileSync('data/known-sundowner-events.json')); if(!c.models||!Array.isArray(e.events)||e.events.length<30) process.exit(1)"
+          node - <<'NODE'
+          const fs=require('fs');
+          const c=JSON.parse(fs.readFileSync('calibration.json'));
+          const e=JSON.parse(fs.readFileSync('data/known-sundowner-events.json'));
+          const sw=JSON.parse(fs.readFileSync('data/swex-2022-events.json'));
+          const r=JSON.parse(fs.readFileSync('data/historical-event-reconstructions.json'));
+          const v=JSON.parse(fs.readFileSync('validation/fixed-lead-latest.json'));
+          if(!String(c.version||'').startsWith('SI-3.1-cal-')||!c.models||!c.metrics) throw Error('Fitted calibration missing');
+          if(!Array.isArray(e.events)||e.events.length<40) throw Error('Primary event catalog incomplete');
+          if(!Array.isArray(sw.events)||sw.events.length!==10) throw Error('SWEX truth set incomplete');
+          if(r.events_total<57||r.reconstructed<57||r.failed!==0) throw Error('Historical reconstruction incomplete');
+          if(!v.leads?.['24h']||!v.leads?.['48h']) throw Error('Fixed-lead validation incomplete');
+          console.log(c.version, r.reconstructed, 'historical records reconstructed');
+          NODE
       - name: Model tests
         run: node tests/model.test.js
       - name: Browser-flow mock test
         run: node tests/e2e.mock.test.js
       - name: Live API integration test
         run: node tests/live.integration.test.js
-      - name: Probe production URL
+      - name: Probe production URL and fitted calibration
         id: pages
         continue-on-error: true
-        run: curl --fail --location --max-time 30 --silent --show-error https://skyfinderrescue.github.io/sundowner-intelligence/ -o /tmp/pages.html && grep -q "Sundowner Intelligence" /tmp/pages.html
+        run: |
+          curl --fail --location --max-time 30 --silent --show-error https://skyfinderrescue.github.io/sundowner-intelligence/ -o /tmp/pages.html
+          grep -q "Sundowner Intelligence" /tmp/pages.html
+          curl --fail --location --max-time 30 --silent --show-error https://skyfinderrescue.github.io/sundowner-intelligence/calibration.json -o /tmp/live-cal.json
+          node -e "const c=require('/tmp/live-cal.json'); if(!String(c.version||'').startsWith('SI-3.1-cal-')) process.exit(1); console.log('live calibration',c.version)"
       - name: Preserve verification status
         if: always()
         env:
@@ -51,7 +68,8 @@ jobs:
         run: |
           node - <<'NODE'
           const fs=require('fs');
-          const o={verified_at:new Date().toISOString(),commit:process.env.SHA,code_and_live_api_qa:process.env.JOB_STATUS,pages_probe:process.env.PAGES_OUTCOME,model_version:'SI-3.0.0'};
+          let cal='unknown'; try{cal=JSON.parse(fs.readFileSync('calibration.json')).version}catch{}
+          const o={verified_at:new Date().toISOString(),commit:process.env.SHA,code_and_live_api_qa:process.env.JOB_STATUS,pages_probe:process.env.PAGES_OUTCOME,model_version:'SI-3.0.0',calibration_version:cal,release_gate:'fitted-calibration + 57 historical reconstructions + 24h/48h fixed-lead validation'};
           fs.writeFileSync('/tmp/release-status.json',JSON.stringify(o,null,2)+'\n');
           NODE
       - name: Publish verification record on current main
