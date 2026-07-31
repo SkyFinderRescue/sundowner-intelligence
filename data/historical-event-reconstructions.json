@@ -1,14 +1,17 @@
 {
   "version": "SI-3.0-historical-reconstruction",
-  "generated": "2026-07-31T17:09:18.534Z",
-  "method": "Documented Sundowner truth set joined to ERA5 hourly reanalysis for a standard afternoon-to-morning event window. Reanalysis features support analog/context analysis; documented station outcomes remain preferred where available and fire association is never used as a meteorological predictor.",
-  "events_total": 47,
-  "reconstructed": 47,
+  "generated": "2026-07-31T17:17:19.880Z",
+  "method": "Documented Sundowner truth sets joined to ERA5 hourly reanalysis for a standard afternoon-to-morning event window. Includes peer-reviewed/historical cases plus the complete 2022 SWEX IOP set. Reanalysis features support analog/context analysis; documented station outcomes remain preferred and fire association is never a meteorological predictor.",
+  "events_total": 57,
+  "reconstructed": 57,
   "failed": 0,
   "events": [
     {
+      "event_id": null,
       "date": "1990-06-26",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": true,
       "fire_name": "Painted Cave",
       "documented_source": "jones2022_dryad",
@@ -113,8 +116,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "1990-06-27",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": true,
       "fire_name": "Painted Cave",
       "documented_source": "jones2022_dryad",
@@ -219,8 +225,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "1990-06-28",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": true,
       "fire_name": "Painted Cave",
       "documented_source": "jones2022_dryad",
@@ -325,8 +334,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "1992-07-19",
+      "end_date": null,
       "tier": "A",
+      "regime": "unknown",
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "blier1998",
@@ -431,8 +443,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "1992-11-02",
+      "end_date": null,
       "tier": "A",
+      "regime": "unknown",
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "blier1998",
@@ -537,8 +552,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "1995-12-31",
+      "end_date": null,
       "tier": "A",
+      "regime": "unknown",
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "blier1998",
@@ -643,8 +661,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2004-04-24",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "jones2022_dryad",
@@ -749,8 +770,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2004-04-27",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "jones2022_dryad",
@@ -855,8 +879,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2004-04-28",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "jones2022_dryad",
@@ -961,8 +988,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2004-05-02",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "jones2022_dryad",
@@ -1067,8 +1097,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2004-05-03",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "jones2022_dryad",
@@ -1173,8 +1206,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2006-09-16",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "smith2018_aloft",
@@ -1279,8 +1315,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2007-03-04",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "smith2018_aloft",
@@ -1385,8 +1424,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2007-12-04",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "smith2018_aloft",
@@ -1491,8 +1533,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2008-06-18",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "smith2018_aloft",
@@ -1597,8 +1642,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2008-07-02",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": true,
       "fire_name": "Gap",
       "documented_source": "smith2018_aloft",
@@ -1703,8 +1751,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2008-11-01",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "smith2018_aloft",
@@ -1809,8 +1860,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2008-11-13",
+      "end_date": null,
       "tier": "A",
+      "regime": "eastern",
       "fire_associated": true,
       "fire_name": "Montecito Tea",
       "documented_source": "smith2018_aloft",
@@ -1915,8 +1969,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2008-11-14",
+      "end_date": null,
       "tier": "A",
+      "regime": "eastern",
       "fire_associated": true,
       "fire_name": "Montecito Tea",
       "documented_source": "jones2022_dryad",
@@ -2021,8 +2078,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2009-05-05",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": true,
       "fire_name": "Jesusita",
       "documented_source": "smith2018_aloft",
@@ -2127,8 +2187,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2009-05-06",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": true,
       "fire_name": "Jesusita",
       "documented_source": "jones2022_dryad",
@@ -2233,8 +2296,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2009-05-07",
+      "end_date": null,
       "tier": "A",
+      "regime": "eastern",
       "fire_associated": true,
       "fire_name": "Jesusita",
       "documented_source": "carvalho2019_model_cases",
@@ -2339,8 +2405,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2009-05-08",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": true,
       "fire_name": "Jesusita",
       "documented_source": "jones2022_dryad",
@@ -2445,8 +2514,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2009-05-13",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "smith2018_aloft",
@@ -2551,8 +2623,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2010-05-29",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "smith2018_aloft",
@@ -2657,8 +2732,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2011-04-16",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "smith2018_aloft",
@@ -2763,8 +2841,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2012-01-06",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "smith2018_aloft",
@@ -2869,8 +2950,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2012-01-24",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "smith2018_aloft",
@@ -2975,8 +3059,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2012-01-25",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "smith2018_aloft",
@@ -3081,8 +3168,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2012-02-22",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "smith2018_aloft",
@@ -3187,8 +3277,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2013-03-22",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "smith2018_aloft",
@@ -3293,8 +3386,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2013-07-14",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "smith2018_aloft",
@@ -3399,8 +3495,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2013-11-13",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "smith2018_aloft",
@@ -3505,8 +3604,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2014-03-14",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "smith2018_aloft",
@@ -3611,8 +3713,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2014-05-11",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "smith2018_aloft",
@@ -3717,8 +3822,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2015-10-28",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "smith2018_aloft",
@@ -3823,8 +3931,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2016-02-13",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "smith2018_aloft",
@@ -3929,8 +4040,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2016-06-15",
+      "end_date": null,
       "tier": "A",
+      "regime": "western",
       "fire_associated": true,
       "fire_name": "Sherpa",
       "documented_source": "jones2022_dryad",
@@ -4035,8 +4149,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2016-06-16",
+      "end_date": null,
       "tier": "A",
+      "regime": "western",
       "fire_associated": true,
       "fire_name": "Sherpa",
       "documented_source": "jones2022_dryad",
@@ -4141,8 +4258,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2016-06-18",
+      "end_date": null,
       "tier": "A",
+      "regime": "western",
       "fire_associated": true,
       "fire_name": "Sherpa",
       "documented_source": "smith2018_aloft",
@@ -4247,8 +4367,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2017-03-11",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "carvalho2019_model_cases",
@@ -4353,8 +4476,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2017-03-12",
+      "end_date": null,
       "tier": "A",
+      "regime": null,
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "jones2022_dryad",
@@ -4459,8 +4585,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2017-07-06",
+      "end_date": null,
       "tier": "A",
+      "regime": "western",
       "fire_associated": true,
       "fire_name": "Whittier",
       "documented_source": "jones2022_dryad",
@@ -4565,8 +4694,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2017-07-08",
+      "end_date": null,
       "tier": "A",
+      "regime": "western",
       "fire_associated": true,
       "fire_name": "Whittier",
       "documented_source": "jones2022_dryad",
@@ -4671,8 +4803,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2017-12-01",
+      "end_date": null,
       "tier": "B",
+      "regime": "eastern",
       "fire_associated": true,
       "fire_name": "Thomas",
       "documented_source": "sb_cwpp",
@@ -4777,8 +4912,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "2018-04-28",
+      "end_date": "2018-04-29",
       "tier": "A",
+      "regime": "eastern",
       "fire_associated": false,
       "fire_name": null,
       "documented_source": "carvalho2020_swex_pilot",
@@ -4883,8 +5021,11 @@
       }
     },
     {
+      "event_id": null,
       "date": "1979-09-01",
+      "end_date": null,
       "tier": "B",
+      "regime": null,
       "fire_associated": true,
       "fire_name": "Eagle Canyon",
       "documented_source": "sb_cwpp",
@@ -4974,6 +5115,1096 @@
           "max_gust_mph": 21.9,
           "min_rh_percent": 49,
           "max_temp_f": 82.9,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        }
+      },
+      "documented_outcomes": {
+        "temperature_ramp_c": null,
+        "si_cdf_percent": null,
+        "max_sustained_mph": null,
+        "max_gust_mph": null,
+        "onset_local": null,
+        "end_local": null
+      }
+    },
+    {
+      "event_id": "SWEX-IOP1",
+      "date": "2022-04-04",
+      "end_date": "2022-04-05",
+      "tier": "A",
+      "regime": "eastern",
+      "fire_associated": false,
+      "fire_name": null,
+      "documented_source": "witte2026_swex",
+      "reanalysis_source": "ERA5 via Open-Meteo Historical Weather API",
+      "analysis_window_local": "2022-04-04 12:00 through 2022-04-05 08:00",
+      "pressure": {
+        "sba_minus_bfl": {
+          "min_mb": -5.2999999999999545,
+          "max_mb": -3.5
+        },
+        "sba_minus_smx": {
+          "min_mb": -3.2000000000000455,
+          "max_mb": -2.5
+        }
+      },
+      "upstream_cuyama": {
+        "max_northerly_component_mph": 8.130554573019149,
+        "min_rh_percent": 29,
+        "max_gust_mph": 21.9
+      },
+      "zones": {
+        "Gaviota": {
+          "max_terrain_relative_surface_mph": 19.745379206285204,
+          "max_gust_mph": 33.8,
+          "min_rh_percent": 53,
+          "max_temp_f": 63.4,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": true
+        },
+        "Refugio": {
+          "max_terrain_relative_surface_mph": 15.601056497388727,
+          "max_gust_mph": 30,
+          "min_rh_percent": 43,
+          "max_temp_f": 68.8,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": true
+        },
+        "Goleta": {
+          "max_terrain_relative_surface_mph": 10.306152474032555,
+          "max_gust_mph": 30.4,
+          "min_rh_percent": 27,
+          "max_temp_f": 77.7,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "San Marcos Pass": {
+          "max_terrain_relative_surface_mph": 9.95764548830435,
+          "max_gust_mph": 30.4,
+          "min_rh_percent": 26,
+          "max_temp_f": 68.2,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Mission Canyon": {
+          "max_terrain_relative_surface_mph": 9.533769808815537,
+          "max_gust_mph": 30.4,
+          "min_rh_percent": 26,
+          "max_temp_f": 72.1,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Montecito": {
+          "max_terrain_relative_surface_mph": 9.074114628873756,
+          "max_gust_mph": 30.4,
+          "min_rh_percent": 27,
+          "max_temp_f": 75.2,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Toro Canyon": {
+          "max_terrain_relative_surface_mph": 8.535896904115368,
+          "max_gust_mph": 27.7,
+          "min_rh_percent": 24,
+          "max_temp_f": 78.3,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Carpinteria": {
+          "max_terrain_relative_surface_mph": 8.412069366310728,
+          "max_gust_mph": 27.7,
+          "min_rh_percent": 25,
+          "max_temp_f": 80.4,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        }
+      },
+      "documented_outcomes": {
+        "temperature_ramp_c": null,
+        "si_cdf_percent": null,
+        "max_sustained_mph": null,
+        "max_gust_mph": null,
+        "onset_local": null,
+        "end_local": null
+      }
+    },
+    {
+      "event_id": "SWEX-IOP2",
+      "date": "2022-04-05",
+      "end_date": "2022-04-06",
+      "tier": "A",
+      "regime": "eastern",
+      "fire_associated": false,
+      "fire_name": null,
+      "documented_source": "witte2026_swex",
+      "reanalysis_source": "ERA5 via Open-Meteo Historical Weather API",
+      "analysis_window_local": "2022-04-05 12:00 through 2022-04-06 08:00",
+      "pressure": {
+        "sba_minus_bfl": {
+          "min_mb": -5.5,
+          "max_mb": -4.7000000000000455
+        },
+        "sba_minus_smx": {
+          "min_mb": -3.900000000000091,
+          "max_mb": -0.6000000000000227
+        }
+      },
+      "upstream_cuyama": {
+        "max_northerly_component_mph": 6.996957657115166,
+        "min_rh_percent": 38,
+        "max_gust_mph": 22.1
+      },
+      "zones": {
+        "Gaviota": {
+          "max_terrain_relative_surface_mph": 20.28070915966574,
+          "max_gust_mph": 32.9,
+          "min_rh_percent": 39,
+          "max_temp_f": 66.3,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": true
+        },
+        "Refugio": {
+          "max_terrain_relative_surface_mph": 16.07840005450978,
+          "max_gust_mph": 30.9,
+          "min_rh_percent": 44,
+          "max_temp_f": 71.1,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": true
+        },
+        "Goleta": {
+          "max_terrain_relative_surface_mph": 10.870279595098088,
+          "max_gust_mph": 33.6,
+          "min_rh_percent": 29,
+          "max_temp_f": 84,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "San Marcos Pass": {
+          "max_terrain_relative_surface_mph": 10.346186773108396,
+          "max_gust_mph": 33.6,
+          "min_rh_percent": 27,
+          "max_temp_f": 74.4,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Mission Canyon": {
+          "max_terrain_relative_surface_mph": 9.993908270190957,
+          "max_gust_mph": 33.6,
+          "min_rh_percent": 28,
+          "max_temp_f": 78.4,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Montecito": {
+          "max_terrain_relative_surface_mph": 10,
+          "max_gust_mph": 33.6,
+          "min_rh_percent": 28,
+          "max_temp_f": 81.4,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Toro Canyon": {
+          "max_terrain_relative_surface_mph": 8.296582060999157,
+          "max_gust_mph": 29.5,
+          "min_rh_percent": 24,
+          "max_temp_f": 87.3,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Carpinteria": {
+          "max_terrain_relative_surface_mph": 8.298735869798048,
+          "max_gust_mph": 29.5,
+          "min_rh_percent": 24,
+          "max_temp_f": 89.4,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        }
+      },
+      "documented_outcomes": {
+        "temperature_ramp_c": null,
+        "si_cdf_percent": null,
+        "max_sustained_mph": null,
+        "max_gust_mph": null,
+        "onset_local": null,
+        "end_local": null
+      }
+    },
+    {
+      "event_id": "SWEX-IOP3",
+      "date": "2022-04-13",
+      "end_date": "2022-04-14",
+      "tier": "A",
+      "regime": "western",
+      "fire_associated": false,
+      "fire_name": null,
+      "documented_source": "witte2026_swex",
+      "reanalysis_source": "ERA5 via Open-Meteo Historical Weather API",
+      "analysis_window_local": "2022-04-13 12:00 through 2022-04-14 08:00",
+      "pressure": {
+        "sba_minus_bfl": {
+          "min_mb": -3.6000000000000227,
+          "max_mb": -1.5
+        },
+        "sba_minus_smx": {
+          "min_mb": -3.1000000000000227,
+          "max_mb": -2.1000000000000227
+        }
+      },
+      "upstream_cuyama": {
+        "max_northerly_component_mph": 7.7274066103125465,
+        "min_rh_percent": 19,
+        "max_gust_mph": 23.7
+      },
+      "zones": {
+        "Gaviota": {
+          "max_terrain_relative_surface_mph": 18.488678855547658,
+          "max_gust_mph": 35.8,
+          "min_rh_percent": 50,
+          "max_temp_f": 56.7,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": true
+        },
+        "Refugio": {
+          "max_terrain_relative_surface_mph": 14.253245570628456,
+          "max_gust_mph": 31.8,
+          "min_rh_percent": 42,
+          "max_temp_f": 61.2,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Goleta": {
+          "max_terrain_relative_surface_mph": 7.602907607447656,
+          "max_gust_mph": 29.3,
+          "min_rh_percent": 20,
+          "max_temp_f": 70.1,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "San Marcos Pass": {
+          "max_terrain_relative_surface_mph": 7.306253498344616,
+          "max_gust_mph": 29.3,
+          "min_rh_percent": 18,
+          "max_temp_f": 60.6,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Mission Canyon": {
+          "max_terrain_relative_surface_mph": 6.953994388482692,
+          "max_gust_mph": 29.3,
+          "min_rh_percent": 19,
+          "max_temp_f": 64.5,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Montecito": {
+          "max_terrain_relative_surface_mph": 6.548811182387801,
+          "max_gust_mph": 29.3,
+          "min_rh_percent": 19,
+          "max_temp_f": 67.6,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Toro Canyon": {
+          "max_terrain_relative_surface_mph": 5.496649548605027,
+          "max_gust_mph": 26.8,
+          "min_rh_percent": 16,
+          "max_temp_f": 70.3,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Carpinteria": {
+          "max_terrain_relative_surface_mph": 5.459003834027271,
+          "max_gust_mph": 26.8,
+          "min_rh_percent": 16,
+          "max_temp_f": 72.4,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        }
+      },
+      "documented_outcomes": {
+        "temperature_ramp_c": null,
+        "si_cdf_percent": null,
+        "max_sustained_mph": null,
+        "max_gust_mph": null,
+        "onset_local": null,
+        "end_local": null
+      }
+    },
+    {
+      "event_id": "SWEX-IOP4",
+      "date": "2022-04-18",
+      "end_date": "2022-04-19",
+      "tier": "A",
+      "regime": "western",
+      "fire_associated": false,
+      "fire_name": null,
+      "documented_source": "witte2026_swex",
+      "reanalysis_source": "ERA5 via Open-Meteo Historical Weather API",
+      "analysis_window_local": "2022-04-18 12:00 through 2022-04-19 08:00",
+      "pressure": {
+        "sba_minus_bfl": {
+          "min_mb": -2.2000000000000455,
+          "max_mb": 1.3000000000000682
+        },
+        "sba_minus_smx": {
+          "min_mb": -3,
+          "max_mb": -1.6999999999999318
+        }
+      },
+      "upstream_cuyama": {
+        "max_northerly_component_mph": 6.235968414625506,
+        "min_rh_percent": 23,
+        "max_gust_mph": 19.9
+      },
+      "zones": {
+        "Gaviota": {
+          "max_terrain_relative_surface_mph": 16.18046458207882,
+          "max_gust_mph": 28.9,
+          "min_rh_percent": 63,
+          "max_temp_f": 58.1,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": true
+        },
+        "Refugio": {
+          "max_terrain_relative_surface_mph": 13.3669105370599,
+          "max_gust_mph": 27.5,
+          "min_rh_percent": 50,
+          "max_temp_f": 64.8,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Goleta": {
+          "max_terrain_relative_surface_mph": 6.894399988070802,
+          "max_gust_mph": 28.6,
+          "min_rh_percent": 25,
+          "max_temp_f": 77.3,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "San Marcos Pass": {
+          "max_terrain_relative_surface_mph": 6.3639610306789285,
+          "max_gust_mph": 28.6,
+          "min_rh_percent": 24,
+          "max_temp_f": 67.8,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Mission Canyon": {
+          "max_terrain_relative_surface_mph": 5.785088487178855,
+          "max_gust_mph": 28.6,
+          "min_rh_percent": 24,
+          "max_temp_f": 71.7,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Montecito": {
+          "max_terrain_relative_surface_mph": 5.162187927159414,
+          "max_gust_mph": 28.6,
+          "min_rh_percent": 25,
+          "max_temp_f": 74.8,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Toro Canyon": {
+          "max_terrain_relative_surface_mph": 4.010405163008603,
+          "max_gust_mph": 25.7,
+          "min_rh_percent": 20,
+          "max_temp_f": 79.5,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Carpinteria": {
+          "max_terrain_relative_surface_mph": 3.920849499448445,
+          "max_gust_mph": 25.7,
+          "min_rh_percent": 21,
+          "max_temp_f": 81.6,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        }
+      },
+      "documented_outcomes": {
+        "temperature_ramp_c": null,
+        "si_cdf_percent": null,
+        "max_sustained_mph": null,
+        "max_gust_mph": null,
+        "onset_local": null,
+        "end_local": null
+      }
+    },
+    {
+      "event_id": "SWEX-IOP5",
+      "date": "2022-04-23",
+      "end_date": "2022-04-24",
+      "tier": "A",
+      "regime": "eastern",
+      "fire_associated": false,
+      "fire_name": null,
+      "documented_source": "witte2026_swex",
+      "reanalysis_source": "ERA5 via Open-Meteo Historical Weather API",
+      "analysis_window_local": "2022-04-23 12:00 through 2022-04-24 08:00",
+      "pressure": {
+        "sba_minus_bfl": {
+          "min_mb": -3.2999999999999545,
+          "max_mb": -2.1000000000000227
+        },
+        "sba_minus_smx": {
+          "min_mb": -2.300000000000068,
+          "max_mb": -1.1999999999999318
+        }
+      },
+      "upstream_cuyama": {
+        "max_northerly_component_mph": 8.702373279263622,
+        "min_rh_percent": 42,
+        "max_gust_mph": 25.1
+      },
+      "zones": {
+        "Gaviota": {
+          "max_terrain_relative_surface_mph": 17.9072115671889,
+          "max_gust_mph": 30.9,
+          "min_rh_percent": 56,
+          "max_temp_f": 60.5,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": true
+        },
+        "Refugio": {
+          "max_terrain_relative_surface_mph": 13.681224626137661,
+          "max_gust_mph": 25.5,
+          "min_rh_percent": 48,
+          "max_temp_f": 63.8,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Goleta": {
+          "max_terrain_relative_surface_mph": 9.086732733475268,
+          "max_gust_mph": 22.8,
+          "min_rh_percent": 31,
+          "max_temp_f": 72,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "San Marcos Pass": {
+          "max_terrain_relative_surface_mph": 9.177589262390383,
+          "max_gust_mph": 22.8,
+          "min_rh_percent": 29,
+          "max_temp_f": 62.4,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Mission Canyon": {
+          "max_terrain_relative_surface_mph": 9.1985987954388,
+          "max_gust_mph": 22.8,
+          "min_rh_percent": 30,
+          "max_temp_f": 66.4,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Montecito": {
+          "max_terrain_relative_surface_mph": 9.149601437388114,
+          "max_gust_mph": 22.8,
+          "min_rh_percent": 30,
+          "max_temp_f": 69.5,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Toro Canyon": {
+          "max_terrain_relative_surface_mph": 7.3,
+          "max_gust_mph": 23.3,
+          "min_rh_percent": 28,
+          "max_temp_f": 72.5,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Carpinteria": {
+          "max_terrain_relative_surface_mph": 7.272221296069742,
+          "max_gust_mph": 23.3,
+          "min_rh_percent": 28,
+          "max_temp_f": 74.6,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        }
+      },
+      "documented_outcomes": {
+        "temperature_ramp_c": null,
+        "si_cdf_percent": null,
+        "max_sustained_mph": null,
+        "max_gust_mph": null,
+        "onset_local": null,
+        "end_local": null
+      }
+    },
+    {
+      "event_id": "SWEX-IOP6",
+      "date": "2022-04-28",
+      "end_date": "2022-04-29",
+      "tier": "A",
+      "regime": "western",
+      "fire_associated": false,
+      "fire_name": null,
+      "documented_source": "witte2026_swex",
+      "reanalysis_source": "ERA5 via Open-Meteo Historical Weather API",
+      "analysis_window_local": "2022-04-28 12:00 through 2022-04-29 08:00",
+      "pressure": {
+        "sba_minus_bfl": {
+          "min_mb": -4.399999999999977,
+          "max_mb": -1.1000000000000227
+        },
+        "sba_minus_smx": {
+          "min_mb": -3.5,
+          "max_mb": -1.6999999999999318
+        }
+      },
+      "upstream_cuyama": {
+        "max_northerly_component_mph": 10.659283269581676,
+        "min_rh_percent": 19,
+        "max_gust_mph": 26.2
+      },
+      "zones": {
+        "Gaviota": {
+          "max_terrain_relative_surface_mph": 20.549031657123663,
+          "max_gust_mph": 40.3,
+          "min_rh_percent": 64,
+          "max_temp_f": 56.4,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": true
+        },
+        "Refugio": {
+          "max_terrain_relative_surface_mph": 14.69361107994185,
+          "max_gust_mph": 36.5,
+          "min_rh_percent": 52,
+          "max_temp_f": 62,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Goleta": {
+          "max_terrain_relative_surface_mph": 8.588939923774255,
+          "max_gust_mph": 35.8,
+          "min_rh_percent": 27,
+          "max_temp_f": 73.2,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "San Marcos Pass": {
+          "max_terrain_relative_surface_mph": 8.268905225952336,
+          "max_gust_mph": 35.8,
+          "min_rh_percent": 26,
+          "max_temp_f": 63.6,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Mission Canyon": {
+          "max_terrain_relative_surface_mph": 7.8859391664594325,
+          "max_gust_mph": 35.8,
+          "min_rh_percent": 26,
+          "max_temp_f": 67.6,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Montecito": {
+          "max_terrain_relative_surface_mph": 7.442956348249516,
+          "max_gust_mph": 35.8,
+          "min_rh_percent": 27,
+          "max_temp_f": 70.6,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Toro Canyon": {
+          "max_terrain_relative_surface_mph": 6.2224365457493676,
+          "max_gust_mph": 27.3,
+          "min_rh_percent": 25,
+          "max_temp_f": 73.9,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Carpinteria": {
+          "max_terrain_relative_surface_mph": 6.284653516636892,
+          "max_gust_mph": 27.3,
+          "min_rh_percent": 25,
+          "max_temp_f": 76,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        }
+      },
+      "documented_outcomes": {
+        "temperature_ramp_c": null,
+        "si_cdf_percent": null,
+        "max_sustained_mph": null,
+        "max_gust_mph": null,
+        "onset_local": null,
+        "end_local": null
+      }
+    },
+    {
+      "event_id": "SWEX-IOP7",
+      "date": "2022-05-07",
+      "end_date": "2022-05-08",
+      "tier": "A",
+      "regime": "western",
+      "fire_associated": false,
+      "fire_name": null,
+      "documented_source": "witte2026_swex",
+      "reanalysis_source": "ERA5 via Open-Meteo Historical Weather API",
+      "analysis_window_local": "2022-05-07 12:00 through 2022-05-08 08:00",
+      "pressure": {
+        "sba_minus_bfl": {
+          "min_mb": -2.2999999999999545,
+          "max_mb": 0
+        },
+        "sba_minus_smx": {
+          "min_mb": -4,
+          "max_mb": -2.5
+        }
+      },
+      "upstream_cuyama": {
+        "max_northerly_component_mph": 9.49421285668141,
+        "min_rh_percent": 26,
+        "max_gust_mph": 25.5
+      },
+      "zones": {
+        "Gaviota": {
+          "max_terrain_relative_surface_mph": 21.740559190196176,
+          "max_gust_mph": 39.6,
+          "min_rh_percent": 69,
+          "max_temp_f": 60,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": true
+        },
+        "Refugio": {
+          "max_terrain_relative_surface_mph": 15.287408619970407,
+          "max_gust_mph": 35.8,
+          "min_rh_percent": 55,
+          "max_temp_f": 66.9,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": true
+        },
+        "Goleta": {
+          "max_terrain_relative_surface_mph": 8.131727983645296,
+          "max_gust_mph": 35.8,
+          "min_rh_percent": 30,
+          "max_temp_f": 80.1,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "San Marcos Pass": {
+          "max_terrain_relative_surface_mph": 7.392057511395203,
+          "max_gust_mph": 35.8,
+          "min_rh_percent": 29,
+          "max_temp_f": 70.5,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Mission Canyon": {
+          "max_terrain_relative_surface_mph": 6.68499114074001,
+          "max_gust_mph": 35.8,
+          "min_rh_percent": 29,
+          "max_temp_f": 74.5,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Montecito": {
+          "max_terrain_relative_surface_mph": 5.965194938050879,
+          "max_gust_mph": 35.8,
+          "min_rh_percent": 30,
+          "max_temp_f": 77.6,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Toro Canyon": {
+          "max_terrain_relative_surface_mph": 4.6421352007971475,
+          "max_gust_mph": 28,
+          "min_rh_percent": 28,
+          "max_temp_f": 81.8,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Carpinteria": {
+          "max_terrain_relative_surface_mph": 4.5603899134971835,
+          "max_gust_mph": 28,
+          "min_rh_percent": 29,
+          "max_temp_f": 83.9,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        }
+      },
+      "documented_outcomes": {
+        "temperature_ramp_c": null,
+        "si_cdf_percent": null,
+        "max_sustained_mph": null,
+        "max_gust_mph": null,
+        "onset_local": null,
+        "end_local": null
+      }
+    },
+    {
+      "event_id": "SWEX-IOP8",
+      "date": "2022-05-08",
+      "end_date": "2022-05-09",
+      "tier": "A",
+      "regime": "western",
+      "fire_associated": false,
+      "fire_name": null,
+      "documented_source": "witte2026_swex",
+      "reanalysis_source": "ERA5 via Open-Meteo Historical Weather API",
+      "analysis_window_local": "2022-05-08 12:00 through 2022-05-09 08:00",
+      "pressure": {
+        "sba_minus_bfl": {
+          "min_mb": -3.2999999999999545,
+          "max_mb": 0
+        },
+        "sba_minus_smx": {
+          "min_mb": -4.2999999999999545,
+          "max_mb": -2.6000000000000227
+        }
+      },
+      "upstream_cuyama": {
+        "max_northerly_component_mph": 10.106304014777983,
+        "min_rh_percent": 19,
+        "max_gust_mph": 28.2
+      },
+      "zones": {
+        "Gaviota": {
+          "max_terrain_relative_surface_mph": 23.08056624036676,
+          "max_gust_mph": 44.7,
+          "min_rh_percent": 57,
+          "max_temp_f": 55.6,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": true
+        },
+        "Refugio": {
+          "max_terrain_relative_surface_mph": 16.942231202544523,
+          "max_gust_mph": 40,
+          "min_rh_percent": 50,
+          "max_temp_f": 60.9,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": true
+        },
+        "Goleta": {
+          "max_terrain_relative_surface_mph": 9.234002367752245,
+          "max_gust_mph": 42.1,
+          "min_rh_percent": 26,
+          "max_temp_f": 71.8,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "San Marcos Pass": {
+          "max_terrain_relative_surface_mph": 8.305047319498266,
+          "max_gust_mph": 42.1,
+          "min_rh_percent": 24,
+          "max_temp_f": 62.3,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Mission Canyon": {
+          "max_terrain_relative_surface_mph": 7.312885846418228,
+          "max_gust_mph": 42.1,
+          "min_rh_percent": 25,
+          "max_temp_f": 66.2,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Montecito": {
+          "max_terrain_relative_surface_mph": 6.7284540548963685,
+          "max_gust_mph": 42.1,
+          "min_rh_percent": 26,
+          "max_temp_f": 69.3,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Toro Canyon": {
+          "max_terrain_relative_surface_mph": 5.1715138559150216,
+          "max_gust_mph": 36.9,
+          "min_rh_percent": 20,
+          "max_temp_f": 75.5,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Carpinteria": {
+          "max_terrain_relative_surface_mph": 5.104461353927853,
+          "max_gust_mph": 36.9,
+          "min_rh_percent": 21,
+          "max_temp_f": 77.6,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        }
+      },
+      "documented_outcomes": {
+        "temperature_ramp_c": null,
+        "si_cdf_percent": null,
+        "max_sustained_mph": null,
+        "max_gust_mph": null,
+        "onset_local": null,
+        "end_local": null
+      }
+    },
+    {
+      "event_id": "SWEX-IOP9",
+      "date": "2022-05-10",
+      "end_date": "2022-05-11",
+      "tier": "A",
+      "regime": "western",
+      "fire_associated": false,
+      "fire_name": null,
+      "documented_source": "witte2026_swex",
+      "reanalysis_source": "ERA5 via Open-Meteo Historical Weather API",
+      "analysis_window_local": "2022-05-10 12:00 through 2022-05-11 08:00",
+      "pressure": {
+        "sba_minus_bfl": {
+          "min_mb": -2.400000000000091,
+          "max_mb": -0.1999999999999318
+        },
+        "sba_minus_smx": {
+          "min_mb": -3.2999999999999545,
+          "max_mb": -2.1000000000000227
+        }
+      },
+      "upstream_cuyama": {
+        "max_northerly_component_mph": 9.612616959383189,
+        "min_rh_percent": 18,
+        "max_gust_mph": 24.6
+      },
+      "zones": {
+        "Gaviota": {
+          "max_terrain_relative_surface_mph": 19.974955319917957,
+          "max_gust_mph": 38,
+          "min_rh_percent": 62,
+          "max_temp_f": 53.8,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": true
+        },
+        "Refugio": {
+          "max_terrain_relative_surface_mph": 15.308783404834323,
+          "max_gust_mph": 36.7,
+          "min_rh_percent": 54,
+          "max_temp_f": 56.9,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": true
+        },
+        "Goleta": {
+          "max_terrain_relative_surface_mph": 8.743106467161546,
+          "max_gust_mph": 35.8,
+          "min_rh_percent": 31,
+          "max_temp_f": 66.1,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "San Marcos Pass": {
+          "max_terrain_relative_surface_mph": 8.251973342624463,
+          "max_gust_mph": 35.8,
+          "min_rh_percent": 30,
+          "max_temp_f": 56.6,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Mission Canyon": {
+          "max_terrain_relative_surface_mph": 7.698037718272274,
+          "max_gust_mph": 35.8,
+          "min_rh_percent": 30,
+          "max_temp_f": 60.5,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Montecito": {
+          "max_terrain_relative_surface_mph": 7.085515378681773,
+          "max_gust_mph": 35.8,
+          "min_rh_percent": 31,
+          "max_temp_f": 63.6,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Toro Canyon": {
+          "max_terrain_relative_surface_mph": 5.881556686932371,
+          "max_gust_mph": 31.5,
+          "min_rh_percent": 24,
+          "max_temp_f": 67.8,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Carpinteria": {
+          "max_terrain_relative_surface_mph": 5.662402491684752,
+          "max_gust_mph": 31.5,
+          "min_rh_percent": 24,
+          "max_temp_f": 69.9,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        }
+      },
+      "documented_outcomes": {
+        "temperature_ramp_c": null,
+        "si_cdf_percent": null,
+        "max_sustained_mph": null,
+        "max_gust_mph": null,
+        "onset_local": null,
+        "end_local": null
+      }
+    },
+    {
+      "event_id": "SWEX-IOP10",
+      "date": "2022-05-12",
+      "end_date": "2022-05-13",
+      "tier": "A",
+      "regime": "eastern/hybrid",
+      "fire_associated": false,
+      "fire_name": null,
+      "documented_source": "witte2026_swex",
+      "reanalysis_source": "ERA5 via Open-Meteo Historical Weather API",
+      "analysis_window_local": "2022-05-12 12:00 through 2022-05-13 08:00",
+      "pressure": {
+        "sba_minus_bfl": {
+          "min_mb": -6,
+          "max_mb": -1.8999999999999773
+        },
+        "sba_minus_smx": {
+          "min_mb": -2.5,
+          "max_mb": -1.7999999999999545
+        }
+      },
+      "upstream_cuyama": {
+        "max_northerly_component_mph": 9.563047559630354,
+        "min_rh_percent": 21,
+        "max_gust_mph": 29.8
+      },
+      "zones": {
+        "Gaviota": {
+          "max_terrain_relative_surface_mph": 18.63639547679243,
+          "max_gust_mph": 31.8,
+          "min_rh_percent": 39,
+          "max_temp_f": 61.3,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": true
+        },
+        "Refugio": {
+          "max_terrain_relative_surface_mph": 14.790984239882619,
+          "max_gust_mph": 27.3,
+          "min_rh_percent": 37,
+          "max_temp_f": 64.9,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Goleta": {
+          "max_terrain_relative_surface_mph": 10.33540634129303,
+          "max_gust_mph": 26.8,
+          "min_rh_percent": 21,
+          "max_temp_f": 76,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "San Marcos Pass": {
+          "max_terrain_relative_surface_mph": 10.537442957230626,
+          "max_gust_mph": 26.8,
+          "min_rh_percent": 20,
+          "max_temp_f": 66.5,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Mission Canyon": {
+          "max_terrain_relative_surface_mph": 10.659283269581676,
+          "max_gust_mph": 26.8,
+          "min_rh_percent": 20,
+          "max_temp_f": 70.4,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Montecito": {
+          "max_terrain_relative_surface_mph": 10.7,
+          "max_gust_mph": 26.8,
+          "min_rh_percent": 21,
+          "max_temp_f": 73.5,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Toro Canyon": {
+          "max_terrain_relative_surface_mph": 8.594761112364223,
+          "max_gust_mph": 27.1,
+          "min_rh_percent": 17,
+          "max_temp_f": 78.2,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Carpinteria": {
+          "max_terrain_relative_surface_mph": 8.535896904115368,
+          "max_gust_mph": 27.1,
+          "min_rh_percent": 17,
+          "max_temp_f": 80.3,
           "max_850_terrain_relative_mph": null,
           "max_700_terrain_relative_mph": null,
           "reanalysis_affected": false
