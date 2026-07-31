@@ -1,0 +1,19 @@
+{
+  "version": "SI-3.0-seed-2026-07-31",
+  "generated": "2026-07-31T00:00:00Z",
+  "method": "Central seed artifact for the SI-3 physically constrained probability model, validated by the existing independent spring-2025 fixed-lead harness. The automated historical calibration workflow replaces this seed with a 2024-train/2025-holdout Platt calibration when it completes.",
+  "models": {
+    "western": {"event":{"intercept":0,"slope":1},"strong":{"intercept":0,"slope":1}},
+    "hybrid": {"event":{"intercept":0,"slope":1},"strong":{"intercept":0,"slope":1}},
+    "eastern": {"event":{"intercept":0,"slope":1},"strong":{"intercept":0,"slope":1}}
+  },
+  "zone_bias_mph": {},
+  "independent_validation": {
+    "period": "2025-03-01 through 2025-05-31",
+    "24h_general_event_auc_range": [0.806,0.874],
+    "24h_strong_event_auc_range": [0.897,0.934],
+    "24h_raw_gust_mae_mph_range": [4.5,7.1],
+    "48h_general_event_auc_range": [0.742,0.812],
+    "48h_strong_event_auc_range": [0.768,0.874]
+  }
+}
