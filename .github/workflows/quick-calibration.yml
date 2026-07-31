@@ -1,0 +1,68 @@
+name: Quick Independent Release Calibration
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/quick-calibration.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sundowner-quick-calibration
+  cancel-in-progress: true
+
+jobs:
+  calibrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Fit April-to-April independent calibration
+        id: build
+        continue-on-error: true
+        env:
+          TRAIN_START: '2024-04-01'
+          TRAIN_END: '2024-04-30'
+          TEST_START: '2025-04-01'
+          TEST_END: '2025-04-30'
+        run: node tools/build-calibration.js
+      - name: Validate fit
+        if: steps.build.outcome == 'success'
+        run: node -e "const c=require('./calibration.json'); if(!c.metrics||String(c.version).includes('seed')) process.exit(1);"
+      - name: Preserve outputs
+        if: always()
+        env:
+          OUTCOME: ${{ steps.build.outcome }}
+          SHA: ${{ github.sha }}
+        run: |
+          mkdir -p /tmp/si-qcal
+          node - <<'NODE'
+          const fs=require('fs');
+          fs.writeFileSync('/tmp/si-qcal/status.json',JSON.stringify({checked_at:new Date().toISOString(),source_commit:process.env.SHA,outcome:process.env.OUTCOME,train:['2024-04-01','2024-04-30'],holdout:['2025-04-01','2025-04-30'],lead_hours:24},null,2)+'\n');
+          NODE
+          if [ "$OUTCOME" = "success" ]; then cp calibration.json /tmp/si-qcal/calibration.json; fi
+      - name: Publish current-main calibration
+        if: always()
+        env:
+          OUTCOME: ${{ steps.build.outcome }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git reset --hard origin/main
+          mkdir -p validation
+          cp /tmp/si-qcal/status.json validation/quick-calibration-status.json
+          if [ "$OUTCOME" = "success" ]; then cp /tmp/si-qcal/calibration.json calibration.json; fi
+          git add validation/quick-calibration-status.json
+          if [ "$OUTCOME" = "success" ]; then git add calibration.json; fi
+          git commit -m "Record quick independent calibration [skip ci]" || exit 0
+          git push origin HEAD:main
+      - name: Fail if fit failed
+        if: steps.build.outcome != 'success'
+        run: exit 1
