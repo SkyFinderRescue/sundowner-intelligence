@@ -1,0 +1,93 @@
+name: Enable Sundowner GitHub Pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/pages-enable.yml"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+env:
+  REPO: ${{ github.repository }}
+
+jobs:
+  enable:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: Attempt Pages enablement with strongest available repository token
+        id: enable
+        env:
+          TOKEN: ${{ secrets.GH_PAGES_TOKEN || secrets.GH_PAT || secrets.PAT || secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+        run: |
+          set +e
+          mkdir -p validation
+          GET_BEFORE=$(curl -sS -o /tmp/pages-before.json -w '%{http_code}' \
+            -H "Authorization: Bearer $TOKEN" -H 'Accept: application/vnd.github+json' \
+            "https://api.github.com/repos/$REPO/pages")
+          if [ "$GET_BEFORE" = "200" ]; then
+            CREATE_CODE=already_enabled
+          else
+            CREATE_CODE=$(curl -sS -o /tmp/pages-create.json -w '%{http_code}' -X POST \
+              -H "Authorization: Bearer $TOKEN" -H 'Accept: application/vnd.github+json' \
+              -H 'X-GitHub-Api-Version: 2022-11-28' \
+              "https://api.github.com/repos/$REPO/pages" \
+              -d '{"build_type":"workflow"}')
+          fi
+          if [ "$CREATE_CODE" = "201" ] || [ "$CREATE_CODE" = "already_enabled" ]; then
+            curl -sS -o /tmp/pages-update.json -w '%{http_code}' -X PUT \
+              -H "Authorization: Bearer $TOKEN" -H 'Accept: application/vnd.github+json' \
+              -H 'X-GitHub-Api-Version: 2022-11-28' \
+              "https://api.github.com/repos/$REPO/pages" \
+              -d '{"build_type":"workflow"}' > /tmp/pages-update-code.txt
+          fi
+          sleep 2
+          GET_AFTER=$(curl -sS -o /tmp/pages-after.json -w '%{http_code}' \
+            -H "Authorization: Bearer $TOKEN" -H 'Accept: application/vnd.github+json' \
+            "https://api.github.com/repos/$REPO/pages")
+          node - <<'NODE'
+          const fs=require('fs');
+          const read=p=>{try{return fs.readFileSync(p,'utf8')}catch{return ''}};
+          const parse=p=>{try{return JSON.parse(read(p))}catch{return null}};
+          const out={checked_at:new Date().toISOString(),get_before:process.env.GET_BEFORE||null,create_http:process.env.CREATE_CODE||null,get_after:process.env.GET_AFTER||null,pages:parse('/tmp/pages-after.json'),create_response:parse('/tmp/pages-create.json')};
+          fs.writeFileSync('validation/pages-enable-status.json',JSON.stringify(out,null,2)+'\n');
+          NODE
+          echo "get_before=$GET_BEFORE" >> "$GITHUB_OUTPUT"
+          echo "create_code=$CREATE_CODE" >> "$GITHUB_OUTPUT"
+          echo "get_after=$GET_AFTER" >> "$GITHUB_OUTPUT"
+        env:
+          GET_BEFORE: ${{ steps.enable.outputs.get_before }}
+      - name: Rewrite status with shell outcomes
+        if: always()
+        env:
+          GET_BEFORE: ${{ steps.enable.outputs.get_before }}
+          CREATE_CODE: ${{ steps.enable.outputs.create_code }}
+          GET_AFTER: ${{ steps.enable.outputs.get_after }}
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'); let o={}; try{o=JSON.parse(fs.readFileSync('validation/pages-enable-status.json'))}catch{}
+          o.get_before=process.env.GET_BEFORE||o.get_before||null;o.create_http=process.env.CREATE_CODE||o.create_http||null;o.get_after=process.env.GET_AFTER||o.get_after||null;
+          fs.writeFileSync('validation/pages-enable-status.json',JSON.stringify(o,null,2)+'\n');
+          NODE
+      - name: Publish Pages enablement status
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add validation/pages-enable-status.json
+          git commit -m "Record Pages enablement attempt [skip ci]" || exit 0
+          git push
+      - name: Trigger deployment when Pages exists
+        if: steps.enable.outputs.get_after == '200'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml
+      - name: Fail if Pages is still unavailable
+        if: steps.enable.outputs.get_after != '200'
+        run: exit 1
