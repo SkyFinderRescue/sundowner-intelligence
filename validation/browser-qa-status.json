@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-07-31T17:42:17.697Z",
+  "checked_at": "2026-07-31T17:55:02.632Z",
   "url": "https://skyfinderrescue.github.io/sundowner-intelligence/",
   "chrome": "/usr/bin/google-chrome",
   "desktop": {
@@ -10,17 +10,17 @@
     },
     "url": "https://skyfinderrescue.github.io/sundowner-intelligence/",
     "http_status": 200,
-    "status_text": "Live forecast complete • 36/293 fresh observations • 8/8 zones\n10:42 AM",
+    "status_text": "Live forecast complete • 36/293 fresh observations • 8/8 zones\n10:54 AM",
     "zone_cards": 8,
     "zone_polygons": 301,
+    "calibration_tabs": 0,
     "focus_title": "Refugio • western regime",
     "station_rows": 293,
     "calibration_version": "SI-3.1-cal-2026-07-31",
-    "known_events": 57,
-    "health_rows": 14,
-    "horizontal_overflow": false,
-    "console_errors": [],
-    "pass": true
+    "known_events": 47,
+    "pass": false,
+    "error": "Error: Expected >=57 documented event records, got 47\n    at runCase (file:///home/runner/work/sundowner-intelligence/sundowner-intelligence/tools/production-browser-qa.mjs:21:73)\n    at async file:///home/runner/work/sundowner-intelligence/sundowner-intelligence/tools/production-browser-qa.mjs:30:15",
+    "console_errors": []
   },
   "mobile": {
     "name": "production-mobile",
@@ -30,17 +30,17 @@
     },
     "url": "https://skyfinderrescue.github.io/sundowner-intelligence/",
     "http_status": 200,
-    "status_text": "Live forecast complete • 36/293 fresh observations • 8/8 zones\n10:42 AM",
+    "status_text": "Live forecast complete • 36/293 fresh observations • 8/8 zones\n10:55 AM",
     "zone_cards": 8,
     "zone_polygons": 301,
+    "calibration_tabs": 0,
     "focus_title": "Refugio • western regime",
     "station_rows": 293,
     "calibration_version": "SI-3.1-cal-2026-07-31",
-    "known_events": 57,
-    "health_rows": 14,
-    "horizontal_overflow": false,
-    "console_errors": [],
-    "pass": true
+    "known_events": 47,
+    "pass": false,
+    "error": "Error: Expected >=57 documented event records, got 47\n    at runCase (file:///home/runner/work/sundowner-intelligence/sundowner-intelligence/tools/production-browser-qa.mjs:21:73)\n    at async file:///home/runner/work/sundowner-intelligence/sundowner-intelligence/tools/production-browser-qa.mjs:31:14",
+    "console_errors": []
   },
-  "pass": true
+  "pass": false
 }
