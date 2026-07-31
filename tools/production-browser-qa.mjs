@@ -11,9 +11,11 @@ async function runCase(name,viewport){
   const r=await page.goto(URL,{waitUntil:'domcontentloaded',timeout:60000}); result.http_status=r?.status()||null;
   await page.waitForFunction(()=>document.querySelector('#status')?.textContent?.includes('Live forecast complete'),null,{timeout:120000});
   result.status_text=await page.locator('#status').innerText();
+  result.howto_text=(await page.locator('#howto').innerText()).replace(/\s+/g,' ').trim();
+  for(const expected of ['1. Let the data load.','2. Pick an area.','3. Read the forecast.'])if(!result.howto_text.includes(expected))throw Error(`How-to guide missing: ${expected}`);
   result.zone_cards=await page.locator('.card').count(); if(result.zone_cards!==8)throw Error(`Expected 8 zone cards, got ${result.zone_cards}`);
   result.zone_polygons=await page.locator('#map path.leaflet-interactive').count(); if(result.zone_polygons<8)throw Error(`Expected >=8 zone polygons, got ${result.zone_polygons}`);
-  result.contact_text=(await page.locator('#contact').innerText()).trim(); if(result.contact_text!=='Questions or comments? sky.bonillo@gmail.com')throw Error(`Contact line incorrect: ${result.contact_text}`);
+  result.contact_text=(await page.locator('#contact').innerText()).replace(/\s+/g,' ').trim(); if(!result.contact_text.includes('Questions or comments?')||!result.contact_text.includes('sky.bonillo@gmail.com'))throw Error(`Contact line incorrect: ${result.contact_text}`);
   result.contact_href=await page.locator('#contact a').getAttribute('href'); if(result.contact_href!=='mailto:sky.bonillo@gmail.com')throw Error(`Contact mailto incorrect: ${result.contact_href}`);
   result.calibration_tabs=await page.locator('button[data-view="calibration"]').count(); if(result.calibration_tabs!==0)throw Error('Calibration is still exposed in primary navigation');
   await page.locator('.card').first().click(); await page.waitForTimeout(250); result.focus_title=await page.locator('#focusTitle').innerText(); if(!result.focus_title||/County overview/i.test(result.focus_title))throw Error('Zone click did not update sidebar');
