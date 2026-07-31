@@ -1,0 +1,32 @@
+name: Sync Live GitHub Pages Branch
+
+on:
+  push:
+    branches: ["main"]
+    paths-ignore:
+      - "validation/release-status.json"
+      - "validation/pages-enable-status.json"
+      - "validation/calibration-status.json"
+      - "validation/history-reconstruction-status.json"
+      - "validation/fixed-lead-status.json"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sundowner-pages-sync
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Publish current main to gh-pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git push origin HEAD:gh-pages --force
