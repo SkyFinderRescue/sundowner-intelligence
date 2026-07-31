@@ -1,1 +1,50 @@
-{"pass":false,"error":"browser harness did not create status"}
+{
+  "checked_at": "2026-07-31T17:39:12.574Z",
+  "url": "https://skyfinderrescue.github.io/sundowner-intelligence/",
+  "chrome": "/usr/bin/google-chrome",
+  "desktop": {
+    "name": "production-desktop",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "url": "https://skyfinderrescue.github.io/sundowner-intelligence/",
+    "http_status": 200,
+    "status_text": "Live forecast complete • 36/293 fresh observations • 8/8 zones\n10:39 AM",
+    "zone_cards": 8,
+    "zone_polygons": 301,
+    "focus_title": "Refugio • western regime",
+    "station_rows": 293,
+    "calibration_version": "SI-3.1-cal-2026-07-31",
+    "known_events": 57,
+    "health_rows": 14,
+    "horizontal_overflow": false,
+    "console_errors": [
+      "Failed to load resource: the server responded with a status of 404 ()"
+    ],
+    "pass": true
+  },
+  "mobile": {
+    "name": "production-mobile",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "url": "https://skyfinderrescue.github.io/sundowner-intelligence/",
+    "http_status": 200,
+    "status_text": "Live forecast complete • 36/293 fresh observations • 8/8 zones\n10:39 AM",
+    "zone_cards": 8,
+    "zone_polygons": 301,
+    "focus_title": "Refugio • western regime",
+    "station_rows": 293,
+    "calibration_version": "SI-3.1-cal-2026-07-31",
+    "known_events": 57,
+    "health_rows": 14,
+    "horizontal_overflow": false,
+    "console_errors": [
+      "Failed to load resource: the server responded with a status of 404 ()"
+    ],
+    "pass": true
+  },
+  "pass": true
+}
