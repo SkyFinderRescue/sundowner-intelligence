@@ -1,8 +1,8 @@
 {
-  "verified_at": "2026-07-31T17:54:25.301Z",
-  "commit": "e9ece8ce231cede03bd8c5fc29d33daf32ad7ec3",
-  "code_and_live_api_qa": "cancelled",
-  "pages_probe": "skipped",
+  "verified_at": "2026-07-31T17:54:38.074Z",
+  "commit": "d0d61dfeb33a5761b382f8425be86cc4d87aaa36",
+  "code_and_live_api_qa": "success",
+  "pages_probe": "success",
   "model_version": "SI-3.0.0",
   "calibration_version": "SI-3.1-cal-2026-07-31",
   "release_gate": "fitted-calibration + 57 historical reconstructions + 24h/48h fixed-lead validation"
