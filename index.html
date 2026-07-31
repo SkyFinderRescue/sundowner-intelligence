@@ -3,30 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07111e">
 <title>Sundowner Intelligence</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<style>
-:root{--bg:#07111e;--p:#101d30;--p2:#15263d;--l:#263c5d;--t:#f4f7fb;--m:#9fb2cc;--g:#35c98a;--y:#f2c94c;--o:#f2994a;--r:#eb5757;--b:#63aafc;--v:#b98cff}
-*{box-sizing:border-box}body{margin:0;background:linear-gradient(#07111e,#0a1422);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
-header,main{max-width:1450px;margin:auto;padding:15px}h1{margin:0;font-size:28px}.sub{color:var(--m);font-size:13px;margin:5px 0 12px}
-.controls{display:flex;gap:7px;flex-wrap:wrap}button,select{background:var(--p2);color:#fff;border:1px solid var(--l);border-radius:11px;padding:10px 12px;font-size:14px}
-#status,.panel{background:var(--p);border:1px solid var(--l);border-radius:14px}#status{padding:10px 12px;margin-bottom:10px;color:var(--m);font-size:13px}
-.layout{display:grid;grid-template-columns:1.42fr .58fr;gap:10px}#map{height:520px;border-radius:14px;border:1px solid var(--l)}
-.panel{padding:13px}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px}.metric{background:#0b1727;border:1px solid #213754;border-radius:11px;padding:9px}.k{font-size:10px;color:var(--m);text-transform:uppercase}.v{font-size:21px;font-weight:850;margin-top:3px}
-h2{font-size:16px;margin:5px 0 10px}.factor{display:flex;justify-content:space-between;gap:8px;border-top:1px solid #203651;padding:7px 0;font-size:12px}.factor:first-child{border-top:0}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:9px;margin-top:10px}.card{background:var(--p);border:1px solid var(--l);border-radius:13px;padding:12px;cursor:pointer}.card:hover,.active{border-color:var(--b)}
-.cardtop{display:flex;justify-content:space-between;gap:10px}.name{font-size:17px;font-weight:800}.prob{font-size:34px;font-weight:900}.small{color:var(--m);font-size:11px;line-height:1.5}.badge{font-size:10px;font-weight:850;border-radius:99px;padding:4px 7px}.low{color:#79e0b5;background:#35c98a22}.elevated{color:#ffe27a;background:#f2c94c22}.high{color:#ffc17d;background:#f2994a22}.extreme{color:#ff9898;background:#eb575722}
-.tabs{display:flex;gap:7px;margin:10px 0}.tab{opacity:.72}.tab.on{opacity:1;border-color:var(--b)}.view{display:none}.view.on{display:block}
-#timeline{max-height:245px;overflow:auto}.tr{display:grid;grid-template-columns:82px 1fr 45px 58px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #203651;font-size:11px}.barbg{height:7px;background:#203651;border-radius:9px;overflow:hidden}.bar{height:100%}
-table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:7px;border-bottom:1px solid #203651}th{color:var(--m)}
-.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--g);margin-right:6px}.warn{color:#ffd28a}.err{color:#ff9898}.good{color:#79e0b5}
-.pill{display:inline-block;border:1px solid var(--l);border-radius:99px;padding:3px 7px;font-size:10px;margin-right:4px;color:var(--m)}
-@media(max-width:900px){.layout{grid-template-columns:1fr}#map{height:390px}}@media(max-width:520px){header,main{padding:10px}#map{height:340px}.metrics{grid-template-columns:1fr 1fr}}
-</style></head>
+<link rel="stylesheet" href="styles.css">
+</head>
 <body>
 <header>
 <h1>Sundowner Intelligence</h1>
-<div class="sub">Santa Barbara County • live NOAA HRRR/GFS seamless + RAWS + pressure-gradient + regime-specific experimental forecasting</div>
+<div class="sub">Santa Barbara County • NOAA HRRR primary + GFS extension + NBM • observed multi-station pressure field • county RAWS + Cuyama/Santa Ynez/southern Kern precursors • terrain/regime-specific experimental forecasting</div>
 <div class="controls">
 <select id="zone"><option value="ALL">All forecast zones</option></select>
 <button id="refresh">Refresh live data</button>
@@ -37,242 +22,69 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;p
 </div>
 </header>
 <main>
-<div id="status"><span class="dot"></span>Starting…</div>
-
+<div id="status"><span><span class="dot"></span>Starting…</span><span id="stamp"></span></div>
 <div id="forecast" class="view on">
 <div class="layout">
 <div id="map"></div>
-<div class="panel">
+<div class="panel sidebar">
 <h2 id="focusTitle">County overview</h2>
+<div id="stationFocus" style="display:none"></div>
+<div id="zoneFocus">
 <div class="metrics">
 <div class="metric"><div class="k">Sundowner</div><div class="v" id="mP">—</div></div>
-<div class="metric"><div class="k">Strong</div><div class="v" id="mStrong">—</div></div>
-<div class="metric"><div class="k">Peak gust</div><div class="v" id="mG">—</div></div>
+<div class="metric"><div class="k">Strong event</div><div class="v" id="mStrong">—</div></div>
+<div class="metric"><div class="k">Localized peak gust</div><div class="v" id="mG">—</div></div>
 <div class="metric"><div class="k">Confidence</div><div class="v" id="mC">—</div></div>
 <div class="metric"><div class="k">Fire weather</div><div class="v" id="mFire">—</div></div>
+<div class="metric"><div class="k">Peak window</div><div class="v smallv" id="mPeak">—</div></div>
 <div class="metric"><div class="k">SBA–BFL</div><div class="v" id="mB">—</div></div>
 <div class="metric"><div class="k">SBA–SMX</div><div class="v" id="mS">—</div></div>
 </div>
-<h2 style="margin-top:13px">Drivers</h2><div id="drivers"></div>
+<div id="eventSummary" class="eventbox">Building event guidance…</div>
+<h2>Pressure & upstream</h2><div id="pressureDrivers"></div>
+<h2>Atmospheric drivers</h2><div id="drivers"></div>
 <h2>48-hour probability</h2><div id="timeline"></div>
+</div>
 </div>
 </div>
 <div id="cards" class="cards"></div>
 </div>
-
 <div id="stations" class="view">
-<div class="panel"><h2>Live RAWS / mesonet observation layer</h2>
-<div class="small">The live network discovers reporting California DCP stations and retains core Santa Barbara RAWS as fallback. Upstream Cuyama/interior stations are weighted separately.</div>
-<div id="stationSummary" class="metrics" style="margin-top:10px"></div>
-<div style="overflow:auto;margin-top:10px"><table><thead><tr><th>Station</th><th>Role</th><th>Wind</th><th>RH</th><th>Temp</th><th>Fuel M.</th><th>Age</th></tr></thead><tbody id="stationRows"></tbody></table></div>
+<div class="panel"><h2>Live county & upstream observation network</h2>
+<div class="section-note">Santa Barbara County stations are combined with Santa Ynez Valley, Cuyama, upstream ridge, North County and relevant southern Kern precursor observations. Stale observations remain visible but never influence the active forecast.</div>
+<div id="stationSummary" class="metrics"></div>
+<div class="legend"><span><i class="swatch" style="background:#63aafc"></i>Front country</span><span><i class="swatch" style="background:#b98cff"></i>RAWS</span><span><i class="swatch" style="background:#35c98a"></i>Fresh ≤3 h</span><span><i class="swatch" style="background:#f2c94c"></i>Upstream precursor</span></div>
+<div class="scroll" style="margin-top:10px"><table><thead><tr><th>Station</th><th>Role</th><th>Status</th><th>Wind</th><th>RH</th><th>Temp</th><th>Fuel M.</th><th>Age</th></tr></thead><tbody id="stationRows"></tbody></table></div>
 </div></div>
-
 <div id="calibration" class="view">
-<div class="panel">
-<h2>Historical calibration / verification</h2>
-<div id="calStatus" class="small">Central calibration is precomputed from archived NOAA forecast fields and independent RAWS observations, then refreshed by the deployment pipeline.</div>
-<div class="metrics" style="margin-top:10px">
-<div class="metric"><div class="k">Western calibration</div><div class="v" id="calW">—</div></div>
-<div class="metric"><div class="k">Eastern calibration</div><div class="v" id="calE">—</div></div>
-<div class="metric"><div class="k">SWEX baseline POD</div><div class="v">0.93</div></div>
-<div class="metric"><div class="k">SWEX baseline FAR</div><div class="v">0.22</div></div>
+<div class="panel"><h2>Historical calibration & validation</h2>
+<div id="calStatus" class="section-note">Loading the central calibration artifact and documented Sundowner truth set…</div>
+<div class="comparegrid">
+<div class="metric"><div class="k">Model version</div><div class="v smallv" id="calVersion">—</div></div>
+<div class="metric"><div class="k">Known events</div><div class="v" id="eventCount">—</div></div>
+<div class="metric"><div class="k">Non-fire events</div><div class="v" id="nonFireCount">—</div></div>
+<div class="metric"><div class="k">Self-tests</div><div class="v" id="selfTest">—</div></div>
 </div>
-<div id="calDetails" style="margin-top:10px"></div>
-<div class="small warn" style="margin-top:12px">
-Historical forecast calibration is model-based. Independent RAWS observations remain the live verification layer. The published SWEX values shown here are the research model's performance, not a claim about this application's skill.
-</div>
+<h2 style="margin-top:14px">Independent spring 2025 fixed-lead validation</h2>
+<div class="factor"><span>24h general-event ROC AUC</span><b>0.81–0.87</b></div>
+<div class="factor"><span>24h strong-event ROC AUC</span><b>0.90–0.93</b></div>
+<div class="factor"><span>24h raw gust MAE</span><b>4.5–7.1 mph</b></div>
+<div class="factor"><span>48h general-event ROC AUC</span><b>0.74–0.81</b></div>
+<div class="factor"><span>48h strong-event ROC AUC</span><b>0.77–0.87</b></div>
+<div class="tiny" style="margin-top:9px">Independent HADS/RAWS verification against archived forecasts issued before the valid hour. Live observation assimilation is excluded from fixed-lead testing to prevent target leakage.</div>
+<h2 style="margin-top:14px">Historical truth-set policy</h2>
+<div id="eventPolicy"></div>
+<h2 style="margin-top:14px">Current NWS comparison</h2>
+<div id="nwsCompare" class="section-note">Select a forecast zone to load the current NWS grid gust reference. This is forecast-to-forecast context, not an accuracy score.</div>
+<h2 style="margin-top:14px">Architecture QA</h2><div id="qaDetails"></div>
 </div></div>
-
 <div id="health" class="view">
 <div class="panel"><h2>Data-source health</h2><div id="healthList"></div>
-<div class="small warn" style="margin-top:12px">Experimental decision support only. Do not replace NWS watches/warnings, Red Flag Warnings, spot forecasts, IMET products, or field observations.</div>
+<div class="footer-note">Experimental decision support only. Official NWS watches/warnings, Red Flag Warnings, spot forecasts, IMET products, agency policy and field observations remain authoritative.</div>
 </div></div>
 </main>
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-const TZ="America/Los_Angeles";
-const Z=[
-{name:"Gaviota",lat:34.48,lon:-120.23,regime:"western",targetDir:345},
-{name:"Refugio",lat:34.49,lon:-120.07,regime:"western",targetDir:355},
-{name:"Goleta",lat:34.45,lon:-119.83,regime:"hybrid",targetDir:5},
-{name:"San Marcos Pass",lat:34.51,lon:-119.80,regime:"hybrid",targetDir:10},
-{name:"Mission Canyon",lat:34.47,lon:-119.71,regime:"eastern",targetDir:15},
-{name:"Montecito",lat:34.45,lon:-119.63,regime:"eastern",targetDir:20},
-{name:"Toro Canyon",lat:34.44,lon:-119.57,regime:"eastern",targetDir:20},
-{name:"Carpinteria",lat:34.42,lon:-119.52,regime:"eastern",targetDir:25}
-];
-const CORE=[
-{id:"MOIC1",name:"Montecito RAWS #2",lat:34.445,lon:-119.62583,role:"Front Country RAWS"},
-{id:"MPWC1",name:"San Marcos Pass RAWS",lat:34.4913,lon:-119.7963,role:"Ridge RAWS"},
-{id:"RHWC1",name:"Refugio Hills RAWS",lat:34.5166,lon:-120.0753,role:"Western slope RAWS"},
-{id:"FGMC1",name:"Figueroa Mountain RAWS",lat:34.7344,lon:-120.0067,role:"Upstream ridge RAWS"},
-{id:"TSQC1",name:"Tepusquet RAWS",lat:34.9198,lon:-120.181,role:"North County RAWS"},
-{id:"VDBC1",name:"Vandenberg RAWS",lat:34.7586,lon:-120.4861,role:"Northwest RAWS"},
-{id:"CYAC1",name:"New Cuyama",lat:34.9333,lon:-119.6167,role:"Upstream Cuyama"}
-];
-const HV=["temperature_2m","relative_humidity_2m","pressure_msl","cloud_cover_low","wind_speed_10m","wind_direction_10m","wind_gusts_10m","boundary_layer_height","lifted_index","shortwave_radiation","relative_humidity_925hPa","wind_speed_850hPa","wind_direction_850hPa","wind_speed_700hPa","wind_direction_700hPa","vertical_velocity_850hPa"];
-let map,zoneMarkers={},stationMarkers=[],R=[],ST=[],PS=null,health={},focus=null,CAL={western:null,eastern:null};
-const $=x=>document.getElementById(x), clamp=(x,a,b)=>Math.max(a,Math.min(b,x)), sig=x=>1/(1+Math.exp(-x)), rad=x=>x*Math.PI/180;
-function dirComponent(dir,target){if(dir==null)return 0;return Math.max(0,Math.cos(rad((((dir-target)+540)%360)-180)))}
-function cat(p){return p>=85?"EXTREME":p>=70?"HIGH":p>=50?"ELEVATED":"LOW"}function col(p){return p>=85?"#eb5757":p>=70?"#f2994a":p>=50?"#f2c94c":"#35c98a"}
-function compass(d){if(d==null)return"—";let a=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];return a[Math.round(((d%360)+360)%360/22.5)%16]}
-function ft(t){return new Date(t).toLocaleString("en-US",{weekday:"short",hour:"numeric",minute:"2-digit",timeZone:TZ})}
-function age(t){if(!t)return"—";let m=Math.round((Date.now()-new Date(t))/60000);return m<60?m+"m":Math.round(m/60)+"h"}
-async function json(u){
- let r=await fetch(u);
- if(!r.ok){
-   let detail="";
-   try{detail=(await r.text()).slice(0,180)}catch(e){}
-   throw Error(`${r.status}${detail?": "+detail:""}`)
- }
- return r.json()
-}
-async function model(lat,lon){
- let q=new URLSearchParams({latitude:lat,longitude:lon,hourly:HV.join(","),wind_speed_unit:"mph",temperature_unit:"fahrenheit",timezone:TZ,forecast_hours:"48"});
- let x=await json("https://api.open-meteo.com/v1/gfs?"+q);
- health["NOAA HRRR/GFS seamless"]="OK";
- return x
-}
-async function pressure(){
- let pts=[[34.4262,-119.8404],[35.4336,-119.0568],[34.8993,-120.4576]],out=[];
- for(let p of pts){let q=new URLSearchParams({latitude:p[0],longitude:p[1],hourly:"pressure_msl",timezone:TZ,forecast_hours:"48"});out.push(await json("https://api.open-meteo.com/v1/gfs?"+q))}
- health["Pressure gradients"]="OK";let t=out[0].hourly.time;return{time:t,b:t.map((_,i)=>out[0].hourly.pressure_msl[i]-out[1].hourly.pressure_msl[i]),s:t.map((_,i)=>out[0].hourly.pressure_msl[i]-out[2].hourly.pressure_msl[i])}
-}
-function pa(t){let i=PS.time.indexOf(t);if(i<0)i=0;return{b:PS.b[i]||0,s:PS.s[i]||0}}
-async function current(id){try{let j=await json(`https://mesonet.agron.iastate.edu/json/current.py?station=${id}&network=CA_DCP`),o=j.last_ob||{},fm=null,ft=null;
- let rawWind=o["windspeed[kt]"],rawDir=o["winddirection[deg]"],rawGust=o["gust[kt]"]??o["windgust[kt]"],rawRh=o["relativehumidity[%]"]??o["relh[%]"],rawTemp=o["airtemp[F]"];
- // DCP includes stream/lake gauges. Keep a discovered site only if it actually reports meteorological data.
- if(rawWind==null&&rawDir==null&&rawGust==null&&rawRh==null&&rawTemp==null)return null;
- for(let [k,v] of Object.entries(o)){if(fm==null&&/fuel.*moist|moist.*fuel/i.test(k))fm=Number(v);if(ft==null&&/fuel.*temp|temp.*fuel/i.test(k))ft=Number(v)}
- return{wind:rawWind==null?null:Number(rawWind)*1.15078,gust:rawGust==null?null:Number(rawGust)*1.15078,dir:rawDir==null?null:Number(rawDir),rh:rawRh==null?null:Number(rawRh),temp:rawTemp==null?null:Number(rawTemp),fuelMoist:Number.isFinite(fm)?fm:null,fuelTemp:Number.isFinite(ft)?ft:null,time:o.utc_valid}}catch(e){return null}}
-async function stations(){
- let pool=[...CORE],seen=new Set(pool.map(x=>x.id));
- try{
-  let gj=await json("https://mesonet.agron.iastate.edu/geojson/network.py?network=CA_DCP&only_online=1");health["RAWS discovery"]="OK";
-  for(let f of gj.features||[]){let p=f.properties||{},id=p.sid||p.id||p.station||p.stid,name=p.sname||p.name||p.station_name||id,county=(p.county||"").toLowerCase(),c=f.geometry?.coordinates||[],lon=c[0],lat=c[1];if(!id||!lat||!lon||seen.has(id))continue;
-   let inSB=county.includes("santa barbara")||(lat>34.32&&lat<35.12&&lon>-120.72&&lon<-119.25),up=(lat>34.7&&lat<35.65&&lon>-120.5&&lon<-118.6);
-   // Take every Santa Barbara DCP candidate; current() filters out non-weather gauges by actual variables.
-   // Upstream area is intentionally broader to capture Cuyama/southern Kern precursor weather sites.
-   if(inSB||up){pool.push({id,name,lat,lon,role:inSB?"County weather/RAWS":"Upstream interior"});seen.add(id)}
-  }
- }catch(e){health["RAWS discovery"]="Fallback core list"}
- let out=[];for(let i=0;i<pool.length;i+=16){let b=pool.slice(i,i+16),v=await Promise.all(b.map(x=>current(x.id)));b.forEach((s,k)=>{if(v[k])out.push({...s,...v[k]})})}
- health["Live RAWS/mesonet"]=out.length+" reporting";return out
-}
-function obsSignal(z){
- if(!ST.length)return 0;let sum=0,w=0;
- for(let s of ST){let ws=Math.max(s.gust||0,s.wind||0);if(!ws)continue;let dist=Math.hypot((s.lat-z.lat)*69,(s.lon-z.lon)*57),up=s.role.includes("Upstream"),wt=up?.55:1/(1+dist/18),v=clamp((ws*dirComponent(s.dir,z.targetDir)-10)/35,0,1);sum+=v*wt;w+=wt}return w?clamp(sum/w,0,1):0
-}
-function fuelSignal(){
- let vals=ST.map(s=>s.fuelMoist).filter(x=>Number.isFinite(x)&&x>0&&x<80).sort((a,b)=>a-b);
- if(!vals.length)return{value:null,signal:.35};
- let m=vals[Math.floor(vals.length/2)];
- return{value:m,signal:clamp((16-m)/11,0,1)}
-}
-function vec(h,i,z){
- let P=pa(h.time[i]),g=h.wind_gusts_10m[i]||0,d=h.wind_direction_10m[i],w8=h.wind_speed_850hPa[i]||0,d8=h.wind_direction_850hPa[i],w7=h.wind_speed_700hPa[i]||0,d7=h.wind_direction_700hPa[i],rh=h.relative_humidity_2m[i]??50,bl=h.boundary_layer_height[i]??1000,li=h.lifted_index[i]??0,sol=h.shortwave_radiation[i]??0,r925=h.relative_humidity_925hPa[i]??50,low=h.cloud_cover_low[i]??0;
- let hour=parseInt(h.time[i].slice(11,13)),eve=(hour>=16||hour<=4)?1:0;
- // Published regime thresholds: western SBA-SMX ≈ -3.4 hPa; eastern SBA-BFL ≈ -4.2 hPa.
- let westP=sig((-P.s-3.4)/0.9), eastP=sig((-P.b-4.2)/0.9), press=z.regime==="western"?westP:z.regime==="eastern"?eastP:Math.max(westP,eastP);
- let r8=clamp((w8*dirComponent(d8,z.targetDir)-8)/32,0,1),r7=clamp((w7*dirComponent(d7,z.targetDir)-12)/38,0,1),surf=clamp((g*dirComponent(d,z.targetDir)-13)/35,0,1),dry=clamp((35-rh)/28,0,1),marine=clamp((r925-45)/45,0,1)*clamp((1400-bl)/1100,0,1)*clamp((low+20)/100,0,1),stab=clamp((li+2)/8,0,1),tw=eve?1:clamp((400-sol)/400,0,1),obs=obsSignal(z);
- return{press,r8,r7,surf,dry,marine,stab,tw,eve,obs,b:P.b,s:P.s,g,d,w8,d8,w7,d7,rh,bl,time:h.time[i],solar:sol}
-}
-function fallbackProb(v,z){
- let x=-4.1+1.85*v.press+1.4*v.r8+.6*v.r7+1.05*v.surf+.55*v.dry+.4*v.stab+.5*(1-v.marine)+.35*v.tw+.35*v.eve+.7*v.obs;
- if(z.regime==="hybrid")x+=.12;return sig(x)
-}
-function feat(v){return[1,v.press,v.r8,v.r7,v.dry,1-v.marine,v.stab,v.tw,v.eve]}
-function dot(a,b){return a.reduce((s,x,i)=>s+x*b[i],0)}
-function calibratedProb(v,z){let reg=z.regime==="western"?"western":z.regime==="eastern"?"eastern":null;if(!reg||!CAL[reg])return fallbackProb(v,z);return sig(dot(CAL[reg].beta,feat(v)))}
-function score(h,i,z,gfsH){
- let v=vec(h,i,z),p=calibratedProb(v,z),strong=clamp((p-.08)/.82,0,1),fuel=fuelSignal();
- let upperOK=Number.isFinite(v.w8)&&Number.isFinite(v.w7), pressOK=Number.isFinite(v.b)&&Number.isFinite(v.s), obsOK=ST.length>=3;
- let conf=Math.round(55+(upperOK?15:0)+(pressOK?15:0)+(obsOK?10:0)+(ST.length>=8?5:0));
- let fire=sig(-3.45+1.55*strong+1.25*v.dry+1.15*v.surf+.85*fuel.signal+.45*v.obs);
- return{...v,p:Math.round(p*100),strong:Math.round(strong*100),fire:Math.round(fire*100),fuelMoist:fuel.value,conf:clamp(conf,45,100)}
-}
-async function buildZone(z){
- let m=await model(z.lat,z.lon),h=m.hourly;
- let a=h.time.slice(0,48).map((_,i)=>score(h,i,z,null));
- let pk=a.reduce((x,y)=>!x||y.p>x.p?y:x,null);
- return{...z,a,pk}
-}
-function renderMap(){
- if(!map){map=L.map("map").setView([34.67,-119.88],9);L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:17,attribution:"© OpenStreetMap"}).addTo(map)}
- Object.values(zoneMarkers).forEach(x=>x.remove());zoneMarkers={};stationMarkers.forEach(x=>x.remove());stationMarkers=[];
- R.forEach(r=>{let m=L.circleMarker([r.lat,r.lon],{radius:11,color:"#fff",weight:1,fillColor:col(r.pk.p),fillOpacity:.9}).addTo(map).bindPopup(`<b>${r.name}</b><br>${r.regime.toUpperCase()} regime<br>${r.pk.p}% Sundowner<br>${r.pk.strong}% Strong<br>${Math.round(r.pk.g)} mph peak gust`);m.on("click",()=>select(r.name));zoneMarkers[r.name]=m});
- ST.forEach(s=>{let m=L.circleMarker([s.lat,s.lon],{radius:5,color:s.role.includes("Upstream")?"#b98cff":"#63aafc",weight:1,fillOpacity:.65}).addTo(map).bindPopup(`<b>${s.name}</b><br>${s.role}<br>${compass(s.dir)} ${Math.round(s.wind||0)} mph${s.gust?` G${Math.round(s.gust)}`:""}<br>${s.rh!=null?`RH ${Math.round(s.rh)}%`:""}`);stationMarkers.push(m)})
-}
-function card(r){let c=cat(r.pk.p);return`<div class="card ${focus===r.name?"active":""}" onclick="select('${r.name}')"><div class="cardtop"><div><div class="name">${r.name}</div><span class="pill">${r.regime}</span><span class="badge ${c.toLowerCase()}">${c}</span></div><div class="prob">${r.pk.p}%</div></div><div class="small">Strong ${r.pk.strong}% • Fire Wx ${r.pk.fire}% • Peak ${ft(r.pk.time)} • ${Math.round(r.pk.g)} mph<br>850 mb ${Math.round(r.pk.w8)} mph ${compass(r.pk.d8)} • Confidence ${r.pk.conf}%</div></div>`}
-function renderCards(){let v=$("zone").value,rr=v==="ALL"?R:R.filter(x=>x.name===v);$("cards").innerHTML=rr.map(card).join("")}
-function select(n){let r=R.find(x=>x.name===n);if(!r)return;focus=n;$("zone").value=n;$("focusTitle").textContent=`${n} • ${r.regime} regime`;$("mP").textContent=r.pk.p+"%";$("mStrong").textContent=r.pk.strong+"%";$("mG").textContent=Math.round(r.pk.g)+" mph";$("mC").textContent=r.pk.conf+"%";$("mFire").textContent=r.pk.fire+"%";$("mB").textContent=(r.pk.b>=0?"+":"")+r.pk.b.toFixed(1)+" mb";$("mS").textContent=(r.pk.s>=0?"+":"")+r.pk.s.toFixed(1)+" mb";
- let d=[["Regime pressure support",r.pk.press],["850 mb terrain-relative wind",r.pk.r8],["700 mb support",r.pk.r7],["Surface wind signal",r.pk.surf],["Dry-air signal",r.pk.dry],["RAWS/upstream precursor",r.pk.obs],["Marine-layer suppression",1-r.pk.marine],["Stability signal",r.pk.stab],["RAWS fuel dryness",r.pk.fuelMoist==null?.35:clamp((16-r.pk.fuelMoist)/11,0,1)]];
- $("drivers").innerHTML=d.map(x=>`<div class="factor"><span>${x[0]}</span><b>${Math.round(x[1]*100)}%</b></div>`).join("");$("timeline").innerHTML=r.a.map(x=>`<div class="tr"><span>${ft(x.time)}</span><div class="barbg"><div class="bar" style="width:${x.p}%;background:${col(x.p)}"></div></div><b>${x.p}%</b><span>${Math.round(x.g)} mph</span></div>`).join("");renderCards();zoneMarkers[n]?.openPopup()}
-function renderStations(){let county=ST.filter(s=>!s.role.includes("Upstream")).length,up=ST.length-county,max=ST.reduce((a,b)=>Math.max(a,Math.max(b.gust||0,b.wind||0)),0);$("stationSummary").innerHTML=`<div class="metric"><div class="k">County reporting</div><div class="v">${county}</div></div><div class="metric"><div class="k">Upstream reporting</div><div class="v">${up}</div></div><div class="metric"><div class="k">Strongest current</div><div class="v">${Math.round(max)} mph</div></div><div class="metric"><div class="k">Total live</div><div class="v">${ST.length}</div></div>`;$("stationRows").innerHTML=ST.sort((a,b)=>Math.max(b.gust||0,b.wind||0)-Math.max(a.gust||0,a.wind||0)).map(s=>`<tr><td><b>${s.name}</b><br><span class="small">${s.id}</span></td><td>${s.role}</td><td>${compass(s.dir)} ${Math.round(s.wind||0)}${s.gust?` G${Math.round(s.gust)}`:""} mph</td><td>${s.rh==null?"—":Math.round(s.rh)+"%"}</td><td>${s.temp==null?"—":Math.round(s.temp)+"°F"}</td><td>${s.fuelMoist==null?"—":Math.round(s.fuelMoist)+"%"}</td><td>${age(s.time)}</td></tr>`).join("")}
-function renderHealth(){$("healthList").innerHTML=Object.entries(health).map(x=>`<div class="factor"><span>${x[0]}</span><b>${x[1]}</b></div>`).join("")}
-function fmtMetric(x){return Number.isFinite(x)?x.toFixed(2):"—"}
-function renderCalibration(meta){
- let w=meta?.models?.western,e=meta?.models?.eastern;
- if(!w||!e){
-  $("calStatus").innerHTML='<span class="warn">Research-informed fallback active.</span> Central historical calibration has not been generated yet.';
-  $("calW").textContent="Fallback";$("calE").textContent="Fallback";
-  $("calDetails").innerHTML='<div class="factor"><span>Calibration source</span><b>Published thresholds + live atmospheric drivers</b></div>';
-  return
- }
- $("calW").textContent=fmtMetric(w.holdout?.auc)+" AUC";
- $("calE").textContent=fmtMetric(e.holdout?.auc)+" AUC";
- let gen=meta.generated_utc?new Date(meta.generated_utc).toLocaleString("en-US",{dateStyle:"medium",timeStyle:"short",timeZone:TZ}):"unknown";
- $("calStatus").innerHTML=`<span class="good">Central historical calibration loaded.</span> Updated ${gen}. Training years ${(meta.training_years||[]).join(", ")}; holdout ${(meta.holdout_years||[]).join(", ")}.`;
- $("calDetails").innerHTML=`
-  <div class="factor"><span>Western holdout POD / FAR</span><b>${fmtMetric(w.holdout?.pod)} / ${fmtMetric(w.holdout?.far)}</b></div>
-  <div class="factor"><span>Eastern holdout POD / FAR</span><b>${fmtMetric(e.holdout?.pod)} / ${fmtMetric(e.holdout?.far)}</b></div>
-  <div class="factor"><span>Western holdout Brier / n</span><b>${fmtMetric(w.holdout?.brier)} / ${(w.holdout?.n||0).toLocaleString()}</b></div>
-  <div class="factor"><span>Eastern holdout Brier / n</span><b>${fmtMetric(e.holdout?.brier)} / ${(e.holdout?.n||0).toLocaleString()}</b></div>
-  <div class="factor"><span>Western observed target</span><b>${w.station_name||w.station}</b></div>
-  <div class="factor"><span>Eastern observed target</span><b>${e.station_name||e.station}</b></div>`;
-}
-async function loadCentralCalibration(){
- try{
-  let r=await fetch(`./calibration.json?v=${Date.now()}`,{cache:"no-store"});
-  if(!r.ok)throw Error(r.status);
-  let meta=await r.json(),w=meta?.models?.western,e=meta?.models?.eastern;
-  if(w?.beta?.length===9)CAL.western=w;
-  if(e?.beta?.length===9)CAL.eastern=e;
-  if(CAL.western&&CAL.eastern)health["Historical calibration"]="Central file loaded";
-  else health["Historical calibration"]="Research-informed fallback";
-  renderCalibration(meta);return meta
- }catch(e){
-  health["Historical calibration"]="Fallback (central file unavailable)";
-  renderCalibration(null);return null
- }
-}
-async function alerts(){try{let j=await json("https://api.weather.gov/alerts/active?point=34.45,-119.70"),a=(j.features||[]).filter(x=>/Red Flag|Fire Weather|Wind|High Wind/i.test(x.properties.event||""));health["NWS alerts"]=a.length?a.length+" active":"OK"}catch(e){health["NWS alerts"]="Unavailable"}}
-async function load(){
- $("status").innerHTML='<span class="dot"></span>Loading RAWS, HRRR/GFS, pressure gradients and alerts…';R=[];ST=[];health={};
- try{
-  // Initialize each feed independently so one source cannot blank the application.
-  renderMap();
-  await loadCentralCalibration();
-  let s=[],p=null;
-  try{s=await stations()}catch(e){health["Live RAWS/mesonet"]="Unavailable"}
-  ST=s||[];renderStations();
-  try{p=await pressure()}catch(e){health["Pressure gradients"]="Unavailable"}
-  if(!p){
-    let times=[];for(let i=0;i<48;i++)times.push(new Date(Date.now()+i*3600000).toISOString().slice(0,13)+":00");
-    p={time:times,b:Array(48).fill(0),s:Array(48).fill(0)}
-  }
-  PS=p;
-  alerts();
-  for(let i=0;i<Z.length;i++){$("status").innerHTML=`<span class="dot"></span>Building ${Z[i].name} (${i+1}/${Z.length})…`;try{R.push(await buildZone(Z[i]))}catch(e){health[Z[i].name]="Model unavailable: "+e.message}}
-  R.sort((a,b)=>b.pk.p-a.pk.p);renderCards();renderMap();renderHealth();if(R.length)select(R[0].name);$("zone").value="ALL";renderCards();
-  $("status").innerHTML=`<span class="dot"></span>Live forecast complete • ${ST.length} stations • ${R.length}/${Z.length} zones`;
- }catch(e){$("status").innerHTML=`<span class="err">Load error: ${e.message}</span>`;renderHealth()}
-}
-Z.forEach(z=>{let o=document.createElement("option");o.value=z.name;o.textContent=z.name;$("zone").appendChild(o)});
-$("zone").onchange=()=>{$("zone").value==="ALL"?renderCards():select($("zone").value)};$("refresh").onclick=load;
-document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));document.querySelectorAll(".view").forEach(x=>x.classList.remove("on"));b.classList.add("on");$(b.dataset.view).classList.add("on");if(b.dataset.view==="forecast")setTimeout(()=>map?.invalidateSize(),50)});
-renderMap();
-load();
-</script>
+<script src="core.js"></script>
+<script src="model.js"></script>
+<script src="ui.js"></script>
 </body></html>
