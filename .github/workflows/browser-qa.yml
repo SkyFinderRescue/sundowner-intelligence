@@ -64,3 +64,5 @@ jobs:
       - name: Fail if production QA failed
         if: steps.browser.outcome != 'success'
         run: exit 1
+
+# Release-trigger refresh: 2026-07-31
