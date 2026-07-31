@@ -1,0 +1,52 @@
+name: Reconstruct Historical Sundowners
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - "tools/reconstruct-events.js"
+      - "data/known-sundowner-events.json"
+      - ".github/workflows/reconstruct-history.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sundowner-history-reconstruction
+  cancel-in-progress: true
+
+jobs:
+  reconstruct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - run: node --check tools/reconstruct-events.js
+      - name: Reconstruct documented events
+        id: build
+        continue-on-error: true
+        run: node tools/reconstruct-events.js
+      - name: Publish reconstruction and status
+        if: always()
+        env:
+          OUTCOME: ${{ steps.build.outcome }}
+          SHA: ${{ github.sha }}
+        run: |
+          mkdir -p validation
+          node - <<'NODE'
+          const fs=require('fs');
+          fs.writeFileSync('validation/history-reconstruction-status.json',JSON.stringify({checked_at:new Date().toISOString(),source_commit:process.env.SHA,outcome:process.env.OUTCOME},null,2)+'\n');
+          NODE
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add validation/history-reconstruction-status.json
+          if [ "$OUTCOME" = "success" ]; then git add data/historical-event-reconstructions.json; fi
+          git commit -m "Record historical Sundowner reconstruction [skip ci]" || exit 0
+          git push
+      - name: Fail if reconstruction failed
+        if: steps.build.outcome != 'success'
+        run: exit 1
