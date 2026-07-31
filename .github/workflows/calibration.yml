@@ -28,6 +28,8 @@ jobs:
       - name: Validate calibration builder
         run: node --check tools/build-calibration.js
       - name: Build chronological historical calibration
+        id: build
+        continue-on-error: true
         env:
           TRAIN_START: '2024-01-01'
           TRAIN_END: '2024-12-31'
@@ -35,15 +37,25 @@ jobs:
           TEST_END: '2025-12-31'
         run: node tools/build-calibration.js
       - name: Validate generated artifact
+        if: steps.build.outcome == 'success'
         run: node -e "const c=require('./calibration.json'); if(!c.models||!c.metrics) process.exit(1); console.log(c.version)"
-      - name: Publish refreshed calibration
+      - name: Publish refreshed calibration and status
+        if: always()
+        env:
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+          SHA: ${{ github.sha }}
         run: |
+          mkdir -p validation
+          node - <<'NODE'
+          const fs=require('fs');
+          fs.writeFileSync('validation/calibration-status.json',JSON.stringify({checked_at:new Date().toISOString(),source_commit:process.env.SHA,outcome:process.env.BUILD_OUTCOME},null,2)+'\n');
+          NODE
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add calibration.json
-          if git diff --cached --quiet; then
-            echo "Calibration unchanged"
-          else
-            git commit -m "Refresh historical calibration [skip ci]"
-            git push
-          fi
+          git add validation/calibration-status.json
+          if [ "$BUILD_OUTCOME" = "success" ]; then git add calibration.json; fi
+          git commit -m "Record historical calibration result [skip ci]" || exit 0
+          git push
+      - name: Fail if calibration failed
+        if: steps.build.outcome != 'success'
+        run: exit 1
