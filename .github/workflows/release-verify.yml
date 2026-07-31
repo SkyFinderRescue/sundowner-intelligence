@@ -1,0 +1,64 @@
+name: Verify Sundowner Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths-ignore:
+      - "validation/release-status.json"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sundowner-release-verify
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Syntax and artifact validation
+        run: |
+          node --check core.js
+          node --check model.js
+          node --check ui.js
+          node --check tools/build-calibration.js
+          node --check tools/validate-fixed-lead.js
+          node -e "const fs=require('fs'); const c=JSON.parse(fs.readFileSync('calibration.json')); const e=JSON.parse(fs.readFileSync('data/known-sundowner-events.json')); if(!c.models||!Array.isArray(e.events)||e.events.length<30) process.exit(1)"
+      - name: Model tests
+        run: node tests/model.test.js
+      - name: Browser-flow mock test
+        run: node tests/e2e.mock.test.js
+      - name: Live API integration test
+        run: node tests/live.integration.test.js
+      - name: Probe production URL
+        id: pages
+        continue-on-error: true
+        run: curl --fail --location --max-time 30 --silent --show-error https://skyfinderrescue.github.io/sundowner-intelligence/ -o /tmp/pages.html && grep -q "Sundowner Intelligence" /tmp/pages.html
+      - name: Write verification status
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+          PAGES_OUTCOME: ${{ steps.pages.outcome }}
+          SHA: ${{ github.sha }}
+        run: |
+          mkdir -p validation
+          node - <<'NODE'
+          const fs=require('fs');
+          const o={verified_at:new Date().toISOString(),commit:process.env.SHA,code_and_live_api_qa:process.env.JOB_STATUS,pages_probe:process.env.PAGES_OUTCOME,model_version:'SI-3.0.0'};
+          fs.writeFileSync('validation/release-status.json',JSON.stringify(o,null,2)+'\n');
+          NODE
+      - name: Publish verification record
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add validation/release-status.json
+          git commit -m "Record release verification [skip ci]" || exit 0
+          git push
