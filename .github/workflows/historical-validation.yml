@@ -43,23 +43,34 @@ jobs:
           VALIDATION_END: ${{ inputs.end_date || '2025-05-31' }}
           VALIDATION_LEADS: '1,2'
         run: node tools/validate-fixed-lead.js
-      - name: Publish validation result and status
+      - name: Preserve outputs before syncing current main
         if: always()
         env:
           OUTCOME: ${{ steps.run.outcome }}
           SHA: ${{ github.sha }}
         run: |
-          mkdir -p validation
+          mkdir -p /tmp/si-validation
           node - <<'NODE'
           const fs=require('fs');
-          fs.writeFileSync('validation/fixed-lead-status.json',JSON.stringify({checked_at:new Date().toISOString(),source_commit:process.env.SHA,outcome:process.env.OUTCOME},null,2)+'\n');
+          fs.writeFileSync('/tmp/si-validation/status.json',JSON.stringify({checked_at:new Date().toISOString(),source_commit:process.env.SHA,outcome:process.env.OUTCOME,period:['2025-03-01','2025-05-31'],leads_hours:[24,48]},null,2)+'\n');
           NODE
+          if [ "$OUTCOME" = "success" ]; then cp validation/fixed-lead-latest.json /tmp/si-validation/result.json; fi
+      - name: Publish validation result and status on current main
+        if: always()
+        env:
+          OUTCOME: ${{ steps.run.outcome }}
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git reset --hard origin/main
+          mkdir -p validation
+          cp /tmp/si-validation/status.json validation/fixed-lead-status.json
+          if [ "$OUTCOME" = "success" ]; then cp /tmp/si-validation/result.json validation/fixed-lead-latest.json; fi
           git add validation/fixed-lead-status.json
           if [ "$OUTCOME" = "success" ]; then git add validation/fixed-lead-latest.json; fi
           git commit -m "Record enhanced fixed-lead validation [skip ci]" || exit 0
-          git push
+          git push origin HEAD:main
       - name: Fail if validation failed
         if: steps.run.outcome != 'success'
         run: exit 1
