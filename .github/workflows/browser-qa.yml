@@ -24,20 +24,20 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '22'
-      - name: Install Chromium browser harness
+      - name: Install browser harness
         run: |
+          test -x /usr/bin/google-chrome
+          /usr/bin/google-chrome --version
           npm init -y >/dev/null 2>&1
-          npm install --no-save playwright@1.55.0
-          npx playwright install --with-deps chromium
+          npm install --no-save playwright-core@1.55.0
       - name: Run live desktop/mobile QA
         id: browser
         continue-on-error: true
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
         run: node tools/production-browser-qa.mjs
       - name: Preserve status and screenshots
         if: always()
-        env:
-          OUTCOME: ${{ steps.browser.outcome }}
-          SHA: ${{ github.sha }}
         run: |
           mkdir -p /tmp/si-browser
           cp validation/browser-qa-status.json /tmp/si-browser/status.json 2>/dev/null || echo '{"pass":false,"error":"browser harness did not create status"}' > /tmp/si-browser/status.json
@@ -64,5 +64,3 @@ jobs:
       - name: Fail if production QA failed
         if: steps.browser.outcome != 'success'
         run: exit 1
-
-# Release-trigger refresh: 2026-07-31
