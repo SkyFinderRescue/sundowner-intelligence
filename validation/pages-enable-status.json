@@ -1,0 +1,23 @@
+{
+  "checked_at": "2026-07-31T17:04:48.317Z",
+  "get_before": "200",
+  "create_http": "already_enabled",
+  "get_after": "200",
+  "pages": {
+    "url": "https://api.github.com/repos/SkyFinderRescue/sundowner-intelligence/pages",
+    "status": "built",
+    "cname": null,
+    "custom_404": false,
+    "html_url": "https://skyfinderrescue.github.io/sundowner-intelligence/",
+    "build_type": "legacy",
+    "source": {
+      "branch": "gh-pages",
+      "path": "/"
+    },
+    "public": true,
+    "protected_domain_state": null,
+    "pending_domain_unverified_at": null,
+    "https_enforced": true
+  },
+  "create_response": null
+}
