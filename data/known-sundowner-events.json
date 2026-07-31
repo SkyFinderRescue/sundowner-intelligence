@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Curated Sundowner-first event truth set. Fire association is an outcome field, never an event definition. Tier A records have peer-reviewed event identification; Tier B records are strong documented historical cases retained for case-library/analog use pending full reconstruction.",
+  "generated": "2026-07-31",
+  "training_policy": {
+    "positive_definition": "Documented Sundowner event independent of wildfire occurrence",
+    "fire_is_predictor": false,
+    "use_tier_a_for_quantitative_event_validation": true,
+    "use_tier_b_for_case_library_until_reconstructed": true,
+    "negative_examples_required": true,
+    "future_target_observation_leakage_prohibited": true
+  },
+  "sources": {
+    "smith2018_aloft": "https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2018JD029065",
+    "smith2018_surface": "https://journals.ametsoc.org/view/journals/apme/57/3/jamc-d-17-0162.1.xml",
+    "blier1998": "https://journals.ametsoc.org/view/journals/wefo/13/3/1520-0434_1998_013_0702_tswosb_2_0_co_2.xml",
+    "carvalho2020_swex_pilot": "https://journals.ametsoc.org/view/journals/mwre/148/4/mwr-d-19-0207.1.xml",
+    "carvalho2019_model_cases": "https://doi.org/10.3390/atmos10030155",
+    "sb_cwpp": "https://storymaps.arcgis.com/stories/70505d4aa8134ca9ab84767efa3d06a7"
+  },
+  "events": [
+    {"date":"1992-07-19","tier":"A","fire_associated":false,"regime":"unknown","source":"blier1998","notes":"Blier case study event."},
+    {"date":"1992-11-02","tier":"A","fire_associated":false,"regime":"unknown","source":"blier1998","notes":"Blier case study event."},
+    {"date":"1995-12-31","tier":"A","fire_associated":false,"regime":"unknown","source":"blier1998","notes":"Blier case study event."},
+
+    {"date":"2006-09-16","tier":"A","fire_associated":false,"temperature_ramp_c":8.3,"si_cdf_percent":91,"source":"smith2018_aloft"},
+    {"date":"2007-03-04","tier":"A","fire_associated":false,"temperature_ramp_c":7.3,"si_cdf_percent":78,"source":"smith2018_aloft"},
+    {"date":"2007-12-04","tier":"A","fire_associated":false,"temperature_ramp_c":9.5,"si_cdf_percent":79,"source":"smith2018_aloft"},
+    {"date":"2008-06-18","tier":"A","fire_associated":false,"temperature_ramp_c":12.8,"si_cdf_percent":97,"source":"smith2018_aloft"},
+    {"date":"2008-07-02","tier":"A","fire_associated":true,"fire_name":"Gap","si_cdf_percent":92,"source":"smith2018_aloft"},
+    {"date":"2008-11-01","tier":"A","fire_associated":false,"temperature_ramp_c":11.1,"si_cdf_percent":75,"source":"smith2018_aloft"},
+    {"date":"2008-11-13","tier":"A","fire_associated":true,"fire_name":"Montecito Tea","temperature_ramp_c":5.0,"si_cdf_percent":85,"regime":"eastern","source":"smith2018_aloft"},
+    {"date":"2009-05-05","tier":"A","fire_associated":true,"fire_name":"Jesusita","temperature_ramp_c":5.0,"si_cdf_percent":98,"source":"smith2018_aloft","notes":"Jesusita fire period contained multiple Sundowner episodes; strongest documented episode occurred evening May 7 into May 8."},
+    {"date":"2009-05-07","tier":"A","fire_associated":true,"fire_name":"Jesusita","regime":"eastern","onset_local":"17:00","end_local":"06:00 next day","max_sustained_mph":45.0,"max_gust_mph":67.1,"source":"carvalho2019_model_cases","notes":"Montecito Hills observations reported winds to 20.1 m/s and gusts to 30 m/s."},
+    {"date":"2009-05-13","tier":"A","fire_associated":false,"temperature_ramp_c":7.3,"si_cdf_percent":96,"source":"smith2018_aloft"},
+    {"date":"2010-05-29","tier":"A","fire_associated":false,"temperature_ramp_c":8.9,"si_cdf_percent":96,"source":"smith2018_aloft"},
+    {"date":"2011-04-16","tier":"A","fire_associated":false,"temperature_ramp_c":9.5,"si_cdf_percent":94,"source":"smith2018_aloft"},
+    {"date":"2012-01-06","tier":"A","fire_associated":false,"temperature_ramp_c":8.4,"si_cdf_percent":72,"source":"smith2018_aloft"},
+    {"date":"2012-01-24","tier":"A","fire_associated":false,"temperature_ramp_c":7.8,"si_cdf_percent":90,"source":"smith2018_aloft"},
+    {"date":"2012-01-25","tier":"A","fire_associated":false,"temperature_ramp_c":11.1,"si_cdf_percent":90,"source":"smith2018_aloft"},
+    {"date":"2012-02-22","tier":"A","fire_associated":false,"temperature_ramp_c":10.5,"si_cdf_percent":71,"source":"smith2018_aloft"},
+    {"date":"2013-03-22","tier":"A","fire_associated":false,"temperature_ramp_c":7.8,"si_cdf_percent":95,"source":"smith2018_aloft"},
+    {"date":"2013-07-14","tier":"A","fire_associated":false,"temperature_ramp_c":8.4,"si_cdf_percent":100,"source":"smith2018_aloft"},
+    {"date":"2013-11-13","tier":"A","fire_associated":false,"temperature_ramp_c":9.4,"si_cdf_percent":86,"source":"smith2018_aloft"},
+    {"date":"2014-03-14","tier":"A","fire_associated":false,"temperature_ramp_c":10.0,"si_cdf_percent":96,"source":"smith2018_aloft"},
+    {"date":"2014-05-11","tier":"A","fire_associated":false,"temperature_ramp_c":9.4,"si_cdf_percent":99,"source":"smith2018_aloft"},
+    {"date":"2015-10-28","tier":"A","fire_associated":false,"temperature_ramp_c":8.9,"si_cdf_percent":98,"source":"smith2018_aloft"},
+    {"date":"2016-02-13","tier":"A","fire_associated":false,"temperature_ramp_c":12.2,"si_cdf_percent":93,"source":"smith2018_aloft"},
+    {"date":"2016-06-18","tier":"A","fire_associated":true,"fire_name":"Sherpa","temperature_ramp_c":7.2,"si_cdf_percent":97,"regime":"western","source":"smith2018_aloft","notes":"Peer-reviewed validation case; western event with strong Refugio/Gaviota response."},
+    {"date":"2017-03-11","end_date":"2017-03-12","tier":"A","fire_associated":false,"regime":"unknown","source":"carvalho2019_model_cases","notes":"Non-fire Sundowner case selected using NWS LOX wind criteria and NOAA profiler availability."},
+    {"date":"2017-07-08","tier":"B","fire_associated":true,"fire_name":"Whittier","regime":"western","source":"sb_cwpp","notes":"Documented fire-associated Sundowner; retain as case library pending full event reconstruction."},
+    {"date":"2017-12-01","tier":"B","fire_associated":true,"fire_name":"Thomas","regime":"eastern","source":"sb_cwpp","notes":"December 2017 fire period included Santa Barbara downslope wind impacts; exact event windows must be reconstructed before quantitative use."},
+    {"date":"2018-04-28","end_date":"2018-04-29","tier":"A","fire_associated":false,"regime":"eastern","source":"carvalho2020_swex_pilot","notes":"SWEX pilot significant Sundowner with 3-hourly radiosondes documenting offshore transition, mountain waves and nocturnal lee jet."},
+
+    {"date":"1990-06-27","tier":"B","fire_associated":true,"fire_name":"Painted Cave","source":"sb_cwpp","notes":"Major historical fire-associated Sundowner; retain for analog/case reconstruction."},
+    {"date":"1979-09-01","tier":"B","fire_associated":true,"fire_name":"Eagle Canyon","source":"sb_cwpp","notes":"Month-level historical case; exact date/window required before quantitative validation."}
+  ]
+}
