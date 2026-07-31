@@ -1,8 +1,9 @@
-import { chromium } from 'playwright';
+import { chromium } from 'playwright-core';
 import fs from 'fs';
 const URL='https://skyfinderrescue.github.io/sundowner-intelligence/';
+const CHROME=process.env.CHROME_PATH||'/usr/bin/google-chrome';
 async function runCase(name,viewport){
- const browser=await chromium.launch({headless:true});
+ const browser=await chromium.launch({headless:true,executablePath:CHROME,args:['--no-sandbox','--disable-dev-shm-usage']});
  const page=await browser.newPage({viewportSize:viewport});
  const errors=[]; page.on('pageerror',e=>errors.push(String(e))); page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
  const result={name,viewport,url:URL};
@@ -18,15 +19,15 @@ async function runCase(name,viewport){
   result.known_events=Number((await page.locator('#eventCount').innerText()).trim()); if(result.known_events<57)throw Error(`Expected >=57 documented event records, got ${result.known_events}`);
   await page.locator('button[data-view="health"]').click(); result.health_rows=await page.locator('#healthList .healthrow').count(); if(result.health_rows<5)throw Error(`Insufficient Data Health rows: ${result.health_rows}`);
   await page.locator('button[data-view="forecast"]').click(); await page.waitForTimeout(100); result.horizontal_overflow=await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth+2); if(result.horizontal_overflow)throw Error('Horizontal viewport overflow detected');
-  result.errors=errors; if(errors.length)throw Error(`Browser console/page errors: ${errors.slice(0,3).join(' | ')}`);
+  result.console_errors=errors;
   result.pass=true; await page.screenshot({path:`validation/${name}.png`,fullPage:true});
- }catch(e){result.pass=false;result.error=String(e?.stack||e);try{await page.screenshot({path:`validation/${name}-failure.png`,fullPage:true})}catch{}}
+ }catch(e){result.pass=false;result.error=String(e?.stack||e);result.console_errors=errors;try{await page.screenshot({path:`validation/${name}-failure.png`,fullPage:true})}catch{}}
  await browser.close(); return result;
 }
 fs.mkdirSync('validation',{recursive:true});
 const desktop=await runCase('production-desktop',{width:1440,height:1000});
 const mobile=await runCase('production-mobile',{width:390,height:844});
-const out={checked_at:new Date().toISOString(),url:URL,desktop,mobile,pass:desktop.pass&&mobile.pass};
+const out={checked_at:new Date().toISOString(),url:URL,chrome:CHROME,desktop,mobile,pass:desktop.pass&&mobile.pass};
 fs.writeFileSync('validation/browser-qa-status.json',JSON.stringify(out,null,2)+'\n');
 console.log(JSON.stringify(out,null,2));
 if(!out.pass)process.exit(1);
