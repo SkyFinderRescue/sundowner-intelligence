@@ -1,110 +1,110 @@
 {
   "version": "SI-3.1-cal-2026-07-31",
-  "generated": "2026-07-31T17:24:36.819Z",
+  "generated": "2026-07-31T17:24:52.407Z",
   "method": "Historically fitted fixed-lead probability and gust-bias calibration using proven archived HRRR surface fields, SBA-BFL/SBA-SMX pressure anchors, and independent RAWS outcomes. The live SI-3 forecast adds upper-air, local-pressure, coastal-jet, Cuyama/upstream and fresh-observation evidence on top of this historically calibrated core. Verifying observations never enter historical predictors and fire association is never used as an event target.",
   "train": {
-    "start": "2024-04-01",
-    "end": "2024-04-30",
+    "start": "2024-03-01",
+    "end": "2024-05-31",
     "forecast_lead_hours": 24,
     "model": "NOAA HRRR via Open-Meteo Previous Runs"
   },
   "holdout": {
-    "start": "2025-04-01",
-    "end": "2025-04-30"
+    "start": "2025-03-01",
+    "end": "2025-05-31"
   },
   "known_event_catalog_count": 57,
   "models": {
     "western": {
       "event": {
-        "intercept": 0.669699,
-        "slope": 0.771027,
-        "n": 1436
+        "intercept": 0.569153,
+        "slope": 0.787097,
+        "n": 4408
       },
       "strong": {
-        "intercept": 0.493073,
-        "slope": 0.551941,
-        "n": 1436
+        "intercept": 0.403427,
+        "slope": 0.570467,
+        "n": 4408
       }
     },
     "hybrid": {
       "event": {
-        "intercept": -0.366211,
-        "slope": 1.784346,
-        "n": 718
+        "intercept": -0.333202,
+        "slope": 1.747536,
+        "n": 2204
       },
       "strong": {
-        "intercept": -0.028615,
-        "slope": 1.18282,
-        "n": 718
+        "intercept": -0.030999,
+        "slope": 1.167143,
+        "n": 2204
       }
     },
     "eastern": {
       "event": {
-        "intercept": -0.046404,
-        "slope": 1.330656,
-        "n": 1436
+        "intercept": -0.127071,
+        "slope": 1.457585,
+        "n": 4411
       },
       "strong": {
-        "intercept": 0.16174,
-        "slope": 0.786565,
-        "n": 1436
+        "intercept": 0.100264,
+        "slope": 0.894881,
+        "n": 4411
       }
     }
   },
   "zone_bias_mph": {
     "Gaviota": 3.9,
-    "Refugio": 2.1,
-    "San Marcos Pass": 0.4,
-    "Montecito": 1.1,
-    "Carpinteria": 3
+    "Refugio": 1.4,
+    "San Marcos Pass": -0.2,
+    "Montecito": 0.9,
+    "Carpinteria": 2.2
   },
   "metrics": {
     "western": {
-      "train_n": 1436,
-      "holdout_n": 1440,
+      "train_n": 4408,
+      "holdout_n": 4407,
       "event": {
-        "raw_auc": 0.8524452874850736,
-        "cal_auc": 0.8524452874850736,
-        "raw_brier": 0.19977767735310958,
-        "cal_brier": 0.16041957707165763
+        "raw_auc": 0.8402934210979953,
+        "cal_auc": 0.8402934210979953,
+        "raw_brier": 0.20872270747300897,
+        "cal_brier": 0.16895963391617463
       },
       "strong": {
-        "raw_auc": 0.9301958600204214,
-        "cal_auc": 0.9301958600204214,
-        "raw_brier": 0.16056256603716357,
-        "cal_brier": 0.1317131707166991
+        "raw_auc": 0.904618780146065,
+        "cal_auc": 0.904618780146065,
+        "raw_brier": 0.196120883065544,
+        "cal_brier": 0.15622101697342722
       }
     },
     "hybrid": {
-      "train_n": 718,
-      "holdout_n": 720,
+      "train_n": 2204,
+      "holdout_n": 2202,
       "event": {
-        "raw_auc": 0.6963788300835655,
-        "cal_auc": 0.6963788300835655,
-        "raw_brier": 0.007410897398600669,
-        "cal_brier": 0.002811146659186337
+        "raw_auc": 0.8504393101204035,
+        "cal_auc": 0.8504393101204035,
+        "raw_brier": 0.009816939423399729,
+        "cal_brier": 0.003250659796631285
       },
       "strong": {
-        "raw_auc": 0.942090395480226,
-        "cal_auc": 0.942090395480226,
-        "raw_brier": 0.016221555350448065,
-        "cal_brier": 0.016380996157193423
+        "raw_auc": 0.9055557086939743,
+        "cal_auc": 0.9055557086939743,
+        "raw_brier": 0.029606550070072193,
+        "cal_brier": 0.030103056725448083
       }
     },
     "eastern": {
-      "train_n": 1436,
-      "holdout_n": 1438,
+      "train_n": 4411,
+      "holdout_n": 4406,
       "event": {
-        "raw_auc": 0.8757644153789764,
-        "cal_auc": 0.8757644153789764,
-        "raw_brier": 0.024499496314041833,
-        "cal_brier": 0.023917289221907986
+        "raw_auc": 0.8470852668213457,
+        "cal_auc": 0.8470852668213457,
+        "raw_brier": 0.02169030907961113,
+        "cal_brier": 0.019943281718112986
       },
       "strong": {
-        "raw_auc": 0.957166786312515,
-        "cal_auc": 0.957166786312515,
-        "raw_brier": 0.030019606068679712,
-        "cal_brier": 0.029383571492435076
+        "raw_auc": 0.9385389458174268,
+        "cal_auc": 0.9385389458174268,
+        "raw_brier": 0.029873349426614022,
+        "cal_brier": 0.02931393025682957
       }
     }
   }
