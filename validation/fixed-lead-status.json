@@ -1,0 +1,13 @@
+{
+  "checked_at": "2026-07-31T17:09:03.371Z",
+  "source_commit": "a1e8126f36a7dd5af79177d77d60447286979e03",
+  "outcome": "success",
+  "period": [
+    "2025-03-01",
+    "2025-05-31"
+  ],
+  "leads_hours": [
+    24,
+    48
+  ]
+}

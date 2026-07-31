@@ -1,0 +1,4910 @@
+{
+  "generated": "2026-07-31T17:08:29.509Z",
+  "period": {
+    "start": "2025-03-01",
+    "end": "2025-05-31"
+  },
+  "method": "Independent RAWS verification against Open-Meteo Previous Runs at true fixed lead. 24h uses explicit HRRR; 48h uses seamless GFS/HRRR because HRRR is short range. Live observations are labels only and never forecast predictors. Metrics include probability calibration, pressure-only and raw-gust baselines, onset/peak timing and exact-zone spatial skill across the five validation stations.",
+  "leads": {
+    "24h": {
+      "model": "gfs_hrrr",
+      "lead_hours": 24,
+      "zones": {
+        "Gaviota": {
+          "station": "GVTC1",
+          "event": {
+            "n": 2203,
+            "events": 576,
+            "auc": 0.806340913747183,
+            "brier": 0.21315392755191848,
+            "pod": 0.109375,
+            "recall": 0.109375,
+            "precision": 0.6494845360824743,
+            "far": 0.35051546391752575,
+            "specificity": 0.9791026429010449,
+            "confusion": {
+              "TP": 63,
+              "FN": 513,
+              "FP": 34,
+              "TN": 1593
+            },
+            "reliability": [
+              {
+                "range": [
+                  0,
+                  0.1
+                ],
+                "n": 1730,
+                "forecast_mean": 0.054212784773694414,
+                "observed_frequency": 0.1815028901734104
+              },
+              {
+                "range": [
+                  0.1,
+                  0.2
+                ],
+                "n": 420,
+                "forecast_mean": 0.13887841261273026,
+                "observed_frequency": 0.530952380952381
+              },
+              {
+                "range": [
+                  0.2,
+                  0.3
+                ],
+                "n": 53,
+                "forecast_mean": 0.2224965490178013,
+                "observed_frequency": 0.7358490566037735
+              },
+              {
+                "range": [
+                  0.3,
+                  0.4
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.4,
+                  0.5
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.5,
+                  0.6
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.6,
+                  0.7
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.7,
+                  0.8
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.8,
+                  0.9
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.9,
+                  1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  1,
+                  1.1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              }
+            ]
+          },
+          "strong": {
+            "n": 2203,
+            "events": 426,
+            "auc": 0.8970914211587288,
+            "brier": 0.18267181628578444,
+            "pod": 0,
+            "recall": 0,
+            "precision": 0,
+            "far": 0,
+            "specificity": 1,
+            "confusion": {
+              "TP": 0,
+              "FN": 426,
+              "FP": 0,
+              "TN": 1777
+            },
+            "reliability": [
+              {
+                "range": [
+                  0,
+                  0.1
+                ],
+                "n": 2198,
+                "forecast_mean": 0.018610053576727806,
+                "observed_frequency": 0.19290263876251137
+              },
+              {
+                "range": [
+                  0.1,
+                  0.2
+                ],
+                "n": 5,
+                "forecast_mean": 0.11508468226889065,
+                "observed_frequency": 0.4
+              },
+              {
+                "range": [
+                  0.2,
+                  0.3
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.3,
+                  0.4
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.4,
+                  0.5
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.5,
+                  0.6
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.6,
+                  0.7
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.7,
+                  0.8
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.8,
+                  0.9
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.9,
+                  1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  1,
+                  1.1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              }
+            ]
+          },
+          "baselines": {
+            "pressure_only": {
+              "n": 2203,
+              "events": 576,
+              "auc": 0.8669927610462337,
+              "brier": 0.13445098210139322,
+              "pod": 0.5069444444444444,
+              "recall": 0.5069444444444444,
+              "precision": 0.6293103448275862,
+              "far": 0.3706896551724138,
+              "specificity": 0.8942839582052858,
+              "confusion": {
+                "TP": 292,
+                "FN": 284,
+                "FP": 172,
+                "TN": 1455
+              },
+              "reliability": [
+                {
+                  "range": [
+                    0,
+                    0.1
+                  ],
+                  "n": 394,
+                  "forecast_mean": 0.06803546676917895,
+                  "observed_frequency": 0.005076142131979695
+                },
+                {
+                  "range": [
+                    0.1,
+                    0.2
+                  ],
+                  "n": 527,
+                  "forecast_mean": 0.1388467574289355,
+                  "observed_frequency": 0.015180265654648957
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.3
+                  ],
+                  "n": 363,
+                  "forecast_mean": 0.24932600787707906,
+                  "observed_frequency": 0.15702479338842976
+                },
+                {
+                  "range": [
+                    0.3,
+                    0.4
+                  ],
+                  "n": 247,
+                  "forecast_mean": 0.34992813203071854,
+                  "observed_frequency": 0.42105263157894735
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.5
+                  ],
+                  "n": 208,
+                  "forecast_mean": 0.4459143335939105,
+                  "observed_frequency": 0.5432692307692307
+                },
+                {
+                  "range": [
+                    0.5,
+                    0.6
+                  ],
+                  "n": 180,
+                  "forecast_mean": 0.5537192993497106,
+                  "observed_frequency": 0.6555555555555556
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.7
+                  ],
+                  "n": 132,
+                  "forecast_mean": 0.6529271870326419,
+                  "observed_frequency": 0.5606060606060606
+                },
+                {
+                  "range": [
+                    0.7,
+                    0.8
+                  ],
+                  "n": 116,
+                  "forecast_mean": 0.7438092775330627,
+                  "observed_frequency": 0.6379310344827587
+                },
+                {
+                  "range": [
+                    0.8,
+                    0.9
+                  ],
+                  "n": 34,
+                  "forecast_mean": 0.8456583883306928,
+                  "observed_frequency": 0.7352941176470589
+                },
+                {
+                  "range": [
+                    0.9,
+                    1
+                  ],
+                  "n": 2,
+                  "forecast_mean": 0.904650535100893,
+                  "observed_frequency": 0.5
+                },
+                {
+                  "range": [
+                    1,
+                    1.1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                }
+              ]
+            },
+            "raw_surface_gust": {
+              "n": 2203,
+              "events": 576,
+              "auc": 0.7895186693300553,
+              "brier": 0.197384261403439,
+              "pod": 0.515625,
+              "recall": 0.515625,
+              "precision": 0.4393491124260355,
+              "far": 0.5606508875739645,
+              "specificity": 0.7670559311616472,
+              "confusion": {
+                "TP": 297,
+                "FN": 279,
+                "FP": 379,
+                "TN": 1248
+              },
+              "reliability": [
+                {
+                  "range": [
+                    0,
+                    0.1
+                  ],
+                  "n": 945,
+                  "forecast_mean": 0.030440424393488128,
+                  "observed_frequency": 0.025396825396825397
+                },
+                {
+                  "range": [
+                    0.1,
+                    0.2
+                  ],
+                  "n": 203,
+                  "forecast_mean": 0.1461927962949921,
+                  "observed_frequency": 0.32019704433497537
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.3
+                  ],
+                  "n": 155,
+                  "forecast_mean": 0.24673106597872135,
+                  "observed_frequency": 0.44516129032258067
+                },
+                {
+                  "range": [
+                    0.3,
+                    0.4
+                  ],
+                  "n": 114,
+                  "forecast_mean": 0.34767768955932576,
+                  "observed_frequency": 0.5964912280701754
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.5
+                  ],
+                  "n": 110,
+                  "forecast_mean": 0.44743230326525113,
+                  "observed_frequency": 0.4818181818181818
+                },
+                {
+                  "range": [
+                    0.5,
+                    0.6
+                  ],
+                  "n": 95,
+                  "forecast_mean": 0.5500754576865723,
+                  "observed_frequency": 0.47368421052631576
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.7
+                  ],
+                  "n": 85,
+                  "forecast_mean": 0.6522539795213017,
+                  "observed_frequency": 0.4
+                },
+                {
+                  "range": [
+                    0.7,
+                    0.8
+                  ],
+                  "n": 118,
+                  "forecast_mean": 0.7549318014658875,
+                  "observed_frequency": 0.2796610169491525
+                },
+                {
+                  "range": [
+                    0.8,
+                    0.9
+                  ],
+                  "n": 191,
+                  "forecast_mean": 0.8542133007670288,
+                  "observed_frequency": 0.42408376963350786
+                },
+                {
+                  "range": [
+                    0.9,
+                    1
+                  ],
+                  "n": 187,
+                  "forecast_mean": 0.9439215768238275,
+                  "observed_frequency": 0.5561497326203209
+                },
+                {
+                  "range": [
+                    1,
+                    1.1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                }
+              ]
+            }
+          },
+          "gust": {
+            "mae_mph": 7.092328642759873,
+            "bias_mph": -5.067544257830227,
+            "n": 2203
+          },
+          "timing": {
+            "event_days": 65,
+            "onset_mae_hours": 5.85,
+            "peak_time_mae_hours": 5.876923076923077,
+            "matched_onset_days": 20
+          }
+        },
+        "Refugio": {
+          "station": "RHWC1",
+          "event": {
+            "n": 2204,
+            "events": 586,
+            "auc": 0.8742949412960845,
+            "brier": 0.20429349792952567,
+            "pod": 0.2150170648464164,
+            "recall": 0.2150170648464164,
+            "precision": 0.7411764705882353,
+            "far": 0.25882352941176473,
+            "specificity": 0.9728059332509271,
+            "confusion": {
+              "TP": 126,
+              "FN": 460,
+              "FP": 44,
+              "TN": 1574
+            },
+            "reliability": [
+              {
+                "range": [
+                  0,
+                  0.1
+                ],
+                "n": 1602,
+                "forecast_mean": 0.05372502744142542,
+                "observed_frequency": 0.11922596754057428
+              },
+              {
+                "range": [
+                  0.1,
+                  0.2
+                ],
+                "n": 499,
+                "forecast_mean": 0.14134848423683244,
+                "observed_frequency": 0.625250501002004
+              },
+              {
+                "range": [
+                  0.2,
+                  0.3
+                ],
+                "n": 103,
+                "forecast_mean": 0.2297043493006625,
+                "observed_frequency": 0.8058252427184466
+              },
+              {
+                "range": [
+                  0.3,
+                  0.4
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.4,
+                  0.5
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.5,
+                  0.6
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.6,
+                  0.7
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.7,
+                  0.8
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.8,
+                  0.9
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.9,
+                  1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  1,
+                  1.1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              }
+            ]
+          },
+          "strong": {
+            "n": 2204,
+            "events": 501,
+            "auc": 0.9120338301670294,
+            "brier": 0.20956384772789,
+            "pod": 0,
+            "recall": 0,
+            "precision": 0,
+            "far": 0,
+            "specificity": 1,
+            "confusion": {
+              "TP": 0,
+              "FN": 501,
+              "FP": 0,
+              "TN": 1703
+            },
+            "reliability": [
+              {
+                "range": [
+                  0,
+                  0.1
+                ],
+                "n": 2184,
+                "forecast_mean": 0.021665456412733815,
+                "observed_frequency": 0.22023809523809523
+              },
+              {
+                "range": [
+                  0.1,
+                  0.2
+                ],
+                "n": 20,
+                "forecast_mean": 0.11844790514178889,
+                "observed_frequency": 1
+              },
+              {
+                "range": [
+                  0.2,
+                  0.3
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.3,
+                  0.4
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.4,
+                  0.5
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.5,
+                  0.6
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.6,
+                  0.7
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.7,
+                  0.8
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.8,
+                  0.9
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.9,
+                  1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  1,
+                  1.1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              }
+            ]
+          },
+          "baselines": {
+            "pressure_only": {
+              "n": 2204,
+              "events": 586,
+              "auc": 0.884610841345444,
+              "brier": 0.1253505853196838,
+              "pod": 0.568259385665529,
+              "recall": 0.568259385665529,
+              "precision": 0.7176724137931034,
+              "far": 0.2823275862068966,
+              "specificity": 0.919035846724351,
+              "confusion": {
+                "TP": 333,
+                "FN": 253,
+                "FP": 131,
+                "TN": 1487
+              },
+              "reliability": [
+                {
+                  "range": [
+                    0,
+                    0.1
+                  ],
+                  "n": 394,
+                  "forecast_mean": 0.06803546676917895,
+                  "observed_frequency": 0.007614213197969543
+                },
+                {
+                  "range": [
+                    0.1,
+                    0.2
+                  ],
+                  "n": 528,
+                  "forecast_mean": 0.1388641825058347,
+                  "observed_frequency": 0.032196969696969696
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.3
+                  ],
+                  "n": 363,
+                  "forecast_mean": 0.24932600787707906,
+                  "observed_frequency": 0.15151515151515152
+                },
+                {
+                  "range": [
+                    0.3,
+                    0.4
+                  ],
+                  "n": 247,
+                  "forecast_mean": 0.34992813203071854,
+                  "observed_frequency": 0.32388663967611336
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.5
+                  ],
+                  "n": 208,
+                  "forecast_mean": 0.4459143335939105,
+                  "observed_frequency": 0.47115384615384615
+                },
+                {
+                  "range": [
+                    0.5,
+                    0.6
+                  ],
+                  "n": 180,
+                  "forecast_mean": 0.5537192993497106,
+                  "observed_frequency": 0.7
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.7
+                  ],
+                  "n": 132,
+                  "forecast_mean": 0.6529271870326419,
+                  "observed_frequency": 0.6515151515151515
+                },
+                {
+                  "range": [
+                    0.7,
+                    0.8
+                  ],
+                  "n": 116,
+                  "forecast_mean": 0.7438092775330627,
+                  "observed_frequency": 0.7327586206896551
+                },
+                {
+                  "range": [
+                    0.8,
+                    0.9
+                  ],
+                  "n": 34,
+                  "forecast_mean": 0.8456583883306928,
+                  "observed_frequency": 1
+                },
+                {
+                  "range": [
+                    0.9,
+                    1
+                  ],
+                  "n": 2,
+                  "forecast_mean": 0.904650535100893,
+                  "observed_frequency": 1
+                },
+                {
+                  "range": [
+                    1,
+                    1.1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                }
+              ]
+            },
+            "raw_surface_gust": {
+              "n": 2204,
+              "events": 586,
+              "auc": 0.8910834595442906,
+              "brier": 0.16112463114187717,
+              "pod": 0.8959044368600683,
+              "recall": 0.8959044368600683,
+              "precision": 0.5614973262032086,
+              "far": 0.4385026737967914,
+              "specificity": 0.7466007416563659,
+              "confusion": {
+                "TP": 525,
+                "FN": 61,
+                "FP": 410,
+                "TN": 1208
+              },
+              "reliability": [
+                {
+                  "range": [
+                    0,
+                    0.1
+                  ],
+                  "n": 1015,
+                  "forecast_mean": 0.026667529785430535,
+                  "observed_frequency": 0.009852216748768473
+                },
+                {
+                  "range": [
+                    0.1,
+                    0.2
+                  ],
+                  "n": 83,
+                  "forecast_mean": 0.1475536201765964,
+                  "observed_frequency": 0.1686746987951807
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.3
+                  ],
+                  "n": 57,
+                  "forecast_mean": 0.2557941041993439,
+                  "observed_frequency": 0.21052631578947367
+                },
+                {
+                  "range": [
+                    0.3,
+                    0.4
+                  ],
+                  "n": 54,
+                  "forecast_mean": 0.3531691490858422,
+                  "observed_frequency": 0.2037037037037037
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.5
+                  ],
+                  "n": 60,
+                  "forecast_mean": 0.4512349376347824,
+                  "observed_frequency": 0.23333333333333334
+                },
+                {
+                  "range": [
+                    0.5,
+                    0.6
+                  ],
+                  "n": 63,
+                  "forecast_mean": 0.5549573912857176,
+                  "observed_frequency": 0.4126984126984127
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.7
+                  ],
+                  "n": 75,
+                  "forecast_mean": 0.6557639135269302,
+                  "observed_frequency": 0.3333333333333333
+                },
+                {
+                  "range": [
+                    0.7,
+                    0.8
+                  ],
+                  "n": 109,
+                  "forecast_mean": 0.7529127400838985,
+                  "observed_frequency": 0.44036697247706424
+                },
+                {
+                  "range": [
+                    0.8,
+                    0.9
+                  ],
+                  "n": 193,
+                  "forecast_mean": 0.8552586366227225,
+                  "observed_frequency": 0.47150259067357514
+                },
+                {
+                  "range": [
+                    0.9,
+                    1
+                  ],
+                  "n": 495,
+                  "forecast_mean": 0.9603639288909542,
+                  "observed_frequency": 0.6767676767676768
+                },
+                {
+                  "range": [
+                    1,
+                    1.1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                }
+              ]
+            }
+          },
+          "gust": {
+            "mae_mph": 6.6349364791288625,
+            "bias_mph": -2.9254083484573496,
+            "n": 2204
+          },
+          "timing": {
+            "event_days": 68,
+            "onset_mae_hours": 3.7666666666666666,
+            "peak_time_mae_hours": 3.985294117647059,
+            "matched_onset_days": 30
+          }
+        },
+        "San Marcos Pass": {
+          "station": "MPWC1",
+          "event": {
+            "n": 2202,
+            "events": 7,
+            "auc": 0.8504393101204035,
+            "brier": 0.009816939423399729,
+            "pod": 0.2857142857142857,
+            "recall": 0.2857142857142857,
+            "precision": 0.04,
+            "far": 0.96,
+            "specificity": 0.9781321184510251,
+            "confusion": {
+              "TP": 2,
+              "FN": 5,
+              "FP": 48,
+              "TN": 2147
+            },
+            "reliability": [
+              {
+                "range": [
+                  0,
+                  0.1
+                ],
+                "n": 1665,
+                "forecast_mean": 0.057351984580398675,
+                "observed_frequency": 0.0006006006006006006
+              },
+              {
+                "range": [
+                  0.1,
+                  0.2
+                ],
+                "n": 530,
+                "forecast_mean": 0.13634632785813777,
+                "observed_frequency": 0.011320754716981131
+              },
+              {
+                "range": [
+                  0.2,
+                  0.3
+                ],
+                "n": 7,
+                "forecast_mean": 0.21374100433506626,
+                "observed_frequency": 0
+              },
+              {
+                "range": [
+                  0.3,
+                  0.4
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.4,
+                  0.5
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.5,
+                  0.6
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.6,
+                  0.7
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.7,
+                  0.8
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.8,
+                  0.9
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.9,
+                  1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  1,
+                  1.1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              }
+            ]
+          },
+          "strong": {
+            "n": 2202,
+            "events": 68,
+            "auc": 0.9055557086939743,
+            "brier": 0.029606550070072193,
+            "pod": 0,
+            "recall": 0,
+            "precision": 0,
+            "far": 0,
+            "specificity": 1,
+            "confusion": {
+              "TP": 0,
+              "FN": 68,
+              "FP": 0,
+              "TN": 2134
+            },
+            "reliability": [
+              {
+                "range": [
+                  0,
+                  0.1
+                ],
+                "n": 2202,
+                "forecast_mean": 0.016732300270298543,
+                "observed_frequency": 0.030881017257039057
+              },
+              {
+                "range": [
+                  0.1,
+                  0.2
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.2,
+                  0.3
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.3,
+                  0.4
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.4,
+                  0.5
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.5,
+                  0.6
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.6,
+                  0.7
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.7,
+                  0.8
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.8,
+                  0.9
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.9,
+                  1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  1,
+                  1.1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              }
+            ]
+          },
+          "baselines": {
+            "pressure_only": {
+              "n": 2202,
+              "events": 7,
+              "auc": 0.8986007159127888,
+              "brier": 0.1999200743857986,
+              "pod": 0.8571428571428571,
+              "recall": 0.8571428571428571,
+              "precision": 0.008995502248875561,
+              "far": 0.9910044977511244,
+              "specificity": 0.6988610478359909,
+              "confusion": {
+                "TP": 6,
+                "FN": 1,
+                "FP": 661,
+                "TN": 1534
+              },
+              "reliability": [
+                {
+                  "range": [
+                    0,
+                    0.1
+                  ],
+                  "n": 271,
+                  "forecast_mean": 0.07120733555723918,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.1,
+                    0.2
+                  ],
+                  "n": 468,
+                  "forecast_mean": 0.14382243692564062,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.3
+                  ],
+                  "n": 339,
+                  "forecast_mean": 0.2491725994176496,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.3,
+                    0.4
+                  ],
+                  "n": 238,
+                  "forecast_mean": 0.3499415876869595,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.5
+                  ],
+                  "n": 219,
+                  "forecast_mean": 0.44392741956711057,
+                  "observed_frequency": 0.0045662100456621
+                },
+                {
+                  "range": [
+                    0.5,
+                    0.6
+                  ],
+                  "n": 216,
+                  "forecast_mean": 0.5533939256597834,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.7
+                  ],
+                  "n": 141,
+                  "forecast_mean": 0.6514136228005525,
+                  "observed_frequency": 0.0070921985815602835
+                },
+                {
+                  "range": [
+                    0.7,
+                    0.8
+                  ],
+                  "n": 131,
+                  "forecast_mean": 0.7417506316013696,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.8,
+                    0.9
+                  ],
+                  "n": 110,
+                  "forecast_mean": 0.8485207785168397,
+                  "observed_frequency": 0.01818181818181818
+                },
+                {
+                  "range": [
+                    0.9,
+                    1
+                  ],
+                  "n": 69,
+                  "forecast_mean": 0.9396164095462691,
+                  "observed_frequency": 0.043478260869565216
+                },
+                {
+                  "range": [
+                    1,
+                    1.1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                }
+              ]
+            },
+            "raw_surface_gust": {
+              "n": 2202,
+              "events": 7,
+              "auc": 0.5696062479661569,
+              "brier": 0.09252633263652892,
+              "pod": 0,
+              "recall": 0,
+              "precision": 0,
+              "far": 1,
+              "specificity": 0.8678815489749431,
+              "confusion": {
+                "TP": 0,
+                "FN": 7,
+                "FP": 290,
+                "TN": 1905
+              },
+              "reliability": [
+                {
+                  "range": [
+                    0,
+                    0.1
+                  ],
+                  "n": 1362,
+                  "forecast_mean": 0.029079766499112286,
+                  "observed_frequency": 0.004405286343612335
+                },
+                {
+                  "range": [
+                    0.1,
+                    0.2
+                  ],
+                  "n": 265,
+                  "forecast_mean": 0.14458255890507415,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.3
+                  ],
+                  "n": 123,
+                  "forecast_mean": 0.2500477544014802,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.3,
+                    0.4
+                  ],
+                  "n": 95,
+                  "forecast_mean": 0.3486245689856654,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.5
+                  ],
+                  "n": 67,
+                  "forecast_mean": 0.45537145324437284,
+                  "observed_frequency": 0.014925373134328358
+                },
+                {
+                  "range": [
+                    0.5,
+                    0.6
+                  ],
+                  "n": 73,
+                  "forecast_mean": 0.5452500577454541,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.7
+                  ],
+                  "n": 56,
+                  "forecast_mean": 0.6473359492749103,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.7,
+                    0.8
+                  ],
+                  "n": 62,
+                  "forecast_mean": 0.7458966697346349,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.8,
+                    0.9
+                  ],
+                  "n": 61,
+                  "forecast_mean": 0.8504329696056779,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.9,
+                    1
+                  ],
+                  "n": 38,
+                  "forecast_mean": 0.9381397706735127,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    1,
+                    1.1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                }
+              ]
+            }
+          },
+          "gust": {
+            "mae_mph": 6.541235240690283,
+            "bias_mph": -0.957129881925522,
+            "n": 2202
+          },
+          "timing": {
+            "event_days": 5,
+            "onset_mae_hours": 3.6666666666666665,
+            "peak_time_mae_hours": 6,
+            "matched_onset_days": 3
+          }
+        },
+        "Montecito": {
+          "station": "MTIC1",
+          "event": {
+            "n": 2202,
+            "events": 96,
+            "auc": 0.84363623773346,
+            "brier": 0.03845382746117763,
+            "pod": 0.22916666666666666,
+            "recall": 0.22916666666666666,
+            "precision": 0.24175824175824176,
+            "far": 0.7582417582417582,
+            "specificity": 0.9672364672364673,
+            "confusion": {
+              "TP": 22,
+              "FN": 74,
+              "FP": 69,
+              "TN": 2037
+            },
+            "reliability": [
+              {
+                "range": [
+                  0,
+                  0.1
+                ],
+                "n": 1839,
+                "forecast_mean": 0.04778833495547674,
+                "observed_frequency": 0.025013594344752584
+              },
+              {
+                "range": [
+                  0.1,
+                  0.2
+                ],
+                "n": 301,
+                "forecast_mean": 0.13831240224928107,
+                "observed_frequency": 0.09634551495016612
+              },
+              {
+                "range": [
+                  0.2,
+                  0.3
+                ],
+                "n": 56,
+                "forecast_mean": 0.2349094643936826,
+                "observed_frequency": 0.26785714285714285
+              },
+              {
+                "range": [
+                  0.3,
+                  0.4
+                ],
+                "n": 6,
+                "forecast_mean": 0.3143910012699917,
+                "observed_frequency": 1
+              },
+              {
+                "range": [
+                  0.4,
+                  0.5
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.5,
+                  0.6
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.6,
+                  0.7
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.7,
+                  0.8
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.8,
+                  0.9
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.9,
+                  1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  1,
+                  1.1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              }
+            ]
+          },
+          "strong": {
+            "n": 2202,
+            "events": 131,
+            "auc": 0.9316036431859817,
+            "brier": 0.055611091650924885,
+            "pod": 0,
+            "recall": 0,
+            "precision": 0,
+            "far": 0,
+            "specificity": 1,
+            "confusion": {
+              "TP": 0,
+              "FN": 131,
+              "FP": 0,
+              "TN": 2071
+            },
+            "reliability": [
+              {
+                "range": [
+                  0,
+                  0.1
+                ],
+                "n": 2192,
+                "forecast_mean": 0.016486225387032524,
+                "observed_frequency": 0.05656934306569343
+              },
+              {
+                "range": [
+                  0.1,
+                  0.2
+                ],
+                "n": 8,
+                "forecast_mean": 0.1501771787347096,
+                "observed_frequency": 0.625
+              },
+              {
+                "range": [
+                  0.2,
+                  0.3
+                ],
+                "n": 2,
+                "forecast_mean": 0.20767116695275376,
+                "observed_frequency": 1
+              },
+              {
+                "range": [
+                  0.3,
+                  0.4
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.4,
+                  0.5
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.5,
+                  0.6
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.6,
+                  0.7
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.7,
+                  0.8
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.8,
+                  0.9
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.9,
+                  1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  1,
+                  1.1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              }
+            ]
+          },
+          "baselines": {
+            "pressure_only": {
+              "n": 2202,
+              "events": 96,
+              "auc": 0.7816456948401392,
+              "brier": 0.13394196497852373,
+              "pod": 0.4583333333333333,
+              "recall": 0.4583333333333333,
+              "precision": 0.10526315789473684,
+              "far": 0.8947368421052632,
+              "specificity": 0.8224121557454891,
+              "confusion": {
+                "TP": 44,
+                "FN": 52,
+                "FP": 374,
+                "TN": 1732
+              },
+              "reliability": [
+                {
+                  "range": [
+                    0,
+                    0.1
+                  ],
+                  "n": 964,
+                  "forecast_mean": 0.038110177551984994,
+                  "observed_frequency": 0.004149377593360996
+                },
+                {
+                  "range": [
+                    0.1,
+                    0.2
+                  ],
+                  "n": 362,
+                  "forecast_mean": 0.15183112117490108,
+                  "observed_frequency": 0.03867403314917127
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.3
+                  ],
+                  "n": 195,
+                  "forecast_mean": 0.24952755083821052,
+                  "observed_frequency": 0.07179487179487179
+                },
+                {
+                  "range": [
+                    0.3,
+                    0.4
+                  ],
+                  "n": 128,
+                  "forecast_mean": 0.3425620287586264,
+                  "observed_frequency": 0.0859375
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.5
+                  ],
+                  "n": 135,
+                  "forecast_mean": 0.44252884066557113,
+                  "observed_frequency": 0.06666666666666667
+                },
+                {
+                  "range": [
+                    0.5,
+                    0.6
+                  ],
+                  "n": 119,
+                  "forecast_mean": 0.5533093160702426,
+                  "observed_frequency": 0.058823529411764705
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.7
+                  ],
+                  "n": 68,
+                  "forecast_mean": 0.6482525249546965,
+                  "observed_frequency": 0.10294117647058823
+                },
+                {
+                  "range": [
+                    0.7,
+                    0.8
+                  ],
+                  "n": 73,
+                  "forecast_mean": 0.7451075598089332,
+                  "observed_frequency": 0.0684931506849315
+                },
+                {
+                  "range": [
+                    0.8,
+                    0.9
+                  ],
+                  "n": 90,
+                  "forecast_mean": 0.8506303872645246,
+                  "observed_frequency": 0.14444444444444443
+                },
+                {
+                  "range": [
+                    0.9,
+                    1
+                  ],
+                  "n": 68,
+                  "forecast_mean": 0.9401306135822306,
+                  "observed_frequency": 0.17647058823529413
+                },
+                {
+                  "range": [
+                    1,
+                    1.1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                }
+              ]
+            },
+            "raw_surface_gust": {
+              "n": 2202,
+              "events": 96,
+              "auc": 0.9505826606521051,
+              "brier": 0.0800957523696855,
+              "pod": 0.8645833333333334,
+              "recall": 0.8645833333333334,
+              "precision": 0.26517571884984026,
+              "far": 0.7348242811501597,
+              "specificity": 0.8907882241215574,
+              "confusion": {
+                "TP": 83,
+                "FN": 13,
+                "FP": 230,
+                "TN": 1876
+              },
+              "reliability": [
+                {
+                  "range": [
+                    0,
+                    0.1
+                  ],
+                  "n": 1604,
+                  "forecast_mean": 0.02502784205625786,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.1,
+                    0.2
+                  ],
+                  "n": 109,
+                  "forecast_mean": 0.1416729425453765,
+                  "observed_frequency": 0.009174311926605505
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.3
+                  ],
+                  "n": 69,
+                  "forecast_mean": 0.24524260022638134,
+                  "observed_frequency": 0.028985507246376812
+                },
+                {
+                  "range": [
+                    0.3,
+                    0.4
+                  ],
+                  "n": 43,
+                  "forecast_mean": 0.3489465106828817,
+                  "observed_frequency": 0.13953488372093023
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.5
+                  ],
+                  "n": 64,
+                  "forecast_mean": 0.4491317158030923,
+                  "observed_frequency": 0.0625
+                },
+                {
+                  "range": [
+                    0.5,
+                    0.6
+                  ],
+                  "n": 47,
+                  "forecast_mean": 0.5516308148116305,
+                  "observed_frequency": 0.0851063829787234
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.7
+                  ],
+                  "n": 37,
+                  "forecast_mean": 0.6500192892915254,
+                  "observed_frequency": 0.16216216216216217
+                },
+                {
+                  "range": [
+                    0.7,
+                    0.8
+                  ],
+                  "n": 47,
+                  "forecast_mean": 0.749605648341824,
+                  "observed_frequency": 0.1276595744680851
+                },
+                {
+                  "range": [
+                    0.8,
+                    0.9
+                  ],
+                  "n": 75,
+                  "forecast_mean": 0.8596135532178202,
+                  "observed_frequency": 0.3466666666666667
+                },
+                {
+                  "range": [
+                    0.9,
+                    1
+                  ],
+                  "n": 107,
+                  "forecast_mean": 0.9468596303791373,
+                  "observed_frequency": 0.38317757009345793
+                },
+                {
+                  "range": [
+                    1,
+                    1.1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                }
+              ]
+            }
+          },
+          "gust": {
+            "mae_mph": 4.888192552225258,
+            "bias_mph": -1.497093551316983,
+            "n": 2202
+          },
+          "timing": {
+            "event_days": 27,
+            "onset_mae_hours": 6,
+            "peak_time_mae_hours": 4.703703703703703,
+            "matched_onset_days": 9
+          }
+        },
+        "Carpinteria": {
+          "station": "CXPC1",
+          "event": {
+            "n": 2204,
+            "events": 0,
+            "auc": null,
+            "brier": 0.004942002602201625,
+            "pod": 0,
+            "recall": 0,
+            "precision": 0,
+            "far": 1,
+            "specificity": 0.9868421052631579,
+            "confusion": {
+              "TP": 0,
+              "FN": 0,
+              "FP": 29,
+              "TN": 2175
+            },
+            "reliability": [
+              {
+                "range": [
+                  0,
+                  0.1
+                ],
+                "n": 1897,
+                "forecast_mean": 0.047690694704675636,
+                "observed_frequency": 0
+              },
+              {
+                "range": [
+                  0.1,
+                  0.2
+                ],
+                "n": 303,
+                "forecast_mean": 0.13677725778996785,
+                "observed_frequency": 0
+              },
+              {
+                "range": [
+                  0.2,
+                  0.3
+                ],
+                "n": 4,
+                "forecast_mean": 0.21237703264361024,
+                "observed_frequency": 0
+              },
+              {
+                "range": [
+                  0.3,
+                  0.4
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.4,
+                  0.5
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.5,
+                  0.6
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.6,
+                  0.7
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.7,
+                  0.8
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.8,
+                  0.9
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.9,
+                  1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  1,
+                  1.1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              }
+            ]
+          },
+          "strong": {
+            "n": 2204,
+            "events": 9,
+            "auc": 0.9336876740065806,
+            "brier": 0.004158962685265159,
+            "pod": 0,
+            "recall": 0,
+            "precision": 0,
+            "far": 0,
+            "specificity": 1,
+            "confusion": {
+              "TP": 0,
+              "FN": 9,
+              "FP": 0,
+              "TN": 2195
+            },
+            "reliability": [
+              {
+                "range": [
+                  0,
+                  0.1
+                ],
+                "n": 2204,
+                "forecast_mean": 0.015320318233513196,
+                "observed_frequency": 0.004083484573502722
+              },
+              {
+                "range": [
+                  0.1,
+                  0.2
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.2,
+                  0.3
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.3,
+                  0.4
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.4,
+                  0.5
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.5,
+                  0.6
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.6,
+                  0.7
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.7,
+                  0.8
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.8,
+                  0.9
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.9,
+                  1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  1,
+                  1.1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              }
+            ]
+          },
+          "baselines": {
+            "pressure_only": {
+              "n": 2204,
+              "events": 0,
+              "auc": null,
+              "brier": 0.1344676446310305,
+              "pod": 0,
+              "recall": 0,
+              "precision": 0,
+              "far": 1,
+              "specificity": 0.8098911070780399,
+              "confusion": {
+                "TP": 0,
+                "FN": 0,
+                "FP": 419,
+                "TN": 1785
+              },
+              "reliability": [
+                {
+                  "range": [
+                    0,
+                    0.1
+                  ],
+                  "n": 965,
+                  "forecast_mean": 0.03808599501741637,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.1,
+                    0.2
+                  ],
+                  "n": 362,
+                  "forecast_mean": 0.15183112117490108,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.3
+                  ],
+                  "n": 195,
+                  "forecast_mean": 0.24952755083821052,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.3,
+                    0.4
+                  ],
+                  "n": 128,
+                  "forecast_mean": 0.3425620287586264,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.5
+                  ],
+                  "n": 135,
+                  "forecast_mean": 0.44252884066557113,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.5,
+                    0.6
+                  ],
+                  "n": 119,
+                  "forecast_mean": 0.5533093160702426,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.7
+                  ],
+                  "n": 69,
+                  "forecast_mean": 0.6478787105524811,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.7,
+                    0.8
+                  ],
+                  "n": 73,
+                  "forecast_mean": 0.7451075598089332,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.8,
+                    0.9
+                  ],
+                  "n": 90,
+                  "forecast_mean": 0.8506303872645246,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.9,
+                    1
+                  ],
+                  "n": 68,
+                  "forecast_mean": 0.9401306135822306,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    1,
+                    1.1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                }
+              ]
+            },
+            "raw_surface_gust": {
+              "n": 2204,
+              "events": 0,
+              "auc": null,
+              "brier": 0.02482621417122346,
+              "pod": 0,
+              "recall": 0,
+              "precision": 0,
+              "far": 1,
+              "specificity": 0.9677858439201452,
+              "confusion": {
+                "TP": 0,
+                "FN": 0,
+                "FP": 71,
+                "TN": 2133
+              },
+              "reliability": [
+                {
+                  "range": [
+                    0,
+                    0.1
+                  ],
+                  "n": 1959,
+                  "forecast_mean": 0.02243448640353937,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.1,
+                    0.2
+                  ],
+                  "n": 79,
+                  "forecast_mean": 0.14762278135668305,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.3
+                  ],
+                  "n": 44,
+                  "forecast_mean": 0.2430565833754809,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.3,
+                    0.4
+                  ],
+                  "n": 28,
+                  "forecast_mean": 0.34133755317071407,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.5
+                  ],
+                  "n": 23,
+                  "forecast_mean": 0.45569224211843695,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.5,
+                    0.6
+                  ],
+                  "n": 12,
+                  "forecast_mean": 0.5524031581537935,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.7
+                  ],
+                  "n": 19,
+                  "forecast_mean": 0.6437127988560243,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.7,
+                    0.8
+                  ],
+                  "n": 10,
+                  "forecast_mean": 0.7547390386978374,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.8,
+                    0.9
+                  ],
+                  "n": 18,
+                  "forecast_mean": 0.8577388194731992,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.9,
+                    1
+                  ],
+                  "n": 12,
+                  "forecast_mean": 0.9315751860107602,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    1,
+                    1.1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                }
+              ]
+            }
+          },
+          "gust": {
+            "mae_mph": 4.514292196007262,
+            "bias_mph": -2.2978675136116076,
+            "n": 2204
+          },
+          "timing": {
+            "event_days": 0,
+            "onset_mae_hours": null,
+            "peak_time_mae_hours": null,
+            "matched_onset_days": 0
+          }
+        }
+      },
+      "spatial": {
+        "hours_scored": 1345,
+        "exact_zone_accuracy": 0.45427509293680296
+      }
+    },
+    "48h": {
+      "model": "gfs_seamless",
+      "lead_hours": 48,
+      "zones": {
+        "Gaviota": {
+          "station": "GVTC1",
+          "event": {
+            "n": 2203,
+            "events": 576,
+            "auc": 0.7691911237451342,
+            "brier": 0.21361376442610344,
+            "pod": 0.13368055555555555,
+            "recall": 0.13368055555555555,
+            "precision": 0.6111111111111112,
+            "far": 0.3888888888888889,
+            "specificity": 0.9698832206515058,
+            "confusion": {
+              "TP": 77,
+              "FN": 499,
+              "FP": 49,
+              "TN": 1578
+            },
+            "reliability": [
+              {
+                "range": [
+                  0,
+                  0.1
+                ],
+                "n": 1682,
+                "forecast_mean": 0.05227769118017519,
+                "observed_frequency": 0.187871581450654
+              },
+              {
+                "range": [
+                  0.1,
+                  0.2
+                ],
+                "n": 439,
+                "forecast_mean": 0.13839388352653723,
+                "observed_frequency": 0.4806378132118451
+              },
+              {
+                "range": [
+                  0.2,
+                  0.3
+                ],
+                "n": 82,
+                "forecast_mean": 0.22312510802186897,
+                "observed_frequency": 0.5975609756097561
+              },
+              {
+                "range": [
+                  0.3,
+                  0.4
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.4,
+                  0.5
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.5,
+                  0.6
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.6,
+                  0.7
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.7,
+                  0.8
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.8,
+                  0.9
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.9,
+                  1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  1,
+                  1.1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              }
+            ]
+          },
+          "strong": {
+            "n": 2203,
+            "events": 426,
+            "auc": 0.8735564767332187,
+            "brier": 0.1840700994707235,
+            "pod": 0,
+            "recall": 0,
+            "precision": 0,
+            "far": 0,
+            "specificity": 1,
+            "confusion": {
+              "TP": 0,
+              "FN": 426,
+              "FP": 0,
+              "TN": 1777
+            },
+            "reliability": [
+              {
+                "range": [
+                  0,
+                  0.1
+                ],
+                "n": 2200,
+                "forecast_mean": 0.017255110848986694,
+                "observed_frequency": 0.19227272727272726
+              },
+              {
+                "range": [
+                  0.1,
+                  0.2
+                ],
+                "n": 3,
+                "forecast_mean": 0.11866605280347513,
+                "observed_frequency": 1
+              },
+              {
+                "range": [
+                  0.2,
+                  0.3
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.3,
+                  0.4
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.4,
+                  0.5
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.5,
+                  0.6
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.6,
+                  0.7
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.7,
+                  0.8
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.8,
+                  0.9
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.9,
+                  1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  1,
+                  1.1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              }
+            ]
+          },
+          "baselines": {
+            "pressure_only": {
+              "n": 2203,
+              "events": 576,
+              "auc": 0.8260068804206788,
+              "brier": 0.15531616360762684,
+              "pod": 0.5729166666666666,
+              "recall": 0.5729166666666666,
+              "precision": 0.5463576158940397,
+              "far": 0.45364238410596025,
+              "specificity": 0.8315918869084205,
+              "confusion": {
+                "TP": 330,
+                "FN": 246,
+                "FP": 274,
+                "TN": 1353
+              },
+              "reliability": [
+                {
+                  "range": [
+                    0,
+                    0.1
+                  ],
+                  "n": 414,
+                  "forecast_mean": 0.06362460778658709,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.1,
+                    0.2
+                  ],
+                  "n": 479,
+                  "forecast_mean": 0.14174008065827778,
+                  "observed_frequency": 0.04384133611691023
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.3
+                  ],
+                  "n": 339,
+                  "forecast_mean": 0.24860172208561862,
+                  "observed_frequency": 0.20648967551622419
+                },
+                {
+                  "range": [
+                    0.3,
+                    0.4
+                  ],
+                  "n": 161,
+                  "forecast_mean": 0.34706364073910356,
+                  "observed_frequency": 0.39751552795031053
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.5
+                  ],
+                  "n": 206,
+                  "forecast_mean": 0.45062174363993907,
+                  "observed_frequency": 0.441747572815534
+                },
+                {
+                  "range": [
+                    0.5,
+                    0.6
+                  ],
+                  "n": 198,
+                  "forecast_mean": 0.5512483332272173,
+                  "observed_frequency": 0.5252525252525253
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.7
+                  ],
+                  "n": 121,
+                  "forecast_mean": 0.6477281552854376,
+                  "observed_frequency": 0.5041322314049587
+                },
+                {
+                  "range": [
+                    0.7,
+                    0.8
+                  ],
+                  "n": 138,
+                  "forecast_mean": 0.749768055581656,
+                  "observed_frequency": 0.5507246376811594
+                },
+                {
+                  "range": [
+                    0.8,
+                    0.9
+                  ],
+                  "n": 86,
+                  "forecast_mean": 0.8534825072725338,
+                  "observed_frequency": 0.6744186046511628
+                },
+                {
+                  "range": [
+                    0.9,
+                    1
+                  ],
+                  "n": 61,
+                  "forecast_mean": 0.9386888965461601,
+                  "observed_frequency": 0.5081967213114754
+                },
+                {
+                  "range": [
+                    1,
+                    1.1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                }
+              ]
+            },
+            "raw_surface_gust": {
+              "n": 2203,
+              "events": 576,
+              "auc": 0.8082680290923991,
+              "brier": 0.17461105795922896,
+              "pod": 0.3229166666666667,
+              "recall": 0.3229166666666667,
+              "precision": 0.5269121813031161,
+              "far": 0.4730878186968839,
+              "specificity": 0.8973570989551322,
+              "confusion": {
+                "TP": 186,
+                "FN": 390,
+                "FP": 167,
+                "TN": 1460
+              },
+              "reliability": [
+                {
+                  "range": [
+                    0,
+                    0.1
+                  ],
+                  "n": 1187,
+                  "forecast_mean": 0.03594998378956113,
+                  "observed_frequency": 0.07245155855096883
+                },
+                {
+                  "range": [
+                    0.1,
+                    0.2
+                  ],
+                  "n": 279,
+                  "forecast_mean": 0.14670703772069213,
+                  "observed_frequency": 0.46953405017921146
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.3
+                  ],
+                  "n": 164,
+                  "forecast_mean": 0.24384350877062488,
+                  "observed_frequency": 0.5182926829268293
+                },
+                {
+                  "range": [
+                    0.3,
+                    0.4
+                  ],
+                  "n": 127,
+                  "forecast_mean": 0.34744018881617167,
+                  "observed_frequency": 0.4015748031496063
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.5
+                  ],
+                  "n": 93,
+                  "forecast_mean": 0.4491824811148025,
+                  "observed_frequency": 0.3978494623655914
+                },
+                {
+                  "range": [
+                    0.5,
+                    0.6
+                  ],
+                  "n": 82,
+                  "forecast_mean": 0.5513208974880699,
+                  "observed_frequency": 0.4878048780487805
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.7
+                  ],
+                  "n": 78,
+                  "forecast_mean": 0.6462273903266608,
+                  "observed_frequency": 0.44871794871794873
+                },
+                {
+                  "range": [
+                    0.7,
+                    0.8
+                  ],
+                  "n": 88,
+                  "forecast_mean": 0.7483865760223188,
+                  "observed_frequency": 0.5568181818181818
+                },
+                {
+                  "range": [
+                    0.8,
+                    0.9
+                  ],
+                  "n": 82,
+                  "forecast_mean": 0.8457089613439178,
+                  "observed_frequency": 0.573170731707317
+                },
+                {
+                  "range": [
+                    0.9,
+                    1
+                  ],
+                  "n": 23,
+                  "forecast_mean": 0.9204303451520408,
+                  "observed_frequency": 0.6521739130434783
+                },
+                {
+                  "range": [
+                    1,
+                    1.1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                }
+              ]
+            }
+          },
+          "gust": {
+            "mae_mph": 12.273717657739438,
+            "bias_mph": -11.865093054925099,
+            "n": 2203
+          },
+          "timing": {
+            "event_days": 65,
+            "onset_mae_hours": 4.178571428571429,
+            "peak_time_mae_hours": 6.184615384615385,
+            "matched_onset_days": 28
+          }
+        },
+        "Refugio": {
+          "station": "RHWC1",
+          "event": {
+            "n": 2204,
+            "events": 586,
+            "auc": 0.7940806709501048,
+            "brier": 0.22025704396535745,
+            "pod": 0.05631399317406143,
+            "recall": 0.05631399317406143,
+            "precision": 0.5238095238095238,
+            "far": 0.47619047619047616,
+            "specificity": 0.9814585908529048,
+            "confusion": {
+              "TP": 33,
+              "FN": 553,
+              "FP": 30,
+              "TN": 1588
+            },
+            "reliability": [
+              {
+                "range": [
+                  0,
+                  0.1
+                ],
+                "n": 1767,
+                "forecast_mean": 0.05302594434608277,
+                "observed_frequency": 0.18902093944538767
+              },
+              {
+                "range": [
+                  0.1,
+                  0.2
+                ],
+                "n": 416,
+                "forecast_mean": 0.1362720085084031,
+                "observed_frequency": 0.5721153846153846
+              },
+              {
+                "range": [
+                  0.2,
+                  0.3
+                ],
+                "n": 21,
+                "forecast_mean": 0.21143385259546804,
+                "observed_frequency": 0.6666666666666666
+              },
+              {
+                "range": [
+                  0.3,
+                  0.4
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.4,
+                  0.5
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.5,
+                  0.6
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.6,
+                  0.7
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.7,
+                  0.8
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.8,
+                  0.9
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.9,
+                  1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  1,
+                  1.1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              }
+            ]
+          },
+          "strong": {
+            "n": 2204,
+            "events": 501,
+            "auc": 0.855832668192681,
+            "brier": 0.2181867269545729,
+            "pod": 0,
+            "recall": 0,
+            "precision": 0,
+            "far": 0,
+            "specificity": 1,
+            "confusion": {
+              "TP": 0,
+              "FN": 501,
+              "FP": 0,
+              "TN": 1703
+            },
+            "reliability": [
+              {
+                "range": [
+                  0,
+                  0.1
+                ],
+                "n": 2204,
+                "forecast_mean": 0.016570747775569994,
+                "observed_frequency": 0.22731397459165154
+              },
+              {
+                "range": [
+                  0.1,
+                  0.2
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.2,
+                  0.3
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.3,
+                  0.4
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.4,
+                  0.5
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.5,
+                  0.6
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.6,
+                  0.7
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.7,
+                  0.8
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.8,
+                  0.9
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.9,
+                  1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  1,
+                  1.1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              }
+            ]
+          },
+          "baselines": {
+            "pressure_only": {
+              "n": 2204,
+              "events": 586,
+              "auc": 0.8415047017976096,
+              "brier": 0.14634240092489462,
+              "pod": 0.6194539249146758,
+              "recall": 0.6194539249146758,
+              "precision": 0.6009933774834437,
+              "far": 0.3990066225165563,
+              "specificity": 0.8510506798516687,
+              "confusion": {
+                "TP": 363,
+                "FN": 223,
+                "FP": 241,
+                "TN": 1377
+              },
+              "reliability": [
+                {
+                  "range": [
+                    0,
+                    0.1
+                  ],
+                  "n": 415,
+                  "forecast_mean": 0.06370105322541243,
+                  "observed_frequency": 0.012048192771084338
+                },
+                {
+                  "range": [
+                    0.1,
+                    0.2
+                  ],
+                  "n": 479,
+                  "forecast_mean": 0.14174008065827778,
+                  "observed_frequency": 0.05219206680584551
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.3
+                  ],
+                  "n": 339,
+                  "forecast_mean": 0.24860172208561862,
+                  "observed_frequency": 0.1592920353982301
+                },
+                {
+                  "range": [
+                    0.3,
+                    0.4
+                  ],
+                  "n": 161,
+                  "forecast_mean": 0.34706364073910356,
+                  "observed_frequency": 0.3105590062111801
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.5
+                  ],
+                  "n": 206,
+                  "forecast_mean": 0.45062174363993907,
+                  "observed_frequency": 0.4320388349514563
+                },
+                {
+                  "range": [
+                    0.5,
+                    0.6
+                  ],
+                  "n": 198,
+                  "forecast_mean": 0.5512483332272173,
+                  "observed_frequency": 0.5454545454545454
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.7
+                  ],
+                  "n": 121,
+                  "forecast_mean": 0.6477281552854376,
+                  "observed_frequency": 0.5619834710743802
+                },
+                {
+                  "range": [
+                    0.7,
+                    0.8
+                  ],
+                  "n": 138,
+                  "forecast_mean": 0.749768055581656,
+                  "observed_frequency": 0.6811594202898551
+                },
+                {
+                  "range": [
+                    0.8,
+                    0.9
+                  ],
+                  "n": 86,
+                  "forecast_mean": 0.8534825072725338,
+                  "observed_frequency": 0.6744186046511628
+                },
+                {
+                  "range": [
+                    0.9,
+                    1
+                  ],
+                  "n": 61,
+                  "forecast_mean": 0.9386888965461601,
+                  "observed_frequency": 0.5737704918032787
+                },
+                {
+                  "range": [
+                    1,
+                    1.1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                }
+              ]
+            },
+            "raw_surface_gust": {
+              "n": 2204,
+              "events": 586,
+              "auc": 0.8410227095347984,
+              "brier": 0.22456160067072747,
+              "pod": 0.030716723549488054,
+              "recall": 0.030716723549488054,
+              "precision": 0.391304347826087,
+              "far": 0.6086956521739131,
+              "specificity": 0.9826946847960445,
+              "confusion": {
+                "TP": 18,
+                "FN": 568,
+                "FP": 28,
+                "TN": 1590
+              },
+              "reliability": [
+                {
+                  "range": [
+                    0,
+                    0.1
+                  ],
+                  "n": 1871,
+                  "forecast_mean": 0.035447927767985166,
+                  "observed_frequency": 0.22073757349011225
+                },
+                {
+                  "range": [
+                    0.1,
+                    0.2
+                  ],
+                  "n": 192,
+                  "forecast_mean": 0.13903368719220444,
+                  "observed_frequency": 0.5572916666666666
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.3
+                  ],
+                  "n": 50,
+                  "forecast_mean": 0.2389668418872246,
+                  "observed_frequency": 0.62
+                },
+                {
+                  "range": [
+                    0.3,
+                    0.4
+                  ],
+                  "n": 28,
+                  "forecast_mean": 0.3464911380401455,
+                  "observed_frequency": 0.4642857142857143
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.5
+                  ],
+                  "n": 17,
+                  "forecast_mean": 0.4637010317320215,
+                  "observed_frequency": 0.23529411764705882
+                },
+                {
+                  "range": [
+                    0.5,
+                    0.6
+                  ],
+                  "n": 21,
+                  "forecast_mean": 0.5508312601227805,
+                  "observed_frequency": 0.3333333333333333
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.7
+                  ],
+                  "n": 14,
+                  "forecast_mean": 0.6379165222886717,
+                  "observed_frequency": 0.5
+                },
+                {
+                  "range": [
+                    0.7,
+                    0.8
+                  ],
+                  "n": 9,
+                  "forecast_mean": 0.7384492167174227,
+                  "observed_frequency": 0.3333333333333333
+                },
+                {
+                  "range": [
+                    0.8,
+                    0.9
+                  ],
+                  "n": 2,
+                  "forecast_mean": 0.827783469797027,
+                  "observed_frequency": 0.5
+                },
+                {
+                  "range": [
+                    0.9,
+                    1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                },
+                {
+                  "range": [
+                    1,
+                    1.1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                }
+              ]
+            }
+          },
+          "gust": {
+            "mae_mph": 15.166606170598932,
+            "bias_mph": -14.8515426497278,
+            "n": 2204
+          },
+          "timing": {
+            "event_days": 68,
+            "onset_mae_hours": 8.333333333333334,
+            "peak_time_mae_hours": 7.382352941176471,
+            "matched_onset_days": 18
+          }
+        },
+        "San Marcos Pass": {
+          "station": "MPWC1",
+          "event": {
+            "n": 2202,
+            "events": 7,
+            "auc": 0.8118451025056947,
+            "brier": 0.011569108543146637,
+            "pod": 0.2857142857142857,
+            "recall": 0.2857142857142857,
+            "precision": 0.015037593984962405,
+            "far": 0.9849624060150376,
+            "specificity": 0.9403189066059225,
+            "confusion": {
+              "TP": 2,
+              "FN": 5,
+              "FP": 131,
+              "TN": 2064
+            },
+            "reliability": [
+              {
+                "range": [
+                  0,
+                  0.1
+                ],
+                "n": 1541,
+                "forecast_mean": 0.056270881600555274,
+                "observed_frequency": 0.0012978585334198572
+              },
+              {
+                "range": [
+                  0.1,
+                  0.2
+                ],
+                "n": 605,
+                "forecast_mean": 0.1393968145952662,
+                "observed_frequency": 0.008264462809917356
+              },
+              {
+                "range": [
+                  0.2,
+                  0.3
+                ],
+                "n": 56,
+                "forecast_mean": 0.22269493083062325,
+                "observed_frequency": 0
+              },
+              {
+                "range": [
+                  0.3,
+                  0.4
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.4,
+                  0.5
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.5,
+                  0.6
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.6,
+                  0.7
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.7,
+                  0.8
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.8,
+                  0.9
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.9,
+                  1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  1,
+                  1.1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              }
+            ]
+          },
+          "strong": {
+            "n": 2202,
+            "events": 68,
+            "auc": 0.8186159655989856,
+            "brier": 0.02966754320887395,
+            "pod": 0,
+            "recall": 0,
+            "precision": 0,
+            "far": 0,
+            "specificity": 1,
+            "confusion": {
+              "TP": 0,
+              "FN": 68,
+              "FP": 0,
+              "TN": 2134
+            },
+            "reliability": [
+              {
+                "range": [
+                  0,
+                  0.1
+                ],
+                "n": 2202,
+                "forecast_mean": 0.01726490561195741,
+                "observed_frequency": 0.030881017257039057
+              },
+              {
+                "range": [
+                  0.1,
+                  0.2
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.2,
+                  0.3
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.3,
+                  0.4
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.4,
+                  0.5
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.5,
+                  0.6
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.6,
+                  0.7
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.7,
+                  0.8
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.8,
+                  0.9
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.9,
+                  1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  1,
+                  1.1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              }
+            ]
+          },
+          "baselines": {
+            "pressure_only": {
+              "n": 2202,
+              "events": 7,
+              "auc": 0.8573381060852587,
+              "brier": 0.2598547730652563,
+              "pod": 0.8571428571428571,
+              "recall": 0.8571428571428571,
+              "precision": 0.006993006993006993,
+              "far": 0.993006993006993,
+              "specificity": 0.6118451025056948,
+              "confusion": {
+                "TP": 6,
+                "FN": 1,
+                "FP": 852,
+                "TN": 1343
+              },
+              "reliability": [
+                {
+                  "range": [
+                    0,
+                    0.1
+                  ],
+                  "n": 313,
+                  "forecast_mean": 0.06873905651461708,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.1,
+                    0.2
+                  ],
+                  "n": 387,
+                  "forecast_mean": 0.14496717619672955,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.3
+                  ],
+                  "n": 281,
+                  "forecast_mean": 0.24780481622499353,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.3,
+                    0.4
+                  ],
+                  "n": 162,
+                  "forecast_mean": 0.3447822446188188,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.5
+                  ],
+                  "n": 201,
+                  "forecast_mean": 0.44685314295278944,
+                  "observed_frequency": 0.004975124378109453
+                },
+                {
+                  "range": [
+                    0.5,
+                    0.6
+                  ],
+                  "n": 206,
+                  "forecast_mean": 0.5526302940410109,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.7
+                  ],
+                  "n": 151,
+                  "forecast_mean": 0.6520003662348413,
+                  "observed_frequency": 0.006622516556291391
+                },
+                {
+                  "range": [
+                    0.7,
+                    0.8
+                  ],
+                  "n": 175,
+                  "forecast_mean": 0.7481544564177329,
+                  "observed_frequency": 0.005714285714285714
+                },
+                {
+                  "range": [
+                    0.8,
+                    0.9
+                  ],
+                  "n": 158,
+                  "forecast_mean": 0.8545303712550159,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.9,
+                    1
+                  ],
+                  "n": 168,
+                  "forecast_mean": 0.9388566430354909,
+                  "observed_frequency": 0.023809523809523808
+                },
+                {
+                  "range": [
+                    1,
+                    1.1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                }
+              ]
+            },
+            "raw_surface_gust": {
+              "n": 2202,
+              "events": 7,
+              "auc": 0.8855841197526847,
+              "brier": 0.006174882214472219,
+              "pod": 0,
+              "recall": 0,
+              "precision": 0,
+              "far": 1,
+              "specificity": 0.9981776765375854,
+              "confusion": {
+                "TP": 0,
+                "FN": 7,
+                "FP": 4,
+                "TN": 2191
+              },
+              "reliability": [
+                {
+                  "range": [
+                    0,
+                    0.1
+                  ],
+                  "n": 2098,
+                  "forecast_mean": 0.03284821793957237,
+                  "observed_frequency": 0.0023832221163012394
+                },
+                {
+                  "range": [
+                    0.1,
+                    0.2
+                  ],
+                  "n": 78,
+                  "forecast_mean": 0.13267016412918747,
+                  "observed_frequency": 0.02564102564102564
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.3
+                  ],
+                  "n": 16,
+                  "forecast_mean": 0.2328094336136323,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.3,
+                    0.4
+                  ],
+                  "n": 4,
+                  "forecast_mean": 0.3646852577594115,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.5
+                  ],
+                  "n": 2,
+                  "forecast_mean": 0.446612468737254,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.5,
+                    0.6
+                  ],
+                  "n": 3,
+                  "forecast_mean": 0.5567043707493037,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.7
+                  ],
+                  "n": 1,
+                  "forecast_mean": 0.6800093257165678,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.7,
+                    0.8
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                },
+                {
+                  "range": [
+                    0.8,
+                    0.9
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                },
+                {
+                  "range": [
+                    0.9,
+                    1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                },
+                {
+                  "range": [
+                    1,
+                    1.1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                }
+              ]
+            }
+          },
+          "gust": {
+            "mae_mph": 9.543869209809278,
+            "bias_mph": -9.15004541326069,
+            "n": 2202
+          },
+          "timing": {
+            "event_days": 5,
+            "onset_mae_hours": 6.25,
+            "peak_time_mae_hours": 6.4,
+            "matched_onset_days": 4
+          }
+        },
+        "Montecito": {
+          "station": "MTIC1",
+          "event": {
+            "n": 2202,
+            "events": 96,
+            "auc": 0.7424966365938588,
+            "brier": 0.04126498190213859,
+            "pod": 0.0625,
+            "recall": 0.0625,
+            "precision": 0.1,
+            "far": 0.9,
+            "specificity": 0.9743589743589743,
+            "confusion": {
+              "TP": 6,
+              "FN": 90,
+              "FP": 54,
+              "TN": 2052
+            },
+            "reliability": [
+              {
+                "range": [
+                  0,
+                  0.1
+                ],
+                "n": 1863,
+                "forecast_mean": 0.04645818157739453,
+                "observed_frequency": 0.03327965646806227
+              },
+              {
+                "range": [
+                  0.1,
+                  0.2
+                ],
+                "n": 336,
+                "forecast_mean": 0.14476097148768377,
+                "observed_frequency": 0.10119047619047619
+              },
+              {
+                "range": [
+                  0.2,
+                  0.3
+                ],
+                "n": 3,
+                "forecast_mean": 0.2112090009445989,
+                "observed_frequency": 0
+              },
+              {
+                "range": [
+                  0.3,
+                  0.4
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.4,
+                  0.5
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.5,
+                  0.6
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.6,
+                  0.7
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.7,
+                  0.8
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.8,
+                  0.9
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.9,
+                  1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  1,
+                  1.1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              }
+            ]
+          },
+          "strong": {
+            "n": 2202,
+            "events": 131,
+            "auc": 0.7963811412416467,
+            "brier": 0.057817815944948364,
+            "pod": 0,
+            "recall": 0,
+            "precision": 0,
+            "far": 0,
+            "specificity": 1,
+            "confusion": {
+              "TP": 0,
+              "FN": 131,
+              "FP": 0,
+              "TN": 2071
+            },
+            "reliability": [
+              {
+                "range": [
+                  0,
+                  0.1
+                ],
+                "n": 2202,
+                "forecast_mean": 0.015204667877400926,
+                "observed_frequency": 0.059491371480472295
+              },
+              {
+                "range": [
+                  0.1,
+                  0.2
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.2,
+                  0.3
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.3,
+                  0.4
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.4,
+                  0.5
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.5,
+                  0.6
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.6,
+                  0.7
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.7,
+                  0.8
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.8,
+                  0.9
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.9,
+                  1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  1,
+                  1.1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              }
+            ]
+          },
+          "baselines": {
+            "pressure_only": {
+              "n": 2202,
+              "events": 96,
+              "auc": 0.7624495489078822,
+              "brier": 0.15583391021895523,
+              "pod": 0.53125,
+              "recall": 0.53125,
+              "precision": 0.10261569416498995,
+              "far": 0.89738430583501,
+              "specificity": 0.7882241215574549,
+              "confusion": {
+                "TP": 51,
+                "FN": 45,
+                "FP": 446,
+                "TN": 1660
+              },
+              "reliability": [
+                {
+                  "range": [
+                    0,
+                    0.1
+                  ],
+                  "n": 1063,
+                  "forecast_mean": 0.03511103018629253,
+                  "observed_frequency": 0.00940733772342427
+                },
+                {
+                  "range": [
+                    0.1,
+                    0.2
+                  ],
+                  "n": 284,
+                  "forecast_mean": 0.15053746232854268,
+                  "observed_frequency": 0.035211267605633804
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.3
+                  ],
+                  "n": 126,
+                  "forecast_mean": 0.25057375678089944,
+                  "observed_frequency": 0.023809523809523808
+                },
+                {
+                  "range": [
+                    0.3,
+                    0.4
+                  ],
+                  "n": 115,
+                  "forecast_mean": 0.3434048005074287,
+                  "observed_frequency": 0.11304347826086956
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.5
+                  ],
+                  "n": 117,
+                  "forecast_mean": 0.44131297769078714,
+                  "observed_frequency": 0.07692307692307693
+                },
+                {
+                  "range": [
+                    0.5,
+                    0.6
+                  ],
+                  "n": 111,
+                  "forecast_mean": 0.5496163675913563,
+                  "observed_frequency": 0.13513513513513514
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.7
+                  ],
+                  "n": 87,
+                  "forecast_mean": 0.6539154996331995,
+                  "observed_frequency": 0.05747126436781609
+                },
+                {
+                  "range": [
+                    0.7,
+                    0.8
+                  ],
+                  "n": 77,
+                  "forecast_mean": 0.741672996351961,
+                  "observed_frequency": 0.11688311688311688
+                },
+                {
+                  "range": [
+                    0.8,
+                    0.9
+                  ],
+                  "n": 106,
+                  "forecast_mean": 0.8505120536275342,
+                  "observed_frequency": 0.10377358490566038
+                },
+                {
+                  "range": [
+                    0.9,
+                    1
+                  ],
+                  "n": 116,
+                  "forecast_mean": 0.9376568200209013,
+                  "observed_frequency": 0.09482758620689655
+                },
+                {
+                  "range": [
+                    1,
+                    1.1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                }
+              ]
+            },
+            "raw_surface_gust": {
+              "n": 2202,
+              "events": 96,
+              "auc": 0.9037917458056347,
+              "brier": 0.039925996093282595,
+              "pod": 0,
+              "recall": 0,
+              "precision": 0,
+              "far": 1,
+              "specificity": 0.9990503323836657,
+              "confusion": {
+                "TP": 0,
+                "FN": 96,
+                "FP": 2,
+                "TN": 2104
+              },
+              "reliability": [
+                {
+                  "range": [
+                    0,
+                    0.1
+                  ],
+                  "n": 2186,
+                  "forecast_mean": 0.02704579884748006,
+                  "observed_frequency": 0.03979871912168344
+                },
+                {
+                  "range": [
+                    0.1,
+                    0.2
+                  ],
+                  "n": 11,
+                  "forecast_mean": 0.1186900611594681,
+                  "observed_frequency": 0.8181818181818182
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.3
+                  ],
+                  "n": 1,
+                  "forecast_mean": 0.23722442599977533,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.3,
+                    0.4
+                  ],
+                  "n": 1,
+                  "forecast_mean": 0.36385221308129667,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.5
+                  ],
+                  "n": 1,
+                  "forecast_mean": 0.45731977668355644,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.5,
+                    0.6
+                  ],
+                  "n": 1,
+                  "forecast_mean": 0.5777290843173976,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.7
+                  ],
+                  "n": 1,
+                  "forecast_mean": 0.6444728106833594,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.7,
+                    0.8
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                },
+                {
+                  "range": [
+                    0.8,
+                    0.9
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                },
+                {
+                  "range": [
+                    0.9,
+                    1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                },
+                {
+                  "range": [
+                    1,
+                    1.1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                }
+              ]
+            }
+          },
+          "gust": {
+            "mae_mph": 7.8215258855586,
+            "bias_mph": -7.359673024523178,
+            "n": 2202
+          },
+          "timing": {
+            "event_days": 27,
+            "onset_mae_hours": 8.2,
+            "peak_time_mae_hours": 8.444444444444445,
+            "matched_onset_days": 10
+          }
+        },
+        "Carpinteria": {
+          "station": "CXPC1",
+          "event": {
+            "n": 2204,
+            "events": 0,
+            "auc": null,
+            "brier": 0.0054639609660151875,
+            "pod": 0,
+            "recall": 0,
+            "precision": 0,
+            "far": 1,
+            "specificity": 0.9727767695099818,
+            "confusion": {
+              "TP": 0,
+              "FN": 0,
+              "FP": 60,
+              "TN": 2144
+            },
+            "reliability": [
+              {
+                "range": [
+                  0,
+                  0.1
+                ],
+                "n": 1865,
+                "forecast_mean": 0.046487167423872613,
+                "observed_frequency": 0
+              },
+              {
+                "range": [
+                  0.1,
+                  0.2
+                ],
+                "n": 334,
+                "forecast_mean": 0.1446526998807327,
+                "observed_frequency": 0
+              },
+              {
+                "range": [
+                  0.2,
+                  0.3
+                ],
+                "n": 5,
+                "forecast_mean": 0.2164881619622062,
+                "observed_frequency": 0
+              },
+              {
+                "range": [
+                  0.3,
+                  0.4
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.4,
+                  0.5
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.5,
+                  0.6
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.6,
+                  0.7
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.7,
+                  0.8
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.8,
+                  0.9
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.9,
+                  1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  1,
+                  1.1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              }
+            ]
+          },
+          "strong": {
+            "n": 2204,
+            "events": 9,
+            "auc": 0.767856238926854,
+            "brier": 0.004168995423144551,
+            "pod": 0,
+            "recall": 0,
+            "precision": 0,
+            "far": 0,
+            "specificity": 1,
+            "confusion": {
+              "TP": 0,
+              "FN": 9,
+              "FP": 0,
+              "TN": 2195
+            },
+            "reliability": [
+              {
+                "range": [
+                  0,
+                  0.1
+                ],
+                "n": 2204,
+                "forecast_mean": 0.015211678079505025,
+                "observed_frequency": 0.004083484573502722
+              },
+              {
+                "range": [
+                  0.1,
+                  0.2
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.2,
+                  0.3
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.3,
+                  0.4
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.4,
+                  0.5
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.5,
+                  0.6
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.6,
+                  0.7
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.7,
+                  0.8
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.8,
+                  0.9
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  0.9,
+                  1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              },
+              {
+                "range": [
+                  1,
+                  1.1
+                ],
+                "n": 0,
+                "forecast_mean": null,
+                "observed_frequency": null
+              }
+            ]
+          },
+          "baselines": {
+            "pressure_only": {
+              "n": 2204,
+              "events": 0,
+              "auc": null,
+              "brier": 0.15702775452239884,
+              "pod": 0,
+              "recall": 0,
+              "precision": 0,
+              "far": 1,
+              "specificity": 0.7740471869328494,
+              "confusion": {
+                "TP": 0,
+                "FN": 0,
+                "FP": 498,
+                "TN": 1706
+              },
+              "reliability": [
+                {
+                  "range": [
+                    0,
+                    0.1
+                  ],
+                  "n": 1064,
+                  "forecast_mean": 0.03508738429501492,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.1,
+                    0.2
+                  ],
+                  "n": 284,
+                  "forecast_mean": 0.15053746232854268,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.3
+                  ],
+                  "n": 126,
+                  "forecast_mean": 0.25057375678089944,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.3,
+                    0.4
+                  ],
+                  "n": 115,
+                  "forecast_mean": 0.3434048005074287,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.5
+                  ],
+                  "n": 117,
+                  "forecast_mean": 0.44131297769078714,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.5,
+                    0.6
+                  ],
+                  "n": 111,
+                  "forecast_mean": 0.5496163675913563,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.7
+                  ],
+                  "n": 87,
+                  "forecast_mean": 0.6539154996331995,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.7,
+                    0.8
+                  ],
+                  "n": 78,
+                  "forecast_mean": 0.7412791054067436,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.8,
+                    0.9
+                  ],
+                  "n": 106,
+                  "forecast_mean": 0.8505120536275342,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.9,
+                    1
+                  ],
+                  "n": 116,
+                  "forecast_mean": 0.9376568200209013,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    1,
+                    1.1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                }
+              ]
+            },
+            "raw_surface_gust": {
+              "n": 2204,
+              "events": 0,
+              "auc": null,
+              "brier": 0.0031677525364624823,
+              "pod": 0,
+              "recall": 0,
+              "precision": 0,
+              "far": 1,
+              "specificity": 0.9981851179673321,
+              "confusion": {
+                "TP": 0,
+                "FN": 0,
+                "FP": 4,
+                "TN": 2200
+              },
+              "reliability": [
+                {
+                  "range": [
+                    0,
+                    0.1
+                  ],
+                  "n": 2084,
+                  "forecast_mean": 0.026415302328616008,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.1,
+                    0.2
+                  ],
+                  "n": 103,
+                  "forecast_mean": 0.13437969233132893,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.2,
+                    0.3
+                  ],
+                  "n": 11,
+                  "forecast_mean": 0.2315371191980837,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.3,
+                    0.4
+                  ],
+                  "n": 2,
+                  "forecast_mean": 0.34858297235303254,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.4,
+                    0.5
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                },
+                {
+                  "range": [
+                    0.5,
+                    0.6
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                },
+                {
+                  "range": [
+                    0.6,
+                    0.7
+                  ],
+                  "n": 2,
+                  "forecast_mean": 0.6405646509537604,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.7,
+                    0.8
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                },
+                {
+                  "range": [
+                    0.8,
+                    0.9
+                  ],
+                  "n": 2,
+                  "forecast_mean": 0.8309308551493212,
+                  "observed_frequency": 0
+                },
+                {
+                  "range": [
+                    0.9,
+                    1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                },
+                {
+                  "range": [
+                    1,
+                    1.1
+                  ],
+                  "n": 0,
+                  "forecast_mean": null,
+                  "observed_frequency": null
+                }
+              ]
+            }
+          },
+          "gust": {
+            "mae_mph": 4.649455535390202,
+            "bias_mph": -3.581215970961885,
+            "n": 2204
+          },
+          "timing": {
+            "event_days": 0,
+            "onset_mae_hours": null,
+            "peak_time_mae_hours": null,
+            "matched_onset_days": 0
+          }
+        }
+      },
+      "spatial": {
+        "hours_scored": 1345,
+        "exact_zone_accuracy": 0.2513011152416357
+      }
+    }
+  }
+}
