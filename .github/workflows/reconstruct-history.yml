@@ -30,23 +30,34 @@ jobs:
         id: build
         continue-on-error: true
         run: node tools/reconstruct-events.js
-      - name: Publish reconstruction and status
+      - name: Preserve outputs before syncing current main
         if: always()
         env:
           OUTCOME: ${{ steps.build.outcome }}
           SHA: ${{ github.sha }}
         run: |
-          mkdir -p validation
+          mkdir -p /tmp/si-history
           node - <<'NODE'
           const fs=require('fs');
-          fs.writeFileSync('validation/history-reconstruction-status.json',JSON.stringify({checked_at:new Date().toISOString(),source_commit:process.env.SHA,outcome:process.env.OUTCOME},null,2)+'\n');
+          fs.writeFileSync('/tmp/si-history/status.json',JSON.stringify({checked_at:new Date().toISOString(),source_commit:process.env.SHA,outcome:process.env.OUTCOME},null,2)+'\n');
           NODE
+          if [ "$OUTCOME" = "success" ]; then cp data/historical-event-reconstructions.json /tmp/si-history/recon.json; fi
+      - name: Publish reconstruction and status on current main
+        if: always()
+        env:
+          OUTCOME: ${{ steps.build.outcome }}
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git reset --hard origin/main
+          mkdir -p validation data
+          cp /tmp/si-history/status.json validation/history-reconstruction-status.json
+          if [ "$OUTCOME" = "success" ]; then cp /tmp/si-history/recon.json data/historical-event-reconstructions.json; fi
           git add validation/history-reconstruction-status.json
           if [ "$OUTCOME" = "success" ]; then git add data/historical-event-reconstructions.json; fi
           git commit -m "Record historical Sundowner reconstruction [skip ci]" || exit 0
-          git push
+          git push origin HEAD:main
       - name: Fail if reconstruction failed
         if: steps.build.outcome != 'success'
         run: exit 1
