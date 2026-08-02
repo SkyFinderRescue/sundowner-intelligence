@@ -8,6 +8,7 @@
 <title>Sundowner Predictor</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="mobile.css">
 </head>
 <body>
 <div class="app-shell">
@@ -72,7 +73,7 @@
         <span><span class="dot"></span>Starting…</span>
         <span id="stamp"></span>
       </div>
-      <div id="contact" class="rail-contact"><span>Questions or comments?</span> <a href="mailto:sky.bonillo@gmail.com">sky.bonillo@gmail.com</a></div>
+      <div id="contact" class="rail-contact"><span>Questions or comments?</span> Sky Bonillo · <a href="mailto:sky.bonillo@gmail.com">sky.bonillo@gmail.com</a></div>
       <div class="rail-disclaimer">Experimental decision support. Official NWS products and agency policy remain authoritative.</div>
     </div>
   </aside>
@@ -133,15 +134,15 @@
               </div>
               <div id="eventSummary" class="eventbox">Building event guidance…</div>
 
-              <div class="detail-section">
+              <div class="detail-section pressure-section">
                 <h3>Pressure & upstream</h3>
                 <div id="pressureDrivers"></div>
               </div>
-              <div class="detail-section">
+              <div class="detail-section drivers-section">
                 <h3>Atmospheric drivers</h3>
                 <div id="drivers"></div>
               </div>
-              <div class="detail-section">
+              <div class="detail-section timeline-section">
                 <h3>48-hour probability</h3>
                 <div id="timeline"></div>
               </div>
