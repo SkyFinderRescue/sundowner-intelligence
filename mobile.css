@@ -1,0 +1,316 @@
+/* Mobile-only presentation layer. Desktop/tablet layout remains unchanged. */
+@media (max-width:700px){
+  html{background:#050a10}
+  body{
+    min-width:0;
+    padding-bottom:env(safe-area-inset-bottom);
+    background:linear-gradient(180deg,#03080d 0%,#07131d 100%);
+  }
+
+  .app-shell{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* Let the same application render as a compact mobile interface. */
+  .app-rail{display:contents}
+  .brand{
+    order:1;
+    min-height:66px;
+    margin:0;
+    padding:calc(12px + env(safe-area-inset-top)) 16px 12px;
+    background:rgba(4,12,19,.97);
+    border-bottom:1px solid var(--line-soft);
+  }
+  .brand-mark{width:34px;height:42px}
+  .brand-mark svg{width:31px;height:39px}
+  .brand-name{font-size:19px;letter-spacing:-.015em}
+  .brand-sub{font-size:9px;letter-spacing:.3em;color:#ff8a2b}
+
+  .rail-section{
+    order:2;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:8px;
+    padding:10px 10px 6px;
+    background:#06111a;
+  }
+  .rail-label{display:none}
+  .rail-section select{
+    min-width:0;
+    margin:0;
+    padding:11px 10px;
+    border-radius:9px;
+    font-size:12px;
+  }
+  .refresh-button{
+    width:auto;
+    min-width:46px;
+    margin:0;
+    padding:10px 12px;
+    justify-content:center;
+    border-radius:9px;
+  }
+  .refresh-button span:last-child{display:none}
+
+  .primary-nav{
+    order:3;
+    position:sticky;
+    top:0;
+    z-index:1200;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:5px;
+    margin:0;
+    padding:6px 9px 9px;
+    background:rgba(4,13,21,.96);
+    border-bottom:1px solid var(--line-soft);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+  }
+  .primary-nav .tab{
+    min-width:0;
+    justify-content:center;
+    gap:5px;
+    padding:10px 5px;
+    border:1px solid transparent;
+    border-radius:9px;
+    font-size:11px;
+  }
+  .primary-nav .tab.on{
+    background:linear-gradient(180deg,#164b7d,#0c345b);
+    box-shadow:none;
+  }
+  .nav-icon{width:auto;font-size:15px}
+
+  .app-workspace{order:4;width:100%;min-width:0}
+  .topbar{display:none}
+  main{padding:8px}
+
+  .forecast-grid{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .sidebar{
+    order:1;
+    height:auto;
+    max-height:none;
+    overflow:visible;
+    border-radius:12px;
+  }
+  .map-stage{order:2;border-radius:12px;overflow:hidden}
+  .zone-strip{border-radius:12px;margin-top:8px;padding-bottom:10px}
+
+  .detail-heading{
+    position:static;
+    padding:13px 13px 10px;
+    background:linear-gradient(180deg,#0b1b29,#091721);
+  }
+  .detail-heading .eyebrow{font-size:8px}
+  .detail-heading h2{
+    margin-top:5px;
+    color:#ff8126;
+    font-size:18px;
+    line-height:1.15;
+  }
+  #stationFocus,#zoneFocus{padding:10px}
+  #zoneFocus{display:flex;flex-direction:column}
+  #zoneFocus>.metrics{order:1}
+  #eventSummary{order:2}
+  .timeline-section{order:3}
+  .drivers-section{order:4}
+  .pressure-section{order:5}
+
+  .metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  #zoneFocus>.metrics>.metric:nth-child(2),
+  #zoneFocus>.metrics>.metric:nth-child(5),
+  #zoneFocus>.metrics>.metric:nth-child(7),
+  #zoneFocus>.metrics>.metric:nth-child(8){display:none}
+  #zoneFocus>.metrics>.metric:nth-child(1){order:1}
+  #zoneFocus>.metrics>.metric:nth-child(3){order:2}
+  #zoneFocus>.metrics>.metric:nth-child(6){order:3}
+  #zoneFocus>.metrics>.metric:nth-child(4){order:4}
+  .metric{
+    min-height:82px;
+    padding:10px;
+    border-radius:9px;
+  }
+  .metric-primary{border-left:3px solid #ff7518}
+  .metric-primary .v{font-size:44px;line-height:1;color:#ff7416}
+  .v{font-size:24px}
+  .v.smallv{font-size:17px;white-space:normal}
+  .k{font-size:8px}
+
+  .eventbox{
+    margin:8px 0 2px;
+    padding:9px 10px;
+    font-size:9px;
+    line-height:1.45;
+    display:-webkit-box;
+    -webkit-line-clamp:3;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+
+  .detail-section{margin-top:10px;padding-top:10px}
+  .detail-section h3{font-size:10px;margin-bottom:8px}
+
+  /* Present hourly forecast horizontally rather than as a long vertical list. */
+  #timeline{
+    display:grid;
+    grid-auto-flow:column;
+    grid-auto-columns:96px;
+    gap:6px;
+    max-height:none;
+    padding:2px 0 8px;
+    overflow-x:auto;
+    overscroll-behavior-inline:contain;
+    scroll-snap-type:x proximity;
+    scrollbar-width:none;
+  }
+  #timeline::-webkit-scrollbar{display:none}
+  .tr{
+    min-height:112px;
+    display:grid;
+    grid-template-columns:1fr;
+    grid-template-rows:auto 7px auto auto;
+    gap:7px;
+    align-content:start;
+    padding:10px;
+    border:1px solid var(--line-soft);
+    border-radius:9px;
+    background:#07141e;
+    scroll-snap-align:start;
+    font-size:9px;
+  }
+  .tr .barbg{width:100%;height:6px}
+  .tr b{font-size:17px;color:#f3f6f8}
+  .tr span:last-child{color:#a9b8c4;font-size:11px}
+
+  /* Keep every driver available while reducing vertical scrolling. */
+  #drivers,#pressureDrivers{
+    display:grid;
+    grid-auto-flow:column;
+    grid-auto-columns:minmax(160px,72%);
+    gap:7px;
+    overflow-x:auto;
+    padding-bottom:7px;
+    scroll-snap-type:x proximity;
+    scrollbar-width:none;
+  }
+  #drivers::-webkit-scrollbar,#pressureDrivers::-webkit-scrollbar{display:none}
+  #drivers>.factor,#pressureDrivers>.factor,#pressureDrivers>.section-note{
+    min-height:70px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    gap:8px;
+    padding:10px;
+    border:1px solid var(--line-soft);
+    border-radius:9px;
+    background:#07141e;
+    scroll-snap-align:start;
+  }
+  #drivers>.factor b,#pressureDrivers>.factor b{text-align:left;font-size:13px}
+  #pressureDrivers>.section-note{margin:0;color:#90a3b4}
+
+  .map-header{display:block;padding:12px}
+  .map-header .eyebrow{font-size:8px}
+  .map-header h2{font-size:15px}
+  .risk-legend{
+    margin-top:9px;
+    padding-bottom:2px;
+    gap:9px;
+    overflow-x:auto;
+    flex-wrap:nowrap;
+    white-space:nowrap;
+    scrollbar-width:none;
+  }
+  .risk-legend::-webkit-scrollbar{display:none}
+  .risk-legend i{width:12px;height:5px}
+  #map{height:335px}
+  .map-footer{padding:8px 10px;font-size:8px}
+  .map-footer span:last-child{display:none}
+
+  /* Full forecast-zone names stay visible on the mobile map. */
+  .zone-label{
+    max-width:92px;
+    white-space:normal;
+    text-align:center;
+    line-height:1.08;
+    padding:3px 4px;
+    font-size:7.5px;
+    font-weight:800;
+  }
+
+  .zone-strip .section-header{padding:12px 10px 8px}
+  .cards{
+    display:grid;
+    grid-auto-flow:column;
+    grid-auto-columns:minmax(225px,78vw);
+    grid-template-columns:none;
+    gap:7px;
+    padding:0 10px 5px;
+    overflow-x:auto;
+    scroll-snap-type:x proximity;
+    scrollbar-width:none;
+  }
+  .cards::-webkit-scrollbar{display:none}
+  .card{scroll-snap-align:start;padding:11px}
+  .name{font-size:14px;white-space:normal}
+  .prob{font-size:30px}
+
+  .full-panel{min-height:0;padding:0 10px 14px}
+  .section-header{padding:12px 10px 8px}
+  .summary-metrics,.comparegrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .station-table-wrap{max-height:none;overflow:auto;-webkit-overflow-scrolling:touch}
+  table{min-width:760px}
+  .healthrow{grid-template-columns:1fr;gap:4px}
+
+  /* Put help, live status and contact after the forecast on iPhone. */
+  .howto-card{
+    order:5;
+    margin:8px;
+    padding:11px;
+    border-radius:12px;
+    background:#081722;
+  }
+  .howto-step{grid-template-columns:22px 1fr;padding:7px 0}
+  .howto-step small{font-size:9px}
+  .rail-bottom{
+    order:6;
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+    padding:0 8px 12px;
+  }
+  .rail-status,.rail-contact{
+    margin:0;
+    border-radius:10px;
+    background:#07141e;
+  }
+  .rail-status{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:10px 12px;
+  }
+  .rail-contact{
+    padding:11px 12px;
+    text-align:center;
+    font-size:11px;
+  }
+  .rail-contact span{display:block;margin-bottom:3px}
+  .rail-contact a{color:#ff8a2b;font-weight:700}
+  .rail-disclaimer{padding:2px 8px 0;text-align:center;font-size:8px}
+}
+
+@media (max-width:380px){
+  .brand-name{font-size:17px}
+  .primary-nav .tab{font-size:10px}
+  .metric-primary .v{font-size:39px}
+  #map{height:305px}
+  .zone-label{max-width:78px;font-size:7px}
+}
