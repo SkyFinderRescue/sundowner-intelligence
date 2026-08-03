@@ -1,3 +1,16 @@
+/* Approved West Camino Cielo mountain-and-fog brand mark. */
+.brand-mark{
+  width:52px!important;
+  height:52px!important;
+  min-width:52px;
+  flex:0 0 52px!important;
+  overflow:hidden;
+  border-radius:13px;
+  background:url("data:image/webp;base64,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") center/cover no-repeat;
+  box-shadow:0 7px 20px rgba(0,0,0,.34),0 0 0 1px rgba(163,197,224,.28);
+}
+.brand-mark svg{display:none!important}
+
 /* Approved compact iPhone presentation. Forecast/model logic is unchanged. */
 @media (max-width:700px){
   html{background:#03080d}
@@ -6,8 +19,8 @@
   .app-rail{display:contents}
 
   .brand{order:1;min-height:70px;margin:0;padding:calc(14px + env(safe-area-inset-top)) 16px 12px;display:flex;align-items:center;gap:10px;background:rgba(3,10,16,.98);border-bottom:1px solid #173049}
-  .brand-mark{width:38px;height:46px;flex:0 0 38px}
-  .brand-mark svg{width:34px;height:43px}
+  .brand-mark{width:48px!important;height:48px!important;min-width:48px;flex:0 0 48px!important;border-radius:12px}
+  .brand-mark svg{display:none!important}
   .brand>div:last-child{display:flex;align-items:baseline;gap:6px;min-width:0}
   .brand-name{font-size:22px;line-height:1;letter-spacing:-.025em;white-space:nowrap}
   .brand-sub{font-size:9px;letter-spacing:.23em;color:#ff8126;text-transform:uppercase;white-space:nowrap}
@@ -77,7 +90,6 @@
   .rail-card-title{margin:0;font-size:11px;white-space:nowrap}
   .howto-step{display:none!important}
   .howto-card::after{content:"Tap a zone on the map to view its detailed Sundowner risk and hourly forecast.";font-size:9px;line-height:1.35;color:#9fb2cc}
-
   .rail-bottom{order:5;display:flex;flex-direction:column;gap:7px;padding:0 9px 14px}
   .rail-status,.rail-contact{margin:0;border-radius:10px;background:#07141e;border:1px solid #20394f}
   .rail-status{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:10px 11px;font-size:9px}
