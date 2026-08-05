@@ -1,9 +1,30 @@
 {
-  "verified_at": "2026-08-05T04:15:37.723Z",
-  "commit": "15b48e5b9c523f98fc495f7593122bece8fe54ca",
+  "verified_at": "2026-08-05T04:17:11.905Z",
+  "commit": "6aba04680d3d7dd5e3e454605d74f0bdd80443b6",
   "code_and_live_api_qa": "success",
-  "pages_probe": "failure",
+  "browser_ui_qa": "success",
+  "pages_probe": "success",
+  "tested_viewports": [
+    "desktop 1440x1000",
+    "iPhone 390x844"
+  ],
+  "tested_map_layers": [
+    "Esri World Topographic",
+    "Esri World Imagery with labels"
+  ],
+  "tested_features": [
+    "logo",
+    "8 forecast zones",
+    "basemap toggle",
+    "forecast metrics",
+    "hourly forecast",
+    "stations",
+    "data health",
+    "mobile map-first layout",
+    "mobile overflow",
+    "contact"
+  ],
   "model_version": "SI-3.0.0",
   "calibration_version": "SI-3.1-cal-2026-07-31",
-  "release_gate": "fitted-calibration + 57 historical reconstructions + 24h/48h fixed-lead validation"
+  "release_gate": "fitted calibration + 57 historical reconstructions + 24h/48h fixed-lead validation + live desktop/iPhone browser QA"
 }
