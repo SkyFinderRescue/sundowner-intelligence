@@ -17,17 +17,19 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
           node-version: '22'
+
       - name: Syntax and release-artifact validation
         run: |
           node --check core.js
           node --check model.js
           node --check ui.js
+          node --check map-basemap.js
           node --check tools/build-calibration.js
           node --check tools/validate-fixed-lead.js
           node --check tools/reconstruct-events.js
@@ -38,40 +40,104 @@ jobs:
           const sw=JSON.parse(fs.readFileSync('data/swex-2022-events.json'));
           const r=JSON.parse(fs.readFileSync('data/historical-event-reconstructions.json'));
           const v=JSON.parse(fs.readFileSync('validation/fixed-lead-latest.json'));
+          const html=fs.readFileSync('index.html','utf8');
+          const mapJs=fs.readFileSync('map-basemap.js','utf8');
+          const mapCss=fs.readFileSync('map-basemap.css','utf8');
           if(!String(c.version||'').startsWith('SI-3.1-cal-')||!c.models||!c.metrics) throw Error('Fitted calibration missing');
           if(!Array.isArray(e.events)||e.events.length<40) throw Error('Primary event catalog incomplete');
           if(!Array.isArray(sw.events)||sw.events.length!==10) throw Error('SWEX truth set incomplete');
           if(r.events_total<57||r.reconstructed<57||r.failed!==0) throw Error('Historical reconstruction incomplete');
           if(!v.leads?.['24h']||!v.leads?.['48h']) throw Error('Fixed-lead validation incomplete');
-          console.log(c.version, r.reconstructed, 'historical records reconstructed');
+          if(!html.includes('map-basemap.css')||!html.includes('map-basemap.js')) throw Error('Basemap assets are not loaded by index.html');
+          if(!mapJs.includes('World_Topo_Map')||!mapJs.includes('World_Imagery')||!mapJs.includes('World_Boundaries_and_Places')) throw Error('Required Esri basemaps are missing');
+          if(!mapJs.includes('Topographic')||!mapJs.includes('Satellite')) throw Error('Basemap toggle labels are missing');
+          if(!mapCss.includes('filter:none!important')) throw Error('Legacy brown tile filter is not overridden');
+          console.log(c.version, r.reconstructed, 'historical records reconstructed; map assets validated');
           NODE
+
       - name: Model tests
         run: node tests/model.test.js
+
       - name: Browser-flow mock test
         run: node tests/e2e.mock.test.js
+
       - name: Live API integration test
         run: node tests/live.integration.test.js
-      - name: Probe production URL and fitted calibration
+
+      - name: Install browser QA runtime
+        run: |
+          npm install --no-save --no-package-lock @playwright/test@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Live production browser QA — desktop and iPhone
+        id: browser
+        run: npx playwright test tests/live-pages.spec.js --reporter=line --trace=retain-on-failure
+
+      - name: Probe production files, calibration and Esri tiles
         id: pages
+        if: always()
         continue-on-error: true
         run: |
-          curl --fail --location --max-time 30 --silent --show-error https://skyfinderrescue.github.io/sundowner-intelligence/ -o /tmp/pages.html
-          grep -q "Sundowner Intelligence" /tmp/pages.html
-          curl --fail --location --max-time 30 --silent --show-error https://skyfinderrescue.github.io/sundowner-intelligence/calibration.json -o /tmp/live-cal.json
+          BASE=https://skyfinderrescue.github.io/sundowner-intelligence
+          curl --fail --location --max-time 45 --silent --show-error "$BASE/?qa=${GITHUB_SHA}" -o /tmp/pages.html
+          grep -q "Sundowner Predictor" /tmp/pages.html
+          grep -q "map-basemap.css" /tmp/pages.html
+          grep -q "map-basemap.js" /tmp/pages.html
+          curl --fail --location --max-time 30 --silent --show-error "$BASE/map-basemap.js" -o /tmp/map-basemap.js
+          curl --fail --location --max-time 30 --silent --show-error "$BASE/map-basemap.css" -o /tmp/map-basemap.css
+          grep -q "World_Topo_Map" /tmp/map-basemap.js
+          grep -q "World_Imagery" /tmp/map-basemap.js
+          grep -q "World_Boundaries_and_Places" /tmp/map-basemap.js
+          grep -q "Topographic" /tmp/map-basemap.js
+          grep -q "Satellite" /tmp/map-basemap.js
+          grep -q "filter:none!important" /tmp/map-basemap.css
+          curl --fail --location --max-time 30 --silent --show-error "$BASE/calibration.json" -o /tmp/live-cal.json
           node -e "const c=require('/tmp/live-cal.json'); if(!String(c.version||'').startsWith('SI-3.1-cal-')) process.exit(1); console.log('live calibration',c.version)"
+          curl --fail --location --max-time 30 --silent --show-error "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/10/407/170" -o /tmp/topo.tile
+          curl --fail --location --max-time 30 --silent --show-error "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/10/407/170" -o /tmp/imagery.tile
+          curl --fail --location --max-time 30 --silent --show-error "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/10/407/170" -o /tmp/labels.tile
+          test -s /tmp/topo.tile
+          test -s /tmp/imagery.tile
+          test -s /tmp/labels.tile
+
+      - name: Upload browser QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sundowner-live-browser-qa
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Preserve verification status
         if: always()
         env:
           JOB_STATUS: ${{ job.status }}
+          BROWSER_OUTCOME: ${{ steps.browser.outcome }}
           PAGES_OUTCOME: ${{ steps.pages.outcome }}
           SHA: ${{ github.sha }}
         run: |
           node - <<'NODE'
           const fs=require('fs');
           let cal='unknown'; try{cal=JSON.parse(fs.readFileSync('calibration.json')).version}catch{}
-          const o={verified_at:new Date().toISOString(),commit:process.env.SHA,code_and_live_api_qa:process.env.JOB_STATUS,pages_probe:process.env.PAGES_OUTCOME,model_version:'SI-3.0.0',calibration_version:cal,release_gate:'fitted-calibration + 57 historical reconstructions + 24h/48h fixed-lead validation'};
+          const o={
+            verified_at:new Date().toISOString(),
+            commit:process.env.SHA,
+            code_and_live_api_qa:process.env.JOB_STATUS,
+            browser_ui_qa:process.env.BROWSER_OUTCOME||'not-run',
+            pages_probe:process.env.PAGES_OUTCOME||'not-run',
+            tested_viewports:['desktop 1440x1000','iPhone 390x844'],
+            tested_map_layers:['Esri World Topographic','Esri World Imagery with labels'],
+            tested_features:['logo','8 forecast zones','basemap toggle','forecast metrics','hourly forecast','stations','data health','mobile map-first layout','mobile overflow','contact'],
+            model_version:'SI-3.0.0',
+            calibration_version:cal,
+            release_gate:'fitted calibration + 57 historical reconstructions + 24h/48h fixed-lead validation + live desktop/iPhone browser QA'
+          };
           fs.writeFileSync('/tmp/release-status.json',JSON.stringify(o,null,2)+'\n');
           NODE
+
       - name: Publish verification record on current main
         if: always()
         run: |
