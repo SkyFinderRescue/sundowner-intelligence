@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Supplemental operational truth set for newly completed, clearly confirmed Sundowner events identified after the peer-reviewed/historical catalog was generated. Fire association remains a separate outcome field and is never the meteorological event definition.",
+  "generated": "2026-08-05",
+  "events": [
+    {
+      "event_id": "2026-07-27-sw-sba-western-sundowner",
+      "date": "2026-07-27",
+      "end_date": "2026-07-28",
+      "tier": "B-operational-confirmed",
+      "confirmation_status": "confirmed_observed",
+      "regime": "western",
+      "zones_affected": ["Gaviota", "Refugio", "San Marcos Pass"],
+      "onset_local": "late afternoon/evening",
+      "peak_local": "approximately 20:00 PDT",
+      "end_local": "approximately 03:00 PDT 2026-07-28",
+      "observed_wind": {
+        "gust_range_mph": [35, 45],
+        "strongest_locations": ["Refugio", "Gaviota"],
+        "source_character": "NWS LOX real-time observed statement"
+      },
+      "pressure": {
+        "north_south_gradient_peak_mb": -3.7,
+        "peak_time_local": "20:00 PDT",
+        "interpretation": "offshore/northerly support across the Santa Ynez Range"
+      },
+      "thermodynamics": {
+        "minimum_relative_humidity_percent_range": [8, 20],
+        "overnight_recovery": "poor",
+        "temperature_context": "hotter than normal regional conditions; exact event-zone observed maxima not recovered from trusted archival sources in this run"
+      },
+      "upstream_context": {
+        "cuyama": null,
+        "santa_ynez_valley": null,
+        "southern_kern": null,
+        "notes": "No sufficiently specific, trusted archived station values for these upstream sectors were recovered in this run; fields intentionally remain null rather than inferred."
+      },
+      "upper_air_model_context": {
+        "pattern": "597-dam upper high centered over the Texas/Oklahoma Panhandles with a weak trough over California; moderate to strong east-west onshore gradient and a diurnally offshore north-south gradient",
+        "source": "NWS LOX Area Forecast Discussion issued 2026-07-27/28"
+      },
+      "duration_hours_estimate": 8,
+      "fire_associated": false,
+      "fire_name": null,
+      "fire_outcome_notes": "No trusted Santa Barbara County incident source located that tied a wildfire ignition or spread episode to this wind event.",
+      "sources": [
+        {
+          "organization": "National Weather Service Los Angeles/Oxnard",
+          "product": "Area Forecast Discussion",
+          "issued": "2026-07-27T23:20:00-07:00",
+          "url": "https://forecast.weather.gov/product.php?format=CI&glossary=1&issuedby=LOX&product=AFD&site=NWS&version=2",
+          "evidence": "Winds across southwest Santa Barbara County were observed gusting 35 to 45 mph, strongest near Refugio and Gaviota; the north-south pressure gradient was forecast/observed peaking near -3.7 mb at 8 PM, and a Wind Advisory was issued through 3 AM."
+        },
+        {
+          "organization": "National Weather Service Los Angeles/Oxnard",
+          "product": "Fire Weather Planning Forecast",
+          "issued": "2026-07-27T09:32:00-07:00",
+          "url": "https://forecast.weather.gov/product.php?format=txt&glossary=1&issuedby=LOX&product=FWF&site=DDC&version=2",
+          "evidence": "Elevated fire weather across southwest Santa Barbara County through the night due to gusty Sundowner winds and low humidities; RH 8-20 percent with poor overnight recovery."
+        }
+      ],
+      "notes": "This is a genuinely new operationally confirmed event not present in data/known-sundowner-events.json or the 57-record historical reconstruction library as of 2026-08-05. It is retained separately until a complete reanalysis/station reconstruction can be generated without inventing unavailable upstream observations."
+    }
+  ]
+}
