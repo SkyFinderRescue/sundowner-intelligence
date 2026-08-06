@@ -1,0 +1,116 @@
+{
+  "version": "SI-operational-reconstruction-1.0",
+  "generated": "2026-08-05T19:00:00-07:00",
+  "method": "Operational reconstruction from trusted NWS observed statements and fire-weather products. Missing upstream or upper-air station values remain null; no values are inferred solely to complete the schema. Fire association is an outcome field only.",
+  "events_total": 1,
+  "reconstructed": 1,
+  "failed": 0,
+  "events": [
+    {
+      "event_id": "2026-07-27-sw-sba-western-sundowner",
+      "date": "2026-07-27",
+      "end_date": "2026-07-28",
+      "tier": "B-operational-confirmed",
+      "regime": "western",
+      "fire_associated": false,
+      "fire_name": null,
+      "analysis_window_local": "2026-07-27 late afternoon through 2026-07-28 03:00 PDT",
+      "timing": {
+        "onset_local": "late afternoon/evening",
+        "peak_local": "approximately 20:00 PDT",
+        "end_local": "approximately 03:00 PDT",
+        "duration_hours_estimate": 8
+      },
+      "pressure": {
+        "north_south_gradient": {
+          "peak_mb": -3.7,
+          "peak_time_local": "20:00 PDT",
+          "source": "NWS LOX AFD"
+        },
+        "sba_minus_bfl": null,
+        "sba_minus_smx": null,
+        "trend": "strengthening offshore/northerly support into the evening; exact multi-hour numerical series unavailable"
+      },
+      "upstream": {
+        "cuyama": null,
+        "santa_ynez_valley": null,
+        "southern_kern": null,
+        "data_quality_note": "Trusted archived values were not recovered for this run and are intentionally not estimated."
+      },
+      "model_upper_air_context": {
+        "synoptic_pattern": "597-dam upper high centered over the Texas/Oklahoma Panhandles with a weak trough over California",
+        "surface_pattern": "moderate to strong east-west onshore gradient with a diurnally offshore north-south gradient supporting western Santa Ynez Range downslope flow",
+        "925_hpa": null,
+        "850_hpa": null,
+        "700_hpa": null,
+        "500_hpa": null
+      },
+      "zones": {
+        "Gaviota": {
+          "affected": true,
+          "observed_gust_range_mph": [35, 45],
+          "observed_temperature_f": null,
+          "observed_min_rh_percent": null,
+          "notes": "Named by NWS as one of the strongest observed locations."
+        },
+        "Refugio": {
+          "affected": true,
+          "observed_gust_range_mph": [35, 45],
+          "observed_temperature_f": null,
+          "observed_min_rh_percent": null,
+          "notes": "Named by NWS as one of the strongest observed locations."
+        },
+        "Goleta": {
+          "affected": false,
+          "observed_gust_range_mph": null,
+          "observed_temperature_f": null,
+          "observed_min_rh_percent": null,
+          "notes": "No trusted source in this run documented advisory-level impacts in this zone."
+        },
+        "San Marcos Pass": {
+          "affected": true,
+          "observed_gust_range_mph": null,
+          "observed_temperature_f": null,
+          "observed_min_rh_percent": null,
+          "notes": "Included in the adjacent western Santa Ynez Range advisory/forecast impact area; exact observed peak not recovered."
+        },
+        "Mission Canyon": {
+          "affected": false,
+          "observed_gust_range_mph": null,
+          "observed_temperature_f": null,
+          "observed_min_rh_percent": null
+        },
+        "Montecito": {
+          "affected": false,
+          "observed_gust_range_mph": null,
+          "observed_temperature_f": null,
+          "observed_min_rh_percent": null
+        },
+        "Toro Canyon": {
+          "affected": false,
+          "observed_gust_range_mph": null,
+          "observed_temperature_f": null,
+          "observed_min_rh_percent": null
+        },
+        "Carpinteria": {
+          "affected": false,
+          "observed_gust_range_mph": null,
+          "observed_temperature_f": null,
+          "observed_min_rh_percent": null
+        }
+      },
+      "regional_thermodynamics": {
+        "minimum_rh_percent_range": [8, 20],
+        "overnight_recovery": "poor",
+        "temperature_context": "hotter than normal",
+        "scope_note": "These RH and temperature descriptors are from the NWS fire-weather discussion for the broader affected region, not a substitute for missing zone-specific station observations."
+      },
+      "source_evidence": [
+        "NWS LOX AFD issued 11:20 PM PDT July 27, 2026: observed southwest Santa Barbara County gusts 35-45 mph, strongest near Refugio and Gaviota; north-south gradient near -3.7 mb at 8 PM; Wind Advisory through 3 AM.",
+        "NWS LOX Fire Weather Planning Forecast issued 9:32 AM PDT July 27, 2026: gusty Sundowner winds, RH 8-20 percent, poor overnight recovery, elevated fire weather through the night."
+      ],
+      "reconstruction_status": "complete_with_explicit_nulls",
+      "next_data_improvement": "Backfill station-by-station hourly observations and archived HRRR/upper-air fields when a trusted historical observation endpoint is available."
+    }
+  ]
+}
