@@ -1,9 +1,9 @@
 {
   "version": "SI-operational-reconstruction-1.0",
-  "generated": "2026-08-05T19:00:00-07:00",
-  "method": "Operational reconstruction from trusted NWS observed statements and fire-weather products. Missing upstream or upper-air station values remain null; no values are inferred solely to complete the schema. Fire association is an outcome field only.",
-  "events_total": 1,
-  "reconstructed": 1,
+  "generated": "2026-08-10T19:00:00-07:00",
+  "method": "Operational reconstruction from trusted NWS observed statements and fire-weather products. Missing upstream, pressure-series, zone-specific thermodynamic, or upper-air values remain null; no values are inferred solely to complete the schema. Fire association is an outcome field only.",
+  "events_total": 2,
+  "reconstructed": 2,
   "failed": 0,
   "events": [
     {
@@ -46,61 +46,17 @@
         "500_hpa": null
       },
       "zones": {
-        "Gaviota": {
-          "affected": true,
-          "observed_gust_range_mph": [35, 45],
-          "observed_temperature_f": null,
-          "observed_min_rh_percent": null,
-          "notes": "Named by NWS as one of the strongest observed locations."
-        },
-        "Refugio": {
-          "affected": true,
-          "observed_gust_range_mph": [35, 45],
-          "observed_temperature_f": null,
-          "observed_min_rh_percent": null,
-          "notes": "Named by NWS as one of the strongest observed locations."
-        },
-        "Goleta": {
-          "affected": false,
-          "observed_gust_range_mph": null,
-          "observed_temperature_f": null,
-          "observed_min_rh_percent": null,
-          "notes": "No trusted source in this run documented advisory-level impacts in this zone."
-        },
-        "San Marcos Pass": {
-          "affected": true,
-          "observed_gust_range_mph": null,
-          "observed_temperature_f": null,
-          "observed_min_rh_percent": null,
-          "notes": "Included in the adjacent western Santa Ynez Range advisory/forecast impact area; exact observed peak not recovered."
-        },
-        "Mission Canyon": {
-          "affected": false,
-          "observed_gust_range_mph": null,
-          "observed_temperature_f": null,
-          "observed_min_rh_percent": null
-        },
-        "Montecito": {
-          "affected": false,
-          "observed_gust_range_mph": null,
-          "observed_temperature_f": null,
-          "observed_min_rh_percent": null
-        },
-        "Toro Canyon": {
-          "affected": false,
-          "observed_gust_range_mph": null,
-          "observed_temperature_f": null,
-          "observed_min_rh_percent": null
-        },
-        "Carpinteria": {
-          "affected": false,
-          "observed_gust_range_mph": null,
-          "observed_temperature_f": null,
-          "observed_min_rh_percent": null
-        }
+        "Gaviota": {"affected": true,"observed_gust_range_mph": [35,45],"observed_temperature_f": null,"observed_min_rh_percent": null,"notes": "Named by NWS as one of the strongest observed locations."},
+        "Refugio": {"affected": true,"observed_gust_range_mph": [35,45],"observed_temperature_f": null,"observed_min_rh_percent": null,"notes": "Named by NWS as one of the strongest observed locations."},
+        "Goleta": {"affected": false,"observed_gust_range_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null,"notes": "No trusted source in this run documented advisory-level impacts in this zone."},
+        "San Marcos Pass": {"affected": true,"observed_gust_range_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null,"notes": "Included in the adjacent western Santa Ynez Range advisory/forecast impact area; exact observed peak not recovered."},
+        "Mission Canyon": {"affected": false,"observed_gust_range_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
+        "Montecito": {"affected": false,"observed_gust_range_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
+        "Toro Canyon": {"affected": false,"observed_gust_range_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
+        "Carpinteria": {"affected": false,"observed_gust_range_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null}
       },
       "regional_thermodynamics": {
-        "minimum_rh_percent_range": [8, 20],
+        "minimum_rh_percent_range": [8,20],
         "overnight_recovery": "poor",
         "temperature_context": "hotter than normal",
         "scope_note": "These RH and temperature descriptors are from the NWS fire-weather discussion for the broader affected region, not a substitute for missing zone-specific station observations."
@@ -111,6 +67,70 @@
       ],
       "reconstruction_status": "complete_with_explicit_nulls",
       "next_data_improvement": "Backfill station-by-station hourly observations and archived HRRR/upper-air fields when a trusted historical observation endpoint is available."
+    },
+    {
+      "event_id": "2026-07-28-western-sba-sundowner",
+      "date": "2026-07-28",
+      "end_date": "2026-07-29",
+      "tier": "B-operational-confirmed",
+      "regime": "western",
+      "fire_associated": false,
+      "fire_name": null,
+      "analysis_window_local": "2026-07-28 late afternoon through early 2026-07-29 PDT",
+      "timing": {
+        "onset_local": "late afternoon/evening",
+        "confirmed_active_local": "20:40 PDT",
+        "peak_local": "around the 20:40 PDT observation window",
+        "end_local": "overnight into early 2026-07-29",
+        "duration_hours_estimate": "approximately 6-12; exact station threshold timing unavailable"
+      },
+      "pressure": {
+        "north_south_gradient": {"peak_mb": null,"peak_time_local": null,"source": null},
+        "sba_minus_bfl": null,
+        "sba_minus_smx": null,
+        "trend": "Repeat evening western-Santa-Barbara Sundowner ramp-up documented by NWS; exact archived pressure-gradient time series was not recovered."
+      },
+      "upstream": {
+        "cuyama": null,
+        "santa_ynez_valley": null,
+        "southern_kern": null,
+        "data_quality_note": "No sufficiently specific trusted archived upstream station observations were recovered; values intentionally remain null."
+      },
+      "model_upper_air_context": {
+        "synoptic_pattern": "weak trough over California with heights near 590 dam, ahead of rapid strengthening of a very strong ridge later in the week",
+        "surface_pattern": "sub-advisory western Santa Barbara Sundowner during the evening with otherwise generally light onshore flow",
+        "925_hpa": null,
+        "850_hpa": null,
+        "700_hpa": null,
+        "500_hpa": null
+      },
+      "zones": {
+        "Gaviota": {"affected": true,"observed_peak_gust_mph": 40,"observed_temperature_f": null,"observed_min_rh_percent": null,"notes": "Within the western Santa Barbara south-coast Sundowner corridor; NWS reported gusts near 40 mph across the western south coast."},
+        "Refugio": {"affected": true,"observed_peak_gust_mph": 40,"observed_temperature_f": null,"observed_min_rh_percent": null,"notes": "Within the western Santa Barbara south-coast Sundowner corridor; exact station maximum was not isolated in archived text."},
+        "Goleta": {"affected": true,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null,"notes": "Western south-coast scope supports inclusion as affected, but no exact archived station gust was recovered."},
+        "San Marcos Pass": {"affected": true,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null,"notes": "Highest peaks were noted as capable of briefly reaching advisory levels; exact observed peak not recovered."},
+        "Mission Canyon": {"affected": false,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
+        "Montecito": {"affected": false,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
+        "Toro Canyon": {"affected": false,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
+        "Carpinteria": {"affected": false,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null}
+      },
+      "regional_thermodynamics": {
+        "minimum_rh_percent_range": null,
+        "overnight_recovery": null,
+        "temperature_context": "NWS reported interior highs near 100 F, valleys upper 80s to 90s, and cooler coastal temperatures; exact event-zone temperature/RH observations unavailable.",
+        "scope_note": "Regional temperature context is not used as a substitute for missing zone-specific station observations."
+      },
+      "marine_context": {
+        "western_santa_barbara_channel": "NW 10-20 kt with local gusts to 25 kt during the evening in the NWS coastal waters forecast",
+        "source": "NWS LOX CWF issued 7:49 AM PDT July 28, 2026"
+      },
+      "source_evidence": [
+        "NWS LOX AFD issued 8:40 PM PDT July 28, 2026: Sundowner winds had ramped up over the western Santa Barbara south coast, with gusts near 40 mph currently; local highest-peak gusts could briefly reach advisory levels.",
+        "NWS LOX AFD short-term discussion: sub-advisory Sundowner winds expected that evening across southwest Santa Barbara County.",
+        "NWS LOX Coastal Waters Forecast issued 7:49 AM PDT July 28, 2026: western Santa Barbara Channel NW winds 10-20 kt with local gusts to 25 kt during the event evening."
+      ],
+      "reconstruction_status": "complete_with_explicit_nulls",
+      "next_data_improvement": "Backfill exact hourly pressure gradients, Cuyama/Santa Ynez/southern Kern observations, zone station temperature/RH, and archived HRRR/upper-air fields when a trusted archive endpoint is available."
     }
   ]
 }
