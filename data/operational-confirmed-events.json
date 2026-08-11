@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "purpose": "Supplemental operational truth set for newly completed, clearly confirmed Sundowner events identified after the peer-reviewed/historical catalog was generated. Fire association remains a separate outcome field and is never the meteorological event definition.",
-  "generated": "2026-08-05",
+  "generated": "2026-08-10",
   "events": [
     {
       "event_id": "2026-07-27-sw-sba-western-sundowner",
@@ -59,7 +59,67 @@
           "evidence": "Elevated fire weather across southwest Santa Barbara County through the night due to gusty Sundowner winds and low humidities; RH 8-20 percent with poor overnight recovery."
         }
       ],
-      "notes": "This is a genuinely new operationally confirmed event not present in data/known-sundowner-events.json or the 57-record historical reconstruction library as of 2026-08-05. It is retained separately until a complete reanalysis/station reconstruction can be generated without inventing unavailable upstream observations."
+      "notes": "Operationally confirmed event retained separately until a complete reanalysis/station reconstruction can be generated without inventing unavailable upstream observations."
+    },
+    {
+      "event_id": "2026-07-28-western-sba-sundowner",
+      "date": "2026-07-28",
+      "end_date": "2026-07-29",
+      "tier": "B-operational-confirmed",
+      "confirmation_status": "confirmed_observed",
+      "regime": "western",
+      "zones_affected": ["Gaviota", "Refugio", "Goleta", "San Marcos Pass"],
+      "onset_local": "late afternoon/evening",
+      "peak_local": "approximately 20:40 PDT",
+      "end_local": "overnight into early 2026-07-29",
+      "observed_wind": {
+        "peak_gust_mph": 40,
+        "location_scope": "western Santa Barbara south coast",
+        "source_character": "NWS LOX real-time observed statement"
+      },
+      "pressure": {
+        "north_south_gradient_peak_mb": null,
+        "sba_minus_bfl_mb": null,
+        "sba_minus_smx_mb": null,
+        "trend": "NWS described a repeat evening western-Santa-Barbara Sundowner ramp-up; exact archived numerical gradient series was not recovered in this run"
+      },
+      "thermodynamics": {
+        "relative_humidity_percent": null,
+        "temperature_context": "warm regional airmass; NWS noted interior highs near 100 F and valleys upper 80s to 90s, while coastal temperatures were cooler",
+        "notes": "No trustworthy zone-specific temperature/RH observation series was recovered for the event window; values remain null rather than inferred."
+      },
+      "upstream_context": {
+        "cuyama": null,
+        "santa_ynez_valley": null,
+        "southern_kern": null,
+        "notes": "No sufficiently specific trusted archived upstream station values were recovered in this run; intentionally left null."
+      },
+      "upper_air_model_context": {
+        "pattern": "weak trough over California with heights near 590 dam, preceding rapid amplification of a very strong ridge later in the week",
+        "surface_context": "sub-advisory western Santa Barbara Sundowner expected during the evening, with otherwise generally light onshore flow",
+        "source": "NWS LOX Area Forecast Discussion issued 2026-07-28"
+      },
+      "duration_hours_estimate": "approximately 6-12",
+      "fire_associated": false,
+      "fire_name": null,
+      "fire_outcome_notes": "No trusted Santa Barbara County incident source located tying a wildfire ignition or spread episode to this specific July 28 evening Sundowner episode.",
+      "sources": [
+        {
+          "organization": "National Weather Service Los Angeles/Oxnard",
+          "product": "Area Forecast Discussion AFDLOX FXUS66 KLOX 290340",
+          "issued": "2026-07-28T20:40:00-07:00",
+          "url": "https://forecast.weather.gov/product.php?issuedby=LOX&product=AFD&site=NWS",
+          "evidence": "NWS explicitly stated Sundowner winds had ramped up over the western Santa Barbara south coast, with gusts near 40 mph currently; highest peaks could briefly reach advisory levels."
+        },
+        {
+          "organization": "National Weather Service Los Angeles/Oxnard",
+          "product": "Coastal Waters Forecast FZUS56 KLOX 281449",
+          "issued": "2026-07-28T07:49:00-07:00",
+          "url": "https://forecast.weather.gov/product.php?format=CI&issuedby=LOX&product=CWF&site=LOX&version=1",
+          "evidence": "Western Santa Barbara Channel northwest winds 10-20 kt with local gusts to 25 kt were forecast for the event evening, consistent with the western wind regime."
+        }
+      ],
+      "notes": "Treated as a separate repeat episode from July 27 because NWS documented a fresh ramp-up the following evening after daytime weakening. Not present in the 47-event central truth set or 57-record historical reconstruction library as of this update."
     }
   ]
 }
