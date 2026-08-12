@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Extract leakage-safe F24 HRRR pressure-level point features from the public Zarr archive.
 
-The University of Utah/MesoWest HRRR Zarr archive is chunked by forecast-time/y/x,
-so this reads only the chunks containing the Santa Barbara points instead of downloading
-full CONUS GRIB files. Output is RESEARCH ONLY and is intended to feed SI-4 calibration.
+Reads only Santa Barbara grid points from the public HRRR Zarr pressure forecast archive.
+Output is research-only and intended to feed SI-4 calibration/validation.
 """
 from __future__ import annotations
 
@@ -35,7 +34,6 @@ POINTS = {
     "Carpinteria": (34.42, -119.52),
 }
 
-# HRRR Lambert grid parameters documented by the HRRR Zarr archive.
 PROJ = pyproj.Proj(
     proj="lcc", lat_1=38.5, lat_2=38.5, lat_0=38.5, lon_0=-97.5,
     a=6371229, b=6371229, units="m"
@@ -58,28 +56,19 @@ def grid_index(lat: float, lon: float) -> tuple[int, int]:
 def array_root(run: dt.datetime, pressure: int, var: str) -> str:
     day = run.strftime("%Y%m%d")
     cycle = run.strftime("%H")
-    base = f"prs/{day}/{day}_{cycle}z_fcst.zarr/{pressure}mb/{var}/{pressure}mb/{var}"
-    return f"{BUCKET}/{base}"
+    return f"s3://{BUCKET}/prs/{day}/{day}_{cycle}z_fcst.zarr/{pressure}mb/{var}/{pressure}mb/{var}"
 
 
-def read_value(fs: s3fs.S3FileSystem, run: dt.datetime, pressure: int, var: str, j: int, i: int, fxx: int = FXX):
+def open_array(fs: s3fs.S3FileSystem, run: dt.datetime, pressure: int, var: str):
     store = s3fs.S3Map(root=array_root(run, pressure, var), s3=fs, check=False)
-    arr = zarr.open_array(store=store, mode="r")
-    if arr.ndim != 3:
-        raise RuntimeError(f"unexpected HRRR forecast array shape {arr.shape} for {pressure}mb/{var}")
-    # Forecast Zarr arrays contain non-zero lead hours F01...; F24 is zero-based index 23.
-    k = fxx - 1
-    if k >= arr.shape[0]:
-        raise RuntimeError(f"F{fxx:02d} unavailable in {run.isoformat()} {pressure}mb/{var}; shape={arr.shape}")
-    value = arr[k, j, i]
-    return None if np.ma.is_masked(value) or not np.isfinite(value) else float(value)
+    return zarr.open_array(store=store, mode="r")
 
 
-def wind(speed_u: float | None, speed_v: float | None):
-    if speed_u is None or speed_v is None:
+def wind(u: float | None, v: float | None):
+    if u is None or v is None:
         return None, None
-    speed_mps = math.hypot(speed_u, speed_v)
-    direction = (math.degrees(math.atan2(-speed_u, -speed_v)) + 360.0) % 360.0
+    speed_mps = math.hypot(u, v)
+    direction = (math.degrees(math.atan2(-u, -v)) + 360.0) % 360.0
     return speed_mps * 2.2369362921, direction
 
 
@@ -91,6 +80,10 @@ def iter_runs(start: dt.date, end: dt.date):
         day += dt.timedelta(days=1)
 
 
+def clean(value):
+    return None if np.ma.is_masked(value) or not np.isfinite(value) else float(value)
+
+
 def extract(start: dt.date, end: dt.date, fxx: int):
     fs = s3fs.S3FileSystem(anon=True, default_fill_cache=False)
     indices = {name: grid_index(*latlon) for name, latlon in POINTS.items()}
@@ -98,17 +91,30 @@ def extract(start: dt.date, end: dt.date, fxx: int):
 
     for run in iter_runs(start, end):
         valid = run + dt.timedelta(hours=fxx)
+        k = fxx - 1
+        arrays = {}
+        try:
+            for pressure in LEVELS:
+                for var in VARS:
+                    arr = open_array(fs, run, pressure, var)
+                    if arr.ndim != 3 or k >= arr.shape[0]:
+                        raise RuntimeError(f"unexpected/short array {pressure}mb/{var}: shape={arr.shape}")
+                    arrays[(pressure, var)] = arr
+        except Exception as exc:
+            failures.append({"run": run.isoformat(), "zone": "ALL", "pressure_hpa": None, "error": str(exc)})
+            continue
+
         for zone, (j, i) in indices.items():
             profile = []
             failed = False
             for pressure in LEVELS:
                 try:
-                    u = read_value(fs, run, pressure, "UGRD", j, i, fxx)
-                    v = read_value(fs, run, pressure, "VGRD", j, i, fxx)
-                    tmp = read_value(fs, run, pressure, "TMP", j, i, fxx)
-                    hgt = read_value(fs, run, pressure, "HGT", j, i, fxx)
-                    rh = read_value(fs, run, pressure, "RH", j, i, fxx)
-                except Exception as exc:  # preserve provenance; never invent missing profile data
+                    u = clean(arrays[(pressure, "UGRD")][k, j, i])
+                    v = clean(arrays[(pressure, "VGRD")][k, j, i])
+                    tmp = clean(arrays[(pressure, "TMP")][k, j, i])
+                    hgt = clean(arrays[(pressure, "HGT")][k, j, i])
+                    rh = clean(arrays[(pressure, "RH")][k, j, i])
+                except Exception as exc:
                     failures.append({"run": run.isoformat(), "zone": zone, "pressure_hpa": pressure, "error": str(exc)})
                     failed = True
                     break
