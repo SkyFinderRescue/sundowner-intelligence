@@ -1,0 +1,64 @@
+name: SI-4 Research Validation
+
+on:
+  push:
+    branches: [si4-research]
+    paths:
+      - 'research/**'
+      - 'tools/build-si4-calibration.js'
+      - '.github/workflows/si4-research.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  science-unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax checks
+        run: |
+          node --check research/si4-science.js
+          node --check research/test-si4-science.js
+          node --check tools/build-si4-calibration.js
+      - name: SI-4 physics tests
+        run: node research/test-si4-science.js
+
+  fixed-lead-smoke-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: science-unit-tests
+    env:
+      TRAIN_START: '2024-04-01'
+      TRAIN_END: '2024-04-30'
+      TEST_START: '2025-04-01'
+      TEST_END: '2025-04-30'
+      OUT: 'research/si4-calibration-smoke.json'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build research-only fixed-lead candidate
+        run: node tools/build-si4-calibration.js
+      - name: Assert research-only status and finite metrics
+        run: |
+          node - <<'NODE'
+          const x=require('./research/si4-calibration-smoke.json');
+          if(x.status!=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION') throw Error('candidate missing research-only guard');
+          for(const r of ['western','hybrid','eastern']){
+            const m=x.report[r];
+            if(!m||!Number.isFinite(m.baseline.auc)||!Number.isFinite(m.candidate.auc)||!Number.isFinite(m.baseline.brier)||!Number.isFinite(m.candidate.brier)) throw Error(`invalid metrics for ${r}`);
+          }
+          console.log(JSON.stringify(x.report,null,2));
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: si4-fixed-lead-smoke
+          path: research/si4-calibration-smoke.json
+          retention-days: 30
