@@ -7,7 +7,9 @@ on:
       - 'research/**'
       - 'tools/build-si4-calibration.js'
       - 'tools/probe-si4-archives.js'
+      - 'tools/probe-swex-catalog.js'
       - 'tools/extract-hrrr-upper-zarr.py'
+      - 'tools/score-si4-nws-benchmark.js'
       - '.github/workflows/si4-research.yml'
   pull_request:
     branches: [main]
@@ -15,7 +17,9 @@ on:
       - 'research/**'
       - 'tools/build-si4-calibration.js'
       - 'tools/probe-si4-archives.js'
+      - 'tools/probe-swex-catalog.js'
       - 'tools/extract-hrrr-upper-zarr.py'
+      - 'tools/score-si4-nws-benchmark.js'
       - '.github/workflows/si4-research.yml'
   workflow_dispatch:
 
@@ -40,13 +44,25 @@ jobs:
           node --check research/test-si4-science.js
           node --check tools/build-si4-calibration.js
           node --check tools/probe-si4-archives.js
+          node --check tools/probe-swex-catalog.js
+          node --check tools/score-si4-nws-benchmark.js
           python -m py_compile tools/extract-hrrr-upper-zarr.py
       - name: SI-4 physics tests
         run: node research/test-si4-science.js
+      - name: NWS benchmark scorer contract test
+        run: |
+          cat > /tmp/matched.json <<'JSON'
+          {"rows":[
+            {"valid_time":"2025-04-01T00:00Z","zone":"Gaviota","regime":"western","observed_event":1,"observed_gust_mph":45,"si_probability":0.8,"si_gust_mph":44,"nws_event_pred":1,"nws_gust_mph":40},
+            {"valid_time":"2025-04-02T00:00Z","zone":"Gaviota","regime":"western","observed_event":0,"observed_gust_mph":18,"si_probability":0.1,"si_gust_mph":20,"nws_event_pred":1,"nws_gust_mph":36}
+          ]}
+          JSON
+          INPUT=/tmp/matched.json OUT=/tmp/benchmark.json node tools/score-si4-nws-benchmark.js
+          node -e "const x=require('/tmp/benchmark.json');if(x.matched_rows!==2||x.rules.nws_probability_not_invented!==true)process.exit(2)"
 
   archive-health:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     needs: science-unit-tests
     steps:
       - uses: actions/checkout@v4
@@ -55,11 +71,15 @@ jobs:
           node-version: '22'
       - name: Verify research archives and current shadow feeds
         run: node tools/probe-si4-archives.js
+      - name: Resolve public SWEX catalog resources
+        run: node tools/probe-swex-catalog.js
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: si4-archive-probe
-          path: research/si4-archive-probe.json
+          path: |
+            research/si4-archive-probe.json
+            research/swex-catalog-inventory.json
           if-no-files-found: warn
           retention-days: 30
 
@@ -111,13 +131,14 @@ jobs:
           node-version: '22'
       - name: Confirm frozen SI-3 fixed-lead data path remains healthy
         run: node tools/build-calibration.js > /tmp/si3-baseline-smoke.json
-      - name: Confirm candidate builder remains research-only by source inspection
+      - name: Confirm SI-4 candidate source separation
         run: |
           node - <<'NODE'
           const fs=require('fs');
           const s=fs.readFileSync('tools/build-si4-calibration.js','utf8');
           if(!s.includes('RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION')) throw Error('research-only guard missing');
+          if(!s.includes('UPPER_CACHE')) throw Error('direct upper-air cache integration missing');
           if(!s.includes('forecast_lead_hours:24')) throw Error('fixed-lead metadata missing');
           if(/fire_associated/.test(s)) throw Error('fire outcome leaked into SI-4 calibrator');
-          console.log('SI-4 research-only and target-separation guards present');
+          console.log('SI-4 research-only, fixed-lead and target-separation guards present');
           NODE
