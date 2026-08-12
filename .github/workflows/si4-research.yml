@@ -7,6 +7,12 @@ on:
       - 'research/**'
       - 'tools/build-si4-calibration.js'
       - '.github/workflows/si4-research.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'research/**'
+      - 'tools/build-si4-calibration.js'
+      - '.github/workflows/si4-research.yml'
   workflow_dispatch:
 
 permissions:
