@@ -7,6 +7,7 @@ on:
       - 'research/**'
       - 'tools/build-si4-calibration.js'
       - 'tools/probe-si4-archives.js'
+      - 'tools/extract-hrrr-upper-zarr.py'
       - '.github/workflows/si4-research.yml'
   pull_request:
     branches: [main]
@@ -14,6 +15,7 @@ on:
       - 'research/**'
       - 'tools/build-si4-calibration.js'
       - 'tools/probe-si4-archives.js'
+      - 'tools/extract-hrrr-upper-zarr.py'
       - '.github/workflows/si4-research.yml'
   workflow_dispatch:
 
@@ -29,12 +31,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Syntax checks
         run: |
           node --check research/si4-science.js
           node --check research/test-si4-science.js
           node --check tools/build-si4-calibration.js
           node --check tools/probe-si4-archives.js
+          python -m py_compile tools/extract-hrrr-upper-zarr.py
       - name: SI-4 physics tests
         run: node research/test-si4-science.js
 
@@ -54,6 +60,38 @@ jobs:
         with:
           name: si4-archive-probe
           path: research/si4-archive-probe.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  hrrr-upper-zarr-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: archive-health
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install minimal Zarr reader
+        run: python -m pip install --quiet 'numpy<3' 'zarr<3' 's3fs<2027' pyproj
+      - name: Extract one day of leakage-safe HRRR F24 pressure profiles
+        run: python tools/extract-hrrr-upper-zarr.py --start 2024-04-01 --end 2024-04-01 --fxx 24 --out research/hrrr-upper-zarr-smoke.json
+      - name: Verify profile completeness
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('research/hrrr-upper-zarr-smoke.json'))
+          assert x['status']=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION'
+          assert x['failure_count']==0
+          assert len(x['rows'])==32, len(x['rows'])
+          assert all(len(r['profile'])==5 for r in x['rows'])
+          print({'rows':len(x['rows']),'profiles':'complete'})
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hrrr-upper-zarr-smoke
+          path: research/hrrr-upper-zarr-smoke.json
           if-no-files-found: warn
           retention-days: 30
 
