@@ -83,7 +83,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install indexed HRRR subset reader
-        run: python -m pip install --quiet 'herbie-data>=2025.7' 'cfgrib>=0.9.15' 'xarray>=2025.1' pandas numpy
+        run: python -m pip install --quiet 'herbie-data>=2025.7' 'cfgrib>=0.9.15' 'xarray>=2025.1' pandas numpy scikit-learn
       - name: Extract one day of leakage-safe HRRR F24 pressure profiles
         run: python tools/extract-hrrr-upper-herbie.py --start 2024-04-01 --end 2024-04-01 --fxx 24 --out research/hrrr-upper-herbie-smoke.json
       - name: Verify profile completeness
