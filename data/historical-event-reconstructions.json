@@ -1,9 +1,9 @@
 {
   "version": "SI-3.0-historical-reconstruction",
-  "generated": "2026-07-31T17:17:19.880Z",
+  "generated": "2026-08-13T02:07:26.666Z",
   "method": "Documented Sundowner truth sets joined to ERA5 hourly reanalysis for a standard afternoon-to-morning event window. Includes peer-reviewed/historical cases plus the complete 2022 SWEX IOP set. Reanalysis features support analog/context analysis; documented station outcomes remain preferred and fire association is never a meteorological predictor.",
-  "events_total": 57,
-  "reconstructed": 57,
+  "events_total": 58,
+  "reconstructed": 58,
   "failed": 0,
   "events": [
     {
@@ -5127,6 +5127,115 @@
         "max_gust_mph": null,
         "onset_local": null,
         "end_local": null
+      }
+    },
+    {
+      "event_id": null,
+      "date": "2026-07-15",
+      "end_date": "2026-07-16",
+      "tier": "B",
+      "regime": "western_to_hybrid_uncertain",
+      "fire_associated": false,
+      "fire_name": null,
+      "documented_source": "nws_lox_20260715_afd",
+      "reanalysis_source": "ERA5 via Open-Meteo Historical Weather API",
+      "analysis_window_local": "2026-07-15 12:00 through 2026-07-16 08:00",
+      "pressure": {
+        "sba_minus_bfl": {
+          "min_mb": -0.40000000000009095,
+          "max_mb": 1.1000000000000227
+        },
+        "sba_minus_smx": {
+          "min_mb": -1.1999999999999318,
+          "max_mb": 0
+        }
+      },
+      "upstream_cuyama": {
+        "max_northerly_component_mph": 10.759623608071863,
+        "min_rh_percent": 21,
+        "max_gust_mph": 27.1
+      },
+      "zones": {
+        "Gaviota": {
+          "max_terrain_relative_surface_mph": 16.263066428647125,
+          "max_gust_mph": 28.2,
+          "min_rh_percent": 60,
+          "max_temp_f": 73.2,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": true
+        },
+        "Refugio": {
+          "max_terrain_relative_surface_mph": 13.95713992036441,
+          "max_gust_mph": 27.1,
+          "min_rh_percent": 50,
+          "max_temp_f": 80.9,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Goleta": {
+          "max_terrain_relative_surface_mph": 8.551202849151766,
+          "max_gust_mph": 24.8,
+          "min_rh_percent": 35,
+          "max_temp_f": 90.3,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "San Marcos Pass": {
+          "max_terrain_relative_surface_mph": 8.247400862033514,
+          "max_gust_mph": 24.8,
+          "min_rh_percent": 34,
+          "max_temp_f": 80.7,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Mission Canyon": {
+          "max_terrain_relative_surface_mph": 7.880831174438392,
+          "max_gust_mph": 24.8,
+          "min_rh_percent": 35,
+          "max_temp_f": 84.7,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Montecito": {
+          "max_terrain_relative_surface_mph": 7.513346478731713,
+          "max_gust_mph": 24.8,
+          "min_rh_percent": 35,
+          "max_temp_f": 87.7,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Toro Canyon": {
+          "max_terrain_relative_surface_mph": 5.09468698847309,
+          "max_gust_mph": 22.1,
+          "min_rh_percent": 36,
+          "max_temp_f": 91.6,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        },
+        "Carpinteria": {
+          "max_terrain_relative_surface_mph": 4.947976260435169,
+          "max_gust_mph": 22.1,
+          "min_rh_percent": 37,
+          "max_temp_f": 93.7,
+          "max_850_terrain_relative_mph": null,
+          "max_700_terrain_relative_mph": null,
+          "reanalysis_affected": false
+        }
+      },
+      "documented_outcomes": {
+        "temperature_ramp_c": null,
+        "si_cdf_percent": null,
+        "max_sustained_mph": null,
+        "max_gust_mph": null,
+        "onset_local": "evening 2026-07-15",
+        "end_local": "morning 2026-07-16"
       }
     },
     {
