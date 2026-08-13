@@ -1,6 +1,6 @@
 {
-  "version": "SI-3.1-cal-2026-07-31",
-  "generated": "2026-07-31T17:24:52.407Z",
+  "version": "SI-3.1-cal-2026-08-13",
+  "generated": "2026-08-13T02:07:24.034Z",
   "method": "Historically fitted fixed-lead probability and gust-bias calibration using proven archived HRRR surface fields, SBA-BFL/SBA-SMX pressure anchors, and independent RAWS outcomes. The live SI-3 forecast adds upper-air, local-pressure, coastal-jet, Cuyama/upstream and fresh-observation evidence on top of this historically calibrated core. Verifying observations never enter historical predictors and fire association is never used as an event target.",
   "train": {
     "start": "2024-03-01",
@@ -12,7 +12,7 @@
     "start": "2025-03-01",
     "end": "2025-05-31"
   },
-  "known_event_catalog_count": 57,
+  "known_event_catalog_count": 58,
   "models": {
     "western": {
       "event": {
