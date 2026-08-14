@@ -4,6 +4,8 @@ const fs=require("fs");
 const path=require("path");
 const OUT=process.env.OUT||"research/swex-catalog-inventory.json";
 const DATASETS=[
+  "multi-network-5mb-vertical-resolution-sounding-composite2",
+  "multi-network-composite-highest-resolution-radiosonde-data7",
   "iss-radar-wind-profiler-products",
   "isfs-surface-meteorology-and-flux-products-georeferenced",
   "iss-radiosonde-data-rancho-alegre-site",
@@ -36,7 +38,12 @@ async function get(id){
   fs.mkdirSync(path.dirname(OUT),{recursive:true});fs.writeFileSync(OUT,JSON.stringify(out,null,2)+"\n");
   const summary=results.map(x=>({id:x.id,ok:x.ok,title:x.title,resources:x.resources?.length||0}));
   console.log(JSON.stringify(summary,null,2));
-  const profiler=results.find(x=>x.id==="iss-radar-wind-profiler-products");
-  const surface=results.find(x=>x.id==="isfs-surface-meteorology-and-flux-products-georeferenced");
-  if(!profiler?.ok||!surface?.ok){console.error("Required SWEX catalog records unresolved");process.exit(2);}
+  const required=[
+    "multi-network-5mb-vertical-resolution-sounding-composite2",
+    "multi-network-composite-highest-resolution-radiosonde-data7",
+    "iss-radar-wind-profiler-products",
+    "isfs-surface-meteorology-and-flux-products-georeferenced"
+  ];
+  const missing=required.filter(id=>!results.find(x=>x.id===id)?.ok);
+  if(missing.length){console.error(`Required SWEX catalog records unresolved: ${missing.join(", ")}`);process.exit(2);}
 })().catch(e=>{console.error(e.stack||e);process.exit(1)});
