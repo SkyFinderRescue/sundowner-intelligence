@@ -9,6 +9,7 @@ on:
       - 'tools/probe-si4-archives.js'
       - 'tools/probe-swex-catalog.js'
       - 'tools/build-swex-qc-features.py'
+      - 'tools/build-swex-composite-features.py'
       - 'tools/extract-hrrr-upper-herbie.py'
       - 'tools/score-si4-nws-benchmark.js'
       - '.github/workflows/si4-research.yml'
@@ -37,7 +38,7 @@ jobs:
           node --check tools/probe-si4-archives.js
           node --check tools/probe-swex-catalog.js
           node --check tools/score-si4-nws-benchmark.js
-          python -m py_compile tools/extract-hrrr-upper-herbie.py tools/build-swex-qc-features.py
+          python -m py_compile tools/extract-hrrr-upper-herbie.py tools/build-swex-qc-features.py tools/build-swex-composite-features.py
       - name: SI-4 physics tests
         run: node research/test-si4-science.js
       - name: SWEX QC extractor contract
@@ -54,6 +55,24 @@ jobs:
           python - <<'PY'
           import json
           x=json.load(open('/tmp/swex.json')); assert len(x['rows'])==1 and not x['failures']; assert x['rows'][0]['levels_hpa']['700']['u_ms']==4.0; assert x['rules']['fire_outcome_used'] is False
+          PY
+      - name: SWEX EOL sounding composite contract
+        run: |
+          mkdir -p /tmp/swex-composite
+          cat > /tmp/swex-composite/test.cls <<'EOF'
+          SWEX synthetic EOL sounding composite contract fixture
+          Pres Temp Alt U V
+          1000 16.85 100 1 -1
+          925 12.85 750 2 -2
+          850 7.85 1450 3 -3
+          700 -3.15 3000 4 -4
+          600 -10.15 4200 5 -5
+          500 -18.15 5600 6 -6
+          EOF
+          python tools/build-swex-composite-features.py --input /tmp/swex-composite --dataset-key swex_sounding_composite_5hpa --out /tmp/swex-composite.json
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/swex-composite.json')); assert len(x['rows'])==1 and not x['failures']; assert x['rows'][0]['levels_hpa']['700']['u_ms']==4.0; assert x['rules']['validation_only'] is True and x['rules']['future_observation_leakage'] is False
           PY
       - name: NWS benchmark scorer contract test
         run: |
