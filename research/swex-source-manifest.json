@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "project": "SWEX 2022",
   "status": "research_source_manifest",
   "campaign_start": "2022-04-01T00:00:00Z",
@@ -7,7 +7,8 @@
   "rules": {
     "quality_controlled_only_for_quantitative_validation": true,
     "fire_association_is_event_definition": false,
-    "missing_values_must_not_be_invented": true
+    "missing_values_must_not_be_invented": true,
+    "future_observation_leakage_forbidden": true
   },
   "primary_publication": {
     "title": "NSF NCAR's In Situ Sensing Facility Measurement System During the Sundowner Wind EXperiment (SWEX)",
@@ -15,6 +16,26 @@
     "published": "2026-04-27"
   },
   "datasets": [
+    {
+      "key": "swex_sounding_composite_5hpa",
+      "title": "Multi-Network 5mb Vertical Resolution Sounding Composite",
+      "doi": "10.26023/CM8F-TNHW-HX01",
+      "priority": "critical",
+      "coverage": "2022-03-17 through 2022-05-17",
+      "format": "EOL Sounding Composite columnar ASCII; 5 hPa vertical resolution",
+      "use": ["harmonized multi-network vertical-profile validation", "critical-level reconstruction", "stability", "cross-site event evolution", "matched non-event windows"],
+      "validation_role": "preferred harmonized sounding layer for independent SWEX event reconstruction; raw site products remain provenance/backstop sources"
+    },
+    {
+      "key": "swex_sounding_composite_highres",
+      "title": "Multi-Network Composite Highest Resolution Radiosonde Data",
+      "doi": "10.26023/TN83-Q6BW-AB0D",
+      "priority": "high",
+      "coverage": "SWEX 2022 campaign",
+      "format": "EOL Sounding Composite columnar ASCII; native/highest available vertical resolution",
+      "use": ["sensitivity check against 5 hPa composite", "fine critical-level structure", "inversion depth", "mountain-wave profile diagnostics"],
+      "validation_role": "high-resolution sensitivity layer; does not replace the 5 hPa harmonized composite for primary matched scoring"
+    },
     {
       "key": "avaps_dropsondes",
       "title": "NCAR/EOL AVAPS Dropsonde Profiles",
@@ -111,5 +132,11 @@
     "issue": "The 2026 Geoscience Data Journal article's dataset-detail list associates DOI 10.26023/ZH7Z-GRWB-AV0F with the SWEX radar wind profiler/RASS product. The current UCAR/DASH catalog resolves the SWEX profiler product itself as DOI 10.26023/2659-AF70-3009, alternate identifier 600.034, and lists SWEX-specific filenames and 2022 coverage. DOI 10.26023/ZH7Z-GRWB-AV0F is not used by this project for SWEX ingestion unless NCAR metadata later reconciles the discrepancy.",
     "resolution": "Use UCAR dataset catalog metadata and alternate ID 600.034 as the ingestion authority; retain the publication mismatch in provenance.",
     "checked": "2026-08-11"
+  },
+  "sounding_composite_provenance": {
+    "checked": "2026-08-14",
+    "authority": "NSF NCAR Earth Observing Laboratory / UCAR DASH dataset catalog",
+    "reason": "The SWEX multi-network composites harmonize NCAR/EOL, UCSB, San Jose State, NWS and aircraft sounding sources into one common format. The 5 hPa product is the primary cross-network validation layer; the native-resolution composite is retained for sensitivity analysis so vertical smoothing cannot silently determine the result.",
+    "independence_rule": "SWEX soundings are event-level observations and are never used as future predictors in fixed-24h HRRR holdout scoring."
   }
 }
