@@ -3,9 +3,10 @@
 
 Input is a local directory of NCAR/EOL CF-style netCDF files from ISS2/ISS3.
 This tool never imputes missing observations, never uses fire outcomes, and leaves
-features null when the source profile does not support them.
+features null when the source profile does not support them. Each output row carries
+an input SHA-256 digest so derived validation evidence can be traced to exact bytes.
 """
-import argparse, glob, json, math, os
+import argparse, glob, hashlib, json, math, os
 from datetime import datetime, timezone
 import numpy as np
 import xarray as xr
@@ -38,7 +39,11 @@ def iso(v):
     try:
         a=np.asarray(v.values).reshape(-1)[0]
         if np.issubdtype(np.asarray(a).dtype,np.datetime64):
-            return np.datetime_as_string(a,unit='s')+'Z'
+            s=np.datetime_as_string(a,unit='s')
+            return s if s.endswith('Z') else s+'Z'
+        if isinstance(a,datetime):
+            if a.tzinfo is None:a=a.replace(tzinfo=timezone.utc)
+            return a.astimezone(timezone.utc).isoformat().replace('+00:00','Z')
         if isinstance(a,(str,bytes)):
             return a.decode() if isinstance(a,bytes) else a
     except Exception:pass
@@ -52,14 +57,12 @@ def finite_or_none(x):
 
 def theta_k(temp,pressure_hpa):
     if temp is None:return None
-    # NCAR/EOL radiosonde temperature is commonly degC; accept K when obvious.
     tk=float(temp) if float(temp)>170 else float(temp)+273.15
     return tk*(1000.0/float(pressure_hpa))**KAPPA
 
 def uv_to_speed_dir(u,v):
     if u is None or v is None:return (None,None)
     speed=math.hypot(u,v)
-    # Meteorological FROM direction from eastward/northward components.
     direction=(math.degrees(math.atan2(-u,-v))+360.0)%360.0
     return speed,direction
 
@@ -88,6 +91,27 @@ def ridge_stability(levels):
     dtheta=tht-thb; mean_theta=(tht+thb)/2; n2=(G/mean_theta)*(dtheta/(zt-zb))
     return {'n_per_s':math.sqrt(n2) if n2>0 else 0.0,'n2_per_s2':n2,'delta_theta_k':dtheta}
 
+def sha256_file(path):
+    h=hashlib.sha256()
+    with open(path,'rb') as f:
+        for chunk in iter(lambda:f.read(1024*1024),b''):h.update(chunk)
+    return h.hexdigest()
+
+def profile_integrity(p,z):
+    fp=p[np.isfinite(p)] if p is not None else np.array([])
+    fz=z[np.isfinite(z)] if z is not None else np.array([])
+    pressure_min=finite_or_none(np.min(fp)) if fp.size else None
+    pressure_max=finite_or_none(np.max(fp)) if fp.size else None
+    altitude_min=finite_or_none(np.min(fz)) if fz.size else None
+    altitude_max=finite_or_none(np.max(fz)) if fz.size else None
+    covers_925_500=bool(pressure_min is not None and pressure_max is not None and pressure_min<=500 and pressure_max>=925)
+    return {
+      'pressure_samples':int(fp.size),'height_samples':int(fz.size),
+      'pressure_min_hpa':pressure_min,'pressure_max_hpa':pressure_max,
+      'altitude_min_m':altitude_min,'altitude_max_m':altitude_max,
+      'covers_925_to_500_hpa':covers_925_500
+    }
+
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument('--input',required=True)
@@ -106,6 +130,7 @@ def main():
         z=arr(pick(ds,['altitude','height','geopotential_height','gpsalt']))
         if p is None: raise ValueError('pressure variable not found')
         if np.nanmedian(p)>2000:p=p/100.0
+        integrity=profile_integrity(p,z)
         prof={}; heights=[]; cross=[]
         for lev in LEVELS:
           uu=interp(p,u,lev); vv=interp(p,v,lev); temp=interp(p,t,lev); height=interp(p,z,lev)
@@ -123,8 +148,13 @@ def main():
         critical=zero_crossing(heights,cross) if a.target_direction_deg is not None else None
         launch=iso(pick(ds,['time','launch_time','base_time']))
         rows.append({
-          'site':a.site,'source_file':os.path.basename(fn),'launch_time':launch,
+          'site':a.site,
+          'source_file':os.path.basename(fn),
+          'source_sha256':sha256_file(fn),
+          'source_bytes':os.path.getsize(fn),
+          'launch_time':launch,
           'target_direction_deg':a.target_direction_deg,
+          'profile_integrity':integrity,
           'levels_hpa':prof,
           'features':{
             'critical_level_height_m':finite_or_none(critical),
@@ -144,7 +174,9 @@ def main():
         'missing_values':'null/no imputation',
         'fire_outcome_used':False,
         'future_observation_leakage':False,
-        'direction_features_require_explicit_target_direction':True
+        'validation_only':True,
+        'direction_features_require_explicit_target_direction':True,
+        'source_byte_provenance':'SHA-256 per input file'
       },
       'rows':rows,'failures':failures
     }
