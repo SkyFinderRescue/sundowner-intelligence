@@ -8,6 +8,7 @@ on:
       - 'tools/build-si4-calibration.js'
       - 'tools/probe-si4-archives.js'
       - 'tools/probe-swex-catalog.js'
+      - 'tools/build-swex-qc-features.py'
       - 'tools/extract-hrrr-upper-herbie.py'
       - 'tools/score-si4-nws-benchmark.js'
       - '.github/workflows/si4-research.yml'
@@ -36,16 +37,28 @@ jobs:
           node --check tools/probe-si4-archives.js
           node --check tools/probe-swex-catalog.js
           node --check tools/score-si4-nws-benchmark.js
-          python -m py_compile tools/extract-hrrr-upper-herbie.py
+          python -m py_compile tools/extract-hrrr-upper-herbie.py tools/build-swex-qc-features.py
       - name: SI-4 physics tests
         run: node research/test-si4-science.js
+      - name: SWEX QC extractor contract
+        run: |
+          python -m pip install --quiet xarray numpy scipy
+          mkdir -p /tmp/swex
+          python - <<'PY'
+          import xarray as xr, numpy as np
+          p=np.array([1000.,925.,850.,700.,600.,500.])
+          ds=xr.Dataset({'pressure':('level',p),'temperature':('level',np.array([290,286,281,270,263,255.])), 'u_wind':('level',np.array([1,2,3,4,5,6.])), 'v_wind':('level',np.array([-1,-2,-3,-4,-5,-6.])), 'altitude':('level',np.array([100,750,1450,3000,4200,5600.]))})
+          ds.to_netcdf('/tmp/swex/test.nc')
+          PY
+          python tools/build-swex-qc-features.py --input /tmp/swex --site ISS2 --out /tmp/swex.json
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/swex.json')); assert len(x['rows'])==1 and not x['failures']; assert x['rows'][0]['levels_hpa']['700']['u_ms']==4.0; assert x['rules']['fire_outcome_used'] is False
+          PY
       - name: NWS benchmark scorer contract test
         run: |
           cat > /tmp/matched.json <<'JSON'
-          {"rows":[
-            {"valid_time":"2025-04-01T00:00Z","zone":"Gaviota","regime":"western","observed_event":1,"observed_gust_mph":45,"si_probability":0.8,"si_gust_mph":44,"nws_event_pred":1,"nws_gust_mph":40},
-            {"valid_time":"2025-04-02T00:00Z","zone":"Gaviota","regime":"western","observed_event":0,"observed_gust_mph":18,"si_probability":0.1,"si_gust_mph":20,"nws_event_pred":1,"nws_gust_mph":36}
-          ]}
+          {"rows":[{"valid_time":"2025-04-01T00:00Z","zone":"Gaviota","regime":"western","observed_event":1,"observed_gust_mph":45,"si_probability":0.8,"si_gust_mph":44,"nws_event_pred":1,"nws_gust_mph":40},{"valid_time":"2025-04-02T00:00Z","zone":"Gaviota","regime":"western","observed_event":0,"observed_gust_mph":18,"si_probability":0.1,"si_gust_mph":20,"nws_event_pred":1,"nws_gust_mph":36}]}
           JSON
           INPUT=/tmp/matched.json OUT=/tmp/benchmark.json node tools/score-si4-nws-benchmark.js
           node -e "const x=require('/tmp/benchmark.json');if(x.matched_rows!==2||x.rules.nws_probability_not_invented!==true)process.exit(2)"
@@ -57,21 +70,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
+        with: {node-version: '22'}
       - name: Verify research archives and current shadow feeds
         run: node tools/probe-si4-archives.js
       - name: Resolve public SWEX catalog resources
         run: node tools/probe-swex-catalog.js
       - uses: actions/upload-artifact@v4
         if: always()
-        with:
-          name: si4-archive-probe
-          path: |
-            research/si4-archive-probe.json
-            research/swex-catalog-inventory.json
-          if-no-files-found: warn
-          retention-days: 30
+        with: {name: si4-archive-probe, path: "research/si4-archive-probe.json\nresearch/swex-catalog-inventory.json", if-no-files-found: warn, retention-days: 30}
 
   hrrr-upper-herbie-smoke:
     runs-on: ubuntu-latest
@@ -80,55 +86,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+        with: {python-version: '3.12'}
       - name: Install indexed HRRR subset reader
         run: python -m pip install --quiet 'herbie-data>=2025.7' 'cfgrib>=0.9.15' 'xarray>=2025.1' pandas numpy scikit-learn
       - name: Extract one day of leakage-safe HRRR F24 pressure profiles
         run: python tools/extract-hrrr-upper-herbie.py --start 2024-04-01 --end 2024-04-01 --fxx 24 --out research/hrrr-upper-herbie-smoke.json
       - name: Verify profile completeness
-        run: |
-          python - <<'PY'
-          import json
-          x=json.load(open('research/hrrr-upper-herbie-smoke.json'))
-          assert x['status']=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION'
-          assert x['failure_count']==0, x['failures']
-          assert len(x['rows'])==32, len(x['rows'])
-          assert all(len(r['profile'])==5 for r in x['rows'])
-          print({'rows':len(x['rows']),'profiles':'complete'})
-          PY
+        run: python -c "import json;x=json.load(open('research/hrrr-upper-herbie-smoke.json'));assert x['status']=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION' and x['failure_count']==0 and len(x['rows'])==32 and all(len(r['profile'])==5 for r in x['rows'])"
       - uses: actions/upload-artifact@v4
         if: always()
-        with:
-          name: hrrr-upper-herbie-smoke
-          path: research/hrrr-upper-herbie-smoke.json
-          if-no-files-found: warn
-          retention-days: 30
+        with: {name: hrrr-upper-herbie-smoke, path: research/hrrr-upper-herbie-smoke.json, if-no-files-found: warn, retention-days: 30}
 
   baseline-fixed-lead-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     needs: archive-health
-    env:
-      TRAIN_START: '2024-04-01'
-      TRAIN_END: '2024-04-30'
-      TEST_START: '2025-04-01'
-      TEST_END: '2025-04-30'
+    env: {TRAIN_START: '2024-04-01', TRAIN_END: '2024-04-30', TEST_START: '2025-04-01', TEST_END: '2025-04-30'}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
+        with: {node-version: '22'}
       - name: Confirm frozen SI-3 fixed-lead data path remains healthy
         run: node tools/build-calibration.js > /tmp/si3-baseline-smoke.json
       - name: Confirm SI-4 candidate source separation
         run: |
           node - <<'NODE'
-          const fs=require('fs');
-          const s=fs.readFileSync('tools/build-si4-calibration.js','utf8');
-          if(!s.includes('RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION')) throw Error('research-only guard missing');
-          if(!s.includes('UPPER_CACHE')) throw Error('direct upper-air cache integration missing');
-          if(!s.includes('forecast_lead_hours:24')) throw Error('fixed-lead metadata missing');
-          if(/fire_associated/.test(s)) throw Error('fire outcome leaked into SI-4 calibrator');
-          console.log('SI-4 research-only, fixed-lead and target-separation guards present');
+          const fs=require('fs');const s=fs.readFileSync('tools/build-si4-calibration.js','utf8');if(!s.includes('RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION'))throw Error('research-only guard missing');if(!s.includes('UPPER_CACHE'))throw Error('direct upper-air cache integration missing');if(!s.includes('forecast_lead_hours:24'))throw Error('fixed-lead metadata missing');if(/fire_associated/.test(s))throw Error('fire outcome leaked into SI-4 calibrator');
           NODE
