@@ -6,10 +6,10 @@ const crypto=require("crypto");
 const OUT=process.env.OUT||"research/swex-download-probe.json";
 const DATASETS=[
   {key:"swex_sounding_composite_5hpa",doi:"10.26023/CM8F-TNHW-HX01",eol:"600.029",query:"Multi-Network 5mb Vertical Resolution Sounding Composite"},
-  {key:"iss2_radiosondes",doi:"10.26023/J6P8-7SYD-XP0M",eol:"600.003",query:"ISS Radiosonde Data Rancho Alegre Site"},
-  {key:"iss3_radiosondes",doi:"10.26023/H5TV-Y54J-R010",eol:"600.004",query:"ISS Radiosonde Data Sedgwick Site"},
+  {key:"iss2_radiosondes",doi:"10.26023/J6P8-7SYD-XP0M",eol:"600.003",query:"ISS Radiosonde Data - Rancho Alegre Site"},
+  {key:"iss3_radiosondes",doi:"10.26023/H5TV-Y54J-R010",eol:"600.004",query:"ISS Radiosonde Data - Sedgwick Site"},
   {key:"iss_profiler",doi:"10.26023/2659-AF70-3009",eol:"600.034",query:"ISS Radar Wind Profiler Products"},
-  {key:"isfs_surface_flux",doi:"10.26023/XDKV-QXC2-1Y0J",eol:"600.016",query:"ISFS Surface Meteorology and Flux Products georeferenced"}
+  {key:"isfs_surface_flux",doi:"10.26023/XDKV-QXC2-1Y0J",eol:"600.016",query:"ISFS Surface Meteorology and Flux Products - georeferenced"}
 ];
 const UA={"User-Agent":"Sundowner-Intelligence-SI4-SWEX/1.0","Accept":"application/json,text/html;q=0.9,*/*;q=0.8"};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -19,6 +19,22 @@ function publicApiKey(js){const usage=js.match(/headers:\{["']X-API-Key["']:\s*(
 async function appInfo(){const landing=await fetchRetry('https://data.eol.ucar.edu/dataset/600.029');const html=await landing.text();const script=hrefs(html,landing.url).find(u=>/\/assets\/.*\.js(?:$|\?)/.test(u));const r=await fetchRetry(script);const text=await r.text();const key=publicApiKey(text);return {script,key,api_base:'https://data.eol.ucar.edu/zinc/rest/',key_hash:key?crypto.createHash('sha256').update(key).digest('hex'):null};}
 function sanitize(x){if(Array.isArray(x))return x.map(sanitize);if(x&&typeof x==='object'){const o={};for(const [k,v] of Object.entries(x)){if(/token|password|secret|api.?key/i.test(k))continue;o[k]=sanitize(v);}return o;}return x;}
 async function getJson(url,key){const r=await fetchRetry(url,{headers:{"X-API-Key":key,"Accept":"application/json"}});const text=await r.text();let body=null;try{body=JSON.parse(text);}catch{}return {url,status:r.status,ok:r.ok,content_type:r.headers.get('content-type'),body:body?sanitize(body):null,excerpt:body?null:text.slice(0,1200)};}
-function idsFromSearch(body,eol){const p=body?.body?.payload||[];const out=[];for(const row of p){if(!row||typeof row!=='object')continue;for(const [id,label] of Object.entries(row)){if(String(label).includes(eol))out.push({id:String(id),label:String(label)});}}return out;}
-async function datasetApi(d,api){const search=await getJson(`${api.api_base}dataset/aSearch?keyword=${encodeURIComponent(d.query)}`,api.key);const matches=idsFromSearch(search.body,d.eol);const records=[];for(const m of matches.slice(0,3))records.push({match:m,response:await getJson(`${api.api_base}dataset/${encodeURIComponent(m.id)}`,api.key)});return {ok:search.ok&&matches.length>0&&records.some(r=>r.response.ok),search,matches,records};}
-(async()=>{const api=await appInfo();const datasets=[];for(const d of DATASETS)datasets.push({...d,api:await datasetApi(d,api)});const out={status:'RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION',generated:new Date().toISOString(),authority:'NSF NCAR/EOL zinc REST API',frontend:{script:api.script,api_base:api.api_base,api_key_resolved:Boolean(api.key),api_key_sha256:api.key_hash},rules:{public_frontend_api_only:true,credentials_not_persisted:true,missing_values_not_invented:true,fire_outcome_used:false,future_observation_leakage:false},datasets};fs.mkdirSync(path.dirname(OUT),{recursive:true});fs.writeFileSync(OUT,JSON.stringify(out,null,2)+'\n');console.log(JSON.stringify({api_key_resolved:Boolean(api.key),datasets:datasets.map(d=>({key:d.key,matches:d.api.matches.length,record_ok:d.api.records.some(r=>r.response.ok)}))},null,2));if(!api.key||datasets.some(d=>!d.api.ok))process.exitCode=2;})().catch(e=>{console.error(e.stack||e);process.exit(1)});
+function idsFromSearch(body,eol){const p=body?.body?.payload||body?.body||[];const rows=Array.isArray(p)?p:[];const out=[];for(const row of rows){if(!row||typeof row!=='object')continue;for(const [id,label] of Object.entries(row)){if(String(label).includes(eol))out.push({id:String(id),label:String(label)});}}return out;}
+function collectUrls(x,out=new Set()){if(typeof x==='string'){if(/^https?:\/\//i.test(x))out.add(x);return out;}if(Array.isArray(x)){for(const v of x)collectUrls(v,out);return out;}if(x&&typeof x==='object')for(const v of Object.values(x))collectUrls(v,out);return out;}
+async function datasetApi(d,api){
+  const probes=[];
+  for(const u of [
+    `${api.api_base}dataset/${encodeURIComponent(d.eol)}`,
+    `${api.api_base}dataset?datasetId=${encodeURIComponent(d.eol)}`,
+    `${api.api_base}dataset/aSearch?keyword=${encodeURIComponent(d.eol)}`,
+    `${api.api_base}dataset/aSearch?keyword=${encodeURIComponent(d.query)}`,
+    `${api.api_base}dataset/aSearch?keyword=${encodeURIComponent(d.doi)}`
+  ]) probes.push(await getJson(u,api.key));
+  let records=probes.filter(p=>p.ok&&p.body?.body);
+  const matches=[];
+  for(const p of probes)matches.push(...idsFromSearch(p.body,d.eol));
+  for(const m of matches.slice(0,3))records.push(await getJson(`${api.api_base}dataset/${encodeURIComponent(m.id)}`,api.key));
+  const urls=[...new Set(records.flatMap(r=>[...collectUrls(r.body)]))];
+  return {ok:records.length>0,probes,matches,records,urls};
+}
+(async()=>{const api=await appInfo();const datasets=[];for(const d of DATASETS)datasets.push({...d,api:await datasetApi(d,api)});const out={status:'RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION',generated:new Date().toISOString(),authority:'NSF NCAR/EOL zinc REST API',frontend:{script:api.script,api_base:api.api_base,api_key_resolved:Boolean(api.key),api_key_sha256:api.key_hash},rules:{public_frontend_api_only:true,credentials_not_persisted:true,missing_values_not_invented:true,fire_outcome_used:false,future_observation_leakage:false},datasets};fs.mkdirSync(path.dirname(OUT),{recursive:true});fs.writeFileSync(OUT,JSON.stringify(out,null,2)+'\n');console.log(JSON.stringify({api_key_resolved:Boolean(api.key),datasets:datasets.map(d=>({key:d.key,record_ok:d.api.records.length>0,urls:d.api.urls.length,probe_statuses:d.api.probes.map(p=>p.status)}))},null,2));if(!api.key||datasets.some(d=>!d.api.ok))process.exitCode=2;})().catch(e=>{console.error(e.stack||e);process.exit(1)});
