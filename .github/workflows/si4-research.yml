@@ -9,6 +9,7 @@ on:
       - 'tools/build-si4-calibration.js'
       - 'tools/probe-si4-archives.js'
       - 'tools/probe-swex-catalog.js'
+      - 'tools/validate-swex-source-identities.js'
       - 'tools/build-swex-qc-features.py'
       - 'tools/build-swex-composite-features.py'
       - 'tools/build-swex-profiler-features.py'
@@ -40,6 +41,7 @@ jobs:
           node --check tools/build-si4-calibration.js
           node --check tools/probe-si4-archives.js
           node --check tools/probe-swex-catalog.js
+          node --check tools/validate-swex-source-identities.js
           node --check tools/score-si4-nws-benchmark.js
           python -m py_compile tools/extract-hrrr-upper-herbie.py tools/build-swex-qc-features.py tools/build-swex-composite-features.py tools/build-swex-profiler-features.py tools/match-swex-event-windows.py
       - name: SI-4 physics tests
@@ -139,9 +141,18 @@ jobs:
         run: node tools/probe-si4-archives.js
       - name: Resolve public SWEX catalog resources
         run: node tools/probe-swex-catalog.js
+      - name: Fail closed on SWEX dataset identity drift
+        run: node tools/validate-swex-source-identities.js
       - uses: actions/upload-artifact@v4
         if: always()
-        with: {name: si4-archive-probe, path: "research/si4-archive-probe.json\nresearch/swex-catalog-inventory.json", if-no-files-found: warn, retention-days: 30}
+        with:
+          name: si4-archive-probe
+          path: |
+            research/si4-archive-probe.json
+            research/swex-catalog-inventory.json
+            research/swex-source-identity-validation.json
+          if-no-files-found: warn
+          retention-days: 30
 
   hrrr-upper-herbie-smoke:
     runs-on: ubuntu-latest
