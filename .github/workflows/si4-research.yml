@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'research/**'
+      - 'data/swex-2022-negative-windows.json'
       - 'tools/build-si4-calibration.js'
       - 'tools/probe-si4-archives.js'
       - 'tools/probe-swex-catalog.js'
@@ -57,12 +58,23 @@ jobs:
           import json
           x=json.load(open('/tmp/swex.json')); r=x['rows'][0]; assert len(x['rows'])==1 and not x['failures']; assert r['levels_hpa']['700']['u_ms']==4.0; assert r['launch_time']=='2022-05-12T18:00:00Z'; assert x['rules']['fire_outcome_used'] is False
           PY
-      - name: SWEX EOL sounding composite contract
+      - name: SWEX EOL sounding composite and window-matching contract
         run: |
           mkdir -p /tmp/swex-composite
-          cat > /tmp/swex-composite/test.cls <<'EOF'
+          cat > /tmp/swex-composite/iop.cls <<'EOF'
           SWEX synthetic EOL sounding composite contract fixture
           Launch Time: 2022-05-12 18:00:00 UTC
+          Pres Temp Alt U V
+          1000 16.85 100 1 -1
+          925 12.85 750 2 -2
+          850 7.85 1450 3 -3
+          700 -3.15 3000 4 -4
+          600 -10.15 4200 5 -5
+          500 -18.15 5600 6 -6
+          EOF
+          cat > /tmp/swex-composite/eop.cls <<'EOF'
+          SWEX synthetic independently verified negative fixture
+          Launch Time: 2022-05-04 18:00:00 UTC
           Pres Temp Alt U V
           1000 16.85 100 1 -1
           925 12.85 750 2 -2
@@ -74,15 +86,18 @@ jobs:
           python tools/build-swex-composite-features.py --input /tmp/swex-composite --dataset-key swex_sounding_composite_5hpa --out /tmp/swex-composite.json
           python - <<'PY'
           import json
-          x=json.load(open('/tmp/swex-composite.json')); r=x['rows'][0]; assert len(x['rows'])==1 and not x['failures']; assert r['levels_hpa']['700']['u_ms']==4.0; assert r['launch_time']=='2022-05-12T18:00:00Z'; assert r['launch_time_provenance']['method']=='header_explicit_utc'; assert x['rules']['ambiguous_launch_times']=='null/no timezone inference'
+          x=json.load(open('/tmp/swex-composite.json')); assert len(x['rows'])==2 and not x['failures']; assert all(r['levels_hpa']['700']['u_ms']==4.0 for r in x['rows']); assert all(r['launch_time_provenance']['method']=='header_explicit_utc' for r in x['rows']); assert x['rules']['ambiguous_launch_times']=='null/no timezone inference'
           PY
           cat > /tmp/swex-events.json <<'EOF'
           {"events":[{"event_id":"fixture-iop","start_utc":"2022-05-12T17:00:00Z","end_utc":"2022-05-12T19:00:00Z","regime":"eastern","tier":"fixture"}]}
           EOF
-          python tools/match-swex-event-windows.py --features /tmp/swex-composite.json --events /tmp/swex-events.json --out /tmp/swex-matched.json
+          cat > /tmp/swex-negatives.json <<'EOF'
+          {"windows":[{"window_id":"fixture-eop","start_utc":"2022-05-04T17:00:00Z","end_utc":"2022-05-04T19:00:00Z","verified_negative":true,"regime":null}]}
+          EOF
+          python tools/match-swex-event-windows.py --features /tmp/swex-composite.json --events /tmp/swex-events.json --negatives /tmp/swex-negatives.json --out /tmp/swex-matched.json
           python - <<'PY'
           import json
-          x=json.load(open('/tmp/swex-matched.json')); assert x['counts']['documented_iop']==1; assert x['counts']['unknown_time']==0; assert x['rows'][0]['swex_validation_membership']['event_id']=='fixture-iop'; assert x['rows'][0]['swex_validation_membership']['verified_negative'] is False
+          x=json.load(open('/tmp/swex-matched.json')); assert x['counts']['documented_iop']==1; assert x['counts']['documented_negative']==1; assert x['counts']['unknown_time']==0; by={r['swex_validation_membership']['class']:r for r in x['rows']}; assert by['documented_iop']['swex_validation_membership']['event_id']=='fixture-iop'; assert by['documented_negative']['swex_validation_membership']['negative_window_id']=='fixture-eop'; assert by['documented_negative']['swex_validation_membership']['verified_negative'] is True
           PY
       - name: NWS benchmark scorer contract test
         run: |
