@@ -10,6 +10,7 @@ on:
       - 'tools/probe-swex-catalog.js'
       - 'tools/build-swex-qc-features.py'
       - 'tools/build-swex-composite-features.py'
+      - 'tools/match-swex-event-windows.py'
       - 'tools/extract-hrrr-upper-herbie.py'
       - 'tools/score-si4-nws-benchmark.js'
       - '.github/workflows/si4-research.yml'
@@ -38,7 +39,7 @@ jobs:
           node --check tools/probe-si4-archives.js
           node --check tools/probe-swex-catalog.js
           node --check tools/score-si4-nws-benchmark.js
-          python -m py_compile tools/extract-hrrr-upper-herbie.py tools/build-swex-qc-features.py tools/build-swex-composite-features.py
+          python -m py_compile tools/extract-hrrr-upper-herbie.py tools/build-swex-qc-features.py tools/build-swex-composite-features.py tools/match-swex-event-windows.py
       - name: SI-4 physics tests
         run: node research/test-si4-science.js
       - name: SWEX QC extractor contract
@@ -48,19 +49,20 @@ jobs:
           python - <<'PY'
           import xarray as xr, numpy as np
           p=np.array([1000.,925.,850.,700.,600.,500.])
-          ds=xr.Dataset({'pressure':('level',p),'temperature':('level',np.array([290,286,281,270,263,255.])), 'u_wind':('level',np.array([1,2,3,4,5,6.])), 'v_wind':('level',np.array([-1,-2,-3,-4,-5,-6.])), 'altitude':('level',np.array([100,750,1450,3000,4200,5600.]))})
+          ds=xr.Dataset({'pressure':('level',p),'temperature':('level',np.array([290,286,281,270,263,255.])), 'u_wind':('level',np.array([1,2,3,4,5,6.])), 'v_wind':('level',np.array([-1,-2,-3,-4,-5,-6.])), 'altitude':('level',np.array([100,750,1450,3000,4200,5600.])), 'launch_time':np.datetime64('2022-05-12T18:00:00')})
           ds.to_netcdf('/tmp/swex/test.nc')
           PY
           python tools/build-swex-qc-features.py --input /tmp/swex --site ISS2 --out /tmp/swex.json
           python - <<'PY'
           import json
-          x=json.load(open('/tmp/swex.json')); assert len(x['rows'])==1 and not x['failures']; assert x['rows'][0]['levels_hpa']['700']['u_ms']==4.0; assert x['rules']['fire_outcome_used'] is False
+          x=json.load(open('/tmp/swex.json')); r=x['rows'][0]; assert len(x['rows'])==1 and not x['failures']; assert r['levels_hpa']['700']['u_ms']==4.0; assert r['launch_time']=='2022-05-12T18:00:00Z'; assert x['rules']['fire_outcome_used'] is False
           PY
       - name: SWEX EOL sounding composite contract
         run: |
           mkdir -p /tmp/swex-composite
           cat > /tmp/swex-composite/test.cls <<'EOF'
           SWEX synthetic EOL sounding composite contract fixture
+          Launch Time: 2022-05-12 18:00:00 UTC
           Pres Temp Alt U V
           1000 16.85 100 1 -1
           925 12.85 750 2 -2
@@ -72,7 +74,15 @@ jobs:
           python tools/build-swex-composite-features.py --input /tmp/swex-composite --dataset-key swex_sounding_composite_5hpa --out /tmp/swex-composite.json
           python - <<'PY'
           import json
-          x=json.load(open('/tmp/swex-composite.json')); assert len(x['rows'])==1 and not x['failures']; assert x['rows'][0]['levels_hpa']['700']['u_ms']==4.0; assert x['rules']['validation_only'] is True and x['rules']['future_observation_leakage'] is False
+          x=json.load(open('/tmp/swex-composite.json')); r=x['rows'][0]; assert len(x['rows'])==1 and not x['failures']; assert r['levels_hpa']['700']['u_ms']==4.0; assert r['launch_time']=='2022-05-12T18:00:00Z'; assert r['launch_time_provenance']['method']=='header_explicit_utc'; assert x['rules']['ambiguous_launch_times']=='null/no timezone inference'
+          PY
+          cat > /tmp/swex-events.json <<'EOF'
+          {"events":[{"event_id":"fixture-iop","start_utc":"2022-05-12T17:00:00Z","end_utc":"2022-05-12T19:00:00Z","regime":"eastern","tier":"fixture"}]}
+          EOF
+          python tools/match-swex-event-windows.py --features /tmp/swex-composite.json --events /tmp/swex-events.json --out /tmp/swex-matched.json
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/swex-matched.json')); assert x['counts']['documented_iop']==1; assert x['counts']['unknown_time']==0; assert x['rows'][0]['swex_validation_membership']['event_id']=='fixture-iop'; assert x['rows'][0]['swex_validation_membership']['verified_negative'] is False
           PY
       - name: NWS benchmark scorer contract test
         run: |
