@@ -6,6 +6,10 @@ Designed for the authoritative SWEX 5-hPa composite (UCAR 600.029, DOI
 DOI 10.26023/TN83-Q6BW-AB0D). Missing values remain null; observations are
 validation-only and are never fixed-lead predictors. Each derived row records
 an SHA-256 digest of its exact source bytes for reproducible provenance.
+
+Launch time is extracted only when an unambiguous UTC timestamp is present in
+the source header or filename. Ambiguous/local times remain null rather than
+being guessed; extraction method/raw token are recorded for auditability.
 """
 import argparse, glob, hashlib, json, math, os, re
 from datetime import datetime, timezone
@@ -71,6 +75,39 @@ def sha256_file(path):
  with open(path,'rb') as f:
   for chunk in iter(lambda:f.read(1024*1024),b''):h.update(chunk)
  return h.hexdigest()
+
+def utc_iso(y,mo,d,h,mi=0,s=0):
+ try:
+  return datetime(int(y),int(mo),int(d),int(h),int(mi),int(s),tzinfo=timezone.utc).isoformat().replace('+00:00','Z')
+ except Exception:return None
+
+def launch_time_from_source(lines,path):
+ """Return (utc_iso, method, raw_token), or (None,None,None).
+
+ Only explicit UTC/Z header timestamps or compact timestamps embedded in the
+ EOL source filename are accepted. Header timestamps without UTC/Z are kept
+ ambiguous by design and are not converted.
+ """
+ head='\n'.join(lines[:80])
+ # Explicit ISO-like timestamp with UTC/Z in header.
+ m=re.search(r'(?i)\b(20\d{2})[-/](\d{1,2})[-/](\d{1,2})[ T]+(\d{1,2}):?(\d{2})(?::?(\d{2}))?\s*(Z|UTC)\b',head)
+ if m:
+  raw=m.group(0); val=utc_iso(*m.groups()[:6])
+  if val:return val,'header_explicit_utc',raw
+ # Common compact UTC token with an adjacent UTC/Z marker.
+ m=re.search(r'(?i)\b(20\d{2})(\d{2})(\d{2})[_T-]?(\d{2})(\d{2})(\d{2})?\s*(Z|UTC)\b',head)
+ if m:
+  raw=m.group(0); g=m.groups(); val=utc_iso(g[0],g[1],g[2],g[3],g[4],g[5] or 0)
+  if val:return val,'header_compact_utc',raw
+ # SWEX/EOL composite files conventionally encode the launch cycle in the
+ # basename. Preserve the raw token and method; do not infer from mtime.
+ base=os.path.basename(path)
+ m=re.search(r'(?<!\d)(20\d{2})(\d{2})(\d{2})[_T.-]?(\d{2})(\d{2})(\d{2})?(?!\d)',base)
+ if m:
+  raw=m.group(0); g=m.groups(); val=utc_iso(g[0],g[1],g[2],g[3],g[4],g[5] or 0)
+  if val:return val,'filename_compact_timestamp',raw
+ return None,None,None
+
 def parse(path):
  lines=open(path,errors='replace').read().splitlines(); columns=None; rows=[]
  for line in lines:
@@ -91,7 +128,8 @@ def parse(path):
    rec['u'],rec['v']=uv(rec['speed'],rec['direction'])
   rows.append(rec)
  if not rows: raise ValueError('no EOL sounding data table recognized')
- return rows
+ launch,method,raw=launch_time_from_source(lines,path)
+ return rows,launch,method,raw
 
 def profile_integrity(rows):
  ps=[x['pressure'] for x in rows if x['pressure'] is not None]
@@ -106,14 +144,14 @@ def main():
  outrows=[]; failures=[]
  for fn in sorted(set(files)):
   try:
-   r=parse(fn); p=[x['pressure'] for x in r]; prof={}; zs=[]; cs=[]
+   r,launch,launch_method,launch_raw=parse(fn); p=[x['pressure'] for x in r]; prof={}; zs=[]; cs=[]
    for lev in LEVELS:
     uu=interp(p,[x['u'] for x in r],lev); vv=interp(p,[x['v'] for x in r],lev); tt=interp(p,[x['temp'] for x in r],lev); zz=interp(p,[x['height'] for x in r],lev); s,d=speed_dir(uu,vv); cb=cross(uu,vv,a.target_direction_deg)
     prof[str(lev)]={'u_ms':finite(uu),'v_ms':finite(vv),'wind_speed_ms':finite(s),'wind_from_deg':finite(d),'cross_barrier_ms':finite(cb),'temp_k':finite((tt if tt is not None and tt>170 else tt+273.15) if tt is not None else None),'theta_k':finite(theta(tt,lev)),'height_m':finite(zz)}; zs.append(zz); cs.append(cb)
    cr=critical(zs,cs) if a.target_direction_deg is not None else None
-   outrows.append({'source_file':os.path.basename(fn),'source_sha256':sha256_file(fn),'source_bytes':os.path.getsize(fn),'dataset_key':a.dataset_key,'dataset_provenance':DATASETS[a.dataset_key],'target_direction_deg':a.target_direction_deg,'profile_integrity':profile_integrity(r),'levels_hpa':prof,'features':{'critical_level_height_m':finite(cr),'critical_level_below_5km':cr<5000 if cr is not None else None,'critical_level_below_3km':cr<3000 if cr is not None else None,'ridge_stability_925_700':stability(prof)}})
+   outrows.append({'source_file':os.path.basename(fn),'source_sha256':sha256_file(fn),'source_bytes':os.path.getsize(fn),'dataset_key':a.dataset_key,'dataset_provenance':DATASETS[a.dataset_key],'launch_time':launch,'launch_time_provenance':{'method':launch_method,'raw_token':launch_raw,'timezone_assumption':None if launch is None else 'UTC'},'target_direction_deg':a.target_direction_deg,'profile_integrity':profile_integrity(r),'levels_hpa':prof,'features':{'critical_level_height_m':finite(cr),'critical_level_below_5km':cr<5000 if cr is not None else None,'critical_level_below_3km':cr<3000 if cr is not None else None,'ridge_stability_925_700':stability(prof)}})
   except Exception as e: failures.append({'file':os.path.basename(fn),'error':str(e)})
- result={'status':'RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION','generated':datetime.now(timezone.utc).isoformat(),'source':'NSF NCAR/EOL SWEX EOL Sounding Composite ASCII','dataset_key':a.dataset_key,'dataset_provenance':DATASETS[a.dataset_key],'rules':{'missing_values':'null/no imputation','fire_outcome_used':False,'future_observation_leakage':False,'validation_only':True,'source_byte_provenance':'SHA-256 per input file'},'rows':outrows,'failures':failures}
+ result={'status':'RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION','generated':datetime.now(timezone.utc).isoformat(),'source':'NSF NCAR/EOL SWEX EOL Sounding Composite ASCII','dataset_key':a.dataset_key,'dataset_provenance':DATASETS[a.dataset_key],'rules':{'missing_values':'null/no imputation','fire_outcome_used':False,'future_observation_leakage':False,'validation_only':True,'source_byte_provenance':'SHA-256 per input file','ambiguous_launch_times':'null/no timezone inference'},'rows':outrows,'failures':failures}
  os.makedirs(os.path.dirname(a.out) or '.',exist_ok=True); json.dump(result,open(a.out,'w'),indent=2,allow_nan=False); print(json.dumps({'rows':len(outrows),'failures':len(failures),'out':a.out}))
  if failures:raise SystemExit(2)
 if __name__=='__main__':main()
