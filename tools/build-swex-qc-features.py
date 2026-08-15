@@ -4,7 +4,8 @@
 Input is a local directory of NCAR/EOL CF-style netCDF files from ISS2/ISS3.
 This tool never imputes missing observations, never uses fire outcomes, and leaves
 features null when the source profile does not support them. Each output row carries
-an input SHA-256 digest so derived validation evidence can be traced to exact bytes.
+an input SHA-256 digest plus exact NCAR/EOL dataset identifiers so derived evidence
+can be traced to both the catalog record and exact bytes.
 """
 import argparse, glob, hashlib, json, math, os
 from datetime import datetime, timezone
@@ -14,6 +15,10 @@ import xarray as xr
 LEVELS=(925,850,700,600,500)
 KAPPA=0.2854
 G=9.80665
+DATASETS={
+    'ISS2':{'site_name':'Rancho Alegre','eol_id':'600.003','doi':'10.26023/J6P8-7SYD-XP0M'},
+    'ISS3':{'site_name':'Sedgwick','eol_id':'600.004','doi':'10.26023/H5TV-Y54J-R010'}
+}
 
 def pick(ds,names):
     lower={k.lower():k for k in list(ds.variables)+list(ds.coords)}
@@ -105,12 +110,7 @@ def profile_integrity(p,z):
     altitude_min=finite_or_none(np.min(fz)) if fz.size else None
     altitude_max=finite_or_none(np.max(fz)) if fz.size else None
     covers_925_500=bool(pressure_min is not None and pressure_max is not None and pressure_min<=500 and pressure_max>=925)
-    return {
-      'pressure_samples':int(fp.size),'height_samples':int(fz.size),
-      'pressure_min_hpa':pressure_min,'pressure_max_hpa':pressure_max,
-      'altitude_min_m':altitude_min,'altitude_max_m':altitude_max,
-      'covers_925_to_500_hpa':covers_925_500
-    }
+    return {'pressure_samples':int(fp.size),'height_samples':int(fz.size),'pressure_min_hpa':pressure_min,'pressure_max_hpa':pressure_max,'altitude_min_m':altitude_min,'altitude_max_m':altitude_max,'covers_925_to_500_hpa':covers_925_500}
 
 def main():
     ap=argparse.ArgumentParser()
@@ -118,68 +118,25 @@ def main():
     ap.add_argument('--site',required=True,choices=['ISS2','ISS3'])
     ap.add_argument('--out',required=True)
     ap.add_argument('--target-direction-deg',type=float,default=None,help='Meteorological FROM direction normal to terrain. Direction-dependent features remain null when omitted.')
-    a=ap.parse_args()
+    a=ap.parse_args(); provenance=DATASETS[a.site]
     rows=[]; failures=[]
     for fn in sorted(glob.glob(os.path.join(a.input,'*.nc'))):
       try:
         ds=xr.open_dataset(fn,decode_times=True)
-        p=arr(pick(ds,['pressure','pres','p']))
-        t=arr(pick(ds,['temperature','temp','tdry']))
-        u=arr(pick(ds,['u_wind','u','uwind']))
-        v=arr(pick(ds,['v_wind','v','vwind']))
-        z=arr(pick(ds,['altitude','height','geopotential_height','gpsalt']))
+        p=arr(pick(ds,['pressure','pres','p'])); t=arr(pick(ds,['temperature','temp','tdry'])); u=arr(pick(ds,['u_wind','u','uwind'])); v=arr(pick(ds,['v_wind','v','vwind'])); z=arr(pick(ds,['altitude','height','geopotential_height','gpsalt']))
         if p is None: raise ValueError('pressure variable not found')
         if np.nanmedian(p)>2000:p=p/100.0
-        integrity=profile_integrity(p,z)
-        prof={}; heights=[]; cross=[]
+        integrity=profile_integrity(p,z); prof={}; heights=[]; cross=[]
         for lev in LEVELS:
-          uu=interp(p,u,lev); vv=interp(p,v,lev); temp=interp(p,t,lev); height=interp(p,z,lev)
-          speed,direction=uv_to_speed_dir(uu,vv)
-          cb=signed_cross_barrier(uu,vv,a.target_direction_deg)
-          prof[str(lev)]={
-            'u_ms':finite_or_none(uu),'v_ms':finite_or_none(vv),
-            'wind_speed_ms':finite_or_none(speed),'wind_from_deg':finite_or_none(direction),
-            'cross_barrier_ms':finite_or_none(cb),
-            'temp_k':finite_or_none((temp if temp is not None and temp>170 else temp+273.15) if temp is not None else None),
-            'theta_k':finite_or_none(theta_k(temp,lev)),
-            'height_m':finite_or_none(height)
-          }
+          uu=interp(p,u,lev); vv=interp(p,v,lev); temp=interp(p,t,lev); height=interp(p,z,lev); speed,direction=uv_to_speed_dir(uu,vv); cb=signed_cross_barrier(uu,vv,a.target_direction_deg)
+          prof[str(lev)]={'u_ms':finite_or_none(uu),'v_ms':finite_or_none(vv),'wind_speed_ms':finite_or_none(speed),'wind_from_deg':finite_or_none(direction),'cross_barrier_ms':finite_or_none(cb),'temp_k':finite_or_none((temp if temp is not None and temp>170 else temp+273.15) if temp is not None else None),'theta_k':finite_or_none(theta_k(temp,lev)),'height_m':finite_or_none(height)}
           heights.append(height); cross.append(cb)
         critical=zero_crossing(heights,cross) if a.target_direction_deg is not None else None
         launch=iso(pick(ds,['time','launch_time','base_time']))
-        rows.append({
-          'site':a.site,
-          'source_file':os.path.basename(fn),
-          'source_sha256':sha256_file(fn),
-          'source_bytes':os.path.getsize(fn),
-          'launch_time':launch,
-          'target_direction_deg':a.target_direction_deg,
-          'profile_integrity':integrity,
-          'levels_hpa':prof,
-          'features':{
-            'critical_level_height_m':finite_or_none(critical),
-            'critical_level_below_5km':(critical<5000 if critical is not None else None),
-            'critical_level_below_3km':(critical<3000 if critical is not None else None),
-            'ridge_stability_925_700':ridge_stability(prof)
-          }
-        })
+        rows.append({'site':a.site,'dataset_provenance':provenance,'source_file':os.path.basename(fn),'source_sha256':sha256_file(fn),'source_bytes':os.path.getsize(fn),'launch_time':launch,'target_direction_deg':a.target_direction_deg,'profile_integrity':integrity,'levels_hpa':prof,'features':{'critical_level_height_m':finite_or_none(critical),'critical_level_below_5km':(critical<5000 if critical is not None else None),'critical_level_below_3km':(critical<3000 if critical is not None else None),'ridge_stability_925_700':ridge_stability(prof)}})
         ds.close()
       except Exception as e: failures.append({'file':os.path.basename(fn),'error':str(e)})
-    out={
-      'status':'RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION',
-      'generated':datetime.now(timezone.utc).isoformat(),
-      'source':'NSF NCAR/EOL final-QC SWEX radiosonde netCDF',
-      'site':a.site,
-      'rules':{
-        'missing_values':'null/no imputation',
-        'fire_outcome_used':False,
-        'future_observation_leakage':False,
-        'validation_only':True,
-        'direction_features_require_explicit_target_direction':True,
-        'source_byte_provenance':'SHA-256 per input file'
-      },
-      'rows':rows,'failures':failures
-    }
+    out={'status':'RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION','generated':datetime.now(timezone.utc).isoformat(),'source':'NSF NCAR/EOL final-QC SWEX radiosonde netCDF','site':a.site,'dataset_provenance':provenance,'rules':{'missing_values':'null/no imputation','fire_outcome_used':False,'future_observation_leakage':False,'validation_only':True,'direction_features_require_explicit_target_direction':True,'source_byte_provenance':'SHA-256 per input file'},'rows':rows,'failures':failures}
     os.makedirs(os.path.dirname(a.out) or '.',exist_ok=True)
     with open(a.out,'w') as f:json.dump(out,f,indent=2,allow_nan=False)
     print(json.dumps({'rows':len(rows),'failures':len(failures),'out':a.out}))
