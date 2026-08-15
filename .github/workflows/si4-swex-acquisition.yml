@@ -1,0 +1,32 @@
+name: SI-4 SWEX Acquisition Probe
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/probe-swex-downloads.js'
+      - '.github/workflows/si4-swex-acquisition.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe-authoritative-swex-downloads:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Syntax check
+        run: node --check tools/probe-swex-downloads.js
+      - name: Resolve authoritative SWEX acquisition endpoints with bounded retry
+        run: node tools/probe-swex-downloads.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-swex-download-probe
+          path: research/swex-download-probe.json
+          if-no-files-found: warn
+          retention-days: 30
