@@ -1,0 +1,143 @@
+name: SI-4 All-Season Frozen Holdout
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/si4-all-season.yml'
+      - 'tools/extract-hrrr-upper-herbie.py'
+      - 'tools/merge-hrrr-upper-chunks.py'
+      - 'tools/build-si4-calibration.js'
+      - 'tools/summarize-si4-holdout.js'
+      - 'research/si4-science.js'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: si4-all-season-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  upper-month:
+    name: HRRR F24 ${{ matrix.month }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        include:
+          - {month: '2024-01', start: '2024-01-01', end: '2024-01-31'}
+          - {month: '2024-02', start: '2024-02-01', end: '2024-02-29'}
+          - {month: '2024-03', start: '2024-03-01', end: '2024-03-31'}
+          - {month: '2024-04', start: '2024-04-01', end: '2024-04-30'}
+          - {month: '2024-05', start: '2024-05-01', end: '2024-05-31'}
+          - {month: '2024-06', start: '2024-06-01', end: '2024-06-30'}
+          - {month: '2024-07', start: '2024-07-01', end: '2024-07-31'}
+          - {month: '2024-08', start: '2024-08-01', end: '2024-08-31'}
+          - {month: '2024-09', start: '2024-09-01', end: '2024-09-30'}
+          - {month: '2024-10', start: '2024-10-01', end: '2024-10-31'}
+          - {month: '2024-11', start: '2024-11-01', end: '2024-11-30'}
+          - {month: '2024-12', start: '2024-12-01', end: '2024-12-31'}
+          - {month: '2025-01', start: '2025-01-01', end: '2025-01-31'}
+          - {month: '2025-02', start: '2025-02-01', end: '2025-02-28'}
+          - {month: '2025-03', start: '2025-03-01', end: '2025-03-31'}
+          - {month: '2025-04', start: '2025-04-01', end: '2025-04-30'}
+          - {month: '2025-05', start: '2025-05-01', end: '2025-05-31'}
+          - {month: '2025-06', start: '2025-06-01', end: '2025-06-30'}
+          - {month: '2025-07', start: '2025-07-01', end: '2025-07-31'}
+          - {month: '2025-08', start: '2025-08-01', end: '2025-08-31'}
+          - {month: '2025-09', start: '2025-09-01', end: '2025-09-30'}
+          - {month: '2025-10', start: '2025-10-01', end: '2025-10-31'}
+          - {month: '2025-11', start: '2025-11-01', end: '2025-11-30'}
+          - {month: '2025-12', start: '2025-12-01', end: '2025-12-31'}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install indexed HRRR subset reader
+        run: python -m pip install --quiet 'herbie-data>=2025.7' 'cfgrib>=0.9.15' 'xarray>=2025.1' pandas numpy scikit-learn
+      - name: Extract complete monthly fixed-24h pressure profiles with bounded infrastructure retry
+        shell: bash
+        run: |
+          set -u
+          out="/tmp/hrrr-upper-${{ matrix.month }}.json"
+          ok=0
+          for attempt in 1 2 3; do
+            echo "HRRR month ${{ matrix.month }} attempt ${attempt}/3"
+            if python tools/extract-hrrr-upper-herbie.py --start '${{ matrix.start }}' --end '${{ matrix.end }}' --fxx 24 --out "$out"; then
+              ok=1
+              break
+            fi
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt*30)); fi
+          done
+          test "$ok" -eq 1
+          python - <<'PY'
+          import json, os
+          f='/tmp/hrrr-upper-${{ matrix.month }}.json'
+          x=json.load(open(f))
+          assert x['status']=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION'
+          assert x['forecast_lead_hours']==24
+          assert x['failure_count']==0, x['failures'][:10]
+          assert x['rows'], 'no rows'
+          assert all(len(r.get('profile') or [])==5 for r in x['rows'])
+          print({'month':'${{ matrix.month }}','rows':len(x['rows'])})
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hrrr-upper-${{ matrix.month }}
+          path: /tmp/hrrr-upper-${{ matrix.month }}.json
+          if-no-files-found: error
+          retention-days: 30
+
+  merge-and-score:
+    name: Merge + frozen 2025 holdout score
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    needs: upper-month
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: hrrr-upper-*
+          path: /tmp/hrrr-months
+      - name: Merge exact complete 2024-2025 fixed-lead cache
+        run: |
+          python tools/merge-hrrr-upper-chunks.py --input '/tmp/hrrr-months/**/*.json' --start 2024-01-01 --end 2025-12-31 --fxx 24 --out /tmp/hrrr-upper-fixed-lead-all-season.json
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/hrrr-upper-fixed-lead-all-season.json'))
+          assert len(x['rows'])==23392, len(x['rows'])
+          assert x['failure_count']==0
+          assert x['rules']['future_observation_leakage'] is False
+          PY
+      - name: Build candidate on 2024 only and score frozen 2025 only
+        env:
+          TRAIN_START: '2024-01-01'
+          TRAIN_END: '2024-12-31'
+          TEST_START: '2025-01-01'
+          TEST_END: '2025-12-31'
+          UPPER_CACHE: /tmp/hrrr-upper-fixed-lead-all-season.json
+          OUT: /tmp/si4-calibration-candidate.json
+        run: node tools/build-si4-calibration.js
+      - name: Produce promotion evidence summary without changing model coefficients
+        env:
+          INPUT: /tmp/si4-calibration-candidate.json
+          OUT: /tmp/si4-holdout-summary.json
+        run: node tools/summarize-si4-holdout.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-all-season-frozen-holdout
+          path: |
+            /tmp/hrrr-upper-fixed-lead-all-season.json
+            /tmp/si4-calibration-candidate.json
+            /tmp/si4-holdout-summary.json
+          if-no-files-found: warn
+          retention-days: 30
