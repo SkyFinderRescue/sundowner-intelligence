@@ -1,0 +1,57 @@
+name: SI-4 NDFD GRIB Sample Decode
+
+on:
+  push:
+    branches: ["si4-ndfd-benchmark"]
+    paths:
+      - 'tools/inspect-ndfd-grib-sample.py'
+      - '.github/workflows/si4-ndfd-sample.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: si4-ndfd-sample
+  cancel-in-progress: true
+
+jobs:
+  decode:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install NOAA GRIB2 reader
+        run: python -m pip install --quiet 'grib2io>=2.7,<3' numpy
+      - name: Decode official archived NDFD wind samples
+        run: python tools/inspect-ndfd-grib-sample.py
+      - name: Verify Santa Barbara station coverage and research guards
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('research/ndfd-grib-sample.json'))
+          assert x['status']=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION'
+          assert x['rules']['future_observation_leakage'] is False
+          for p in ('wdir','wgust','wspd'):
+              s=x['samples'][p]
+              assert s['messages_sampled'] > 0, p
+              assert len(s['sha256']) == 64
+              covered=False
+              for m in s['messages']:
+                  sv=m.get('station_values') or {}
+                  if len(sv)==5 and all(v.get('value') is not None for v in sv.values()):
+                      covered=True
+                      break
+              assert covered, f'{p}: no decoded message covers all validation stations'
+          print('NDFD archived wind samples decoded and Santa Barbara coverage verified')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-ndfd-grib-sample
+          path: research/ndfd-grib-sample.json
+          if-no-files-found: warn
+          retention-days: 30
