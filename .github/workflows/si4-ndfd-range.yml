@@ -40,18 +40,19 @@ jobs:
           assert x['rules']['range_request_full_file_fallback_forbidden'] is True
           assert x['rules']['official_wmo_valid_day_hour_heading_required'] is True
           assert x['max_nearest_station_distance_km'] < 20, x['max_nearest_station_distance_km']
-          # Target is 2025-01-16 01Z inside super-files dated 2025-01-15: B=day+1, 01=valid hour.
-          expected={'wdir':'YBUB01','wspd':'YCUB01','wgust':'YWUB01'}
+          # Verified from actual YBUZ98 sequence: source/reference date uses B; next date uses C.
+          expected={'wdir':'YBUC01','wspd':'YCUC01','wgust':'YWUC01'}
           for p,h in expected.items():
               r=x['results'][p]
               assert r['expected_target_bulletin']==h, (p,r['expected_target_bulletin'])
               assert r['target_bulletin']==h, (p,r['target_bulletin'])
               assert r['decoded']['valid_time_utc']==x['target_valid_utc'], (p,r['decoded'])
+              assert str(r['decoded']['step'])=='24', (p,r['decoded'])
               assert len(r['sha256_grib_message'])==64
               assert len(r['station_values'])==5
               assert all(v['value'] is not None and v['distance_km']<20 for v in r['station_values'].values())
           assert x['transfer']['fraction_of_full_superfiles'] < 0.35, x['transfer']
-          print('Range-based exact valid-time extraction passed')
+          print('Range-based exact F24 extraction passed')
           PY
       - uses: actions/upload-artifact@v4
         if: always()
