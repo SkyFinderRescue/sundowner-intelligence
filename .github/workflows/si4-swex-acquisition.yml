@@ -6,6 +6,7 @@ on:
     paths:
       - 'tools/probe-swex-downloads.js'
       - 'tools/probe-swex-order-controls.js'
+      - 'tools/probe-swex-order-response.js'
       - '.github/workflows/si4-swex-acquisition.yml'
   workflow_dispatch:
 
@@ -24,10 +25,13 @@ jobs:
         run: |
           node --check tools/probe-swex-downloads.js
           node --check tools/probe-swex-order-controls.js
+          node --check tools/probe-swex-order-response.js
       - name: Resolve authoritative SWEX acquisition endpoints with bounded retry
         run: node tools/probe-swex-downloads.js
       - name: Inspect exact public CODIAC order controls without submitting an order
         run: node tools/probe-swex-order-controls.js
+      - name: Probe CODIAC response with minimal selection and no contact information
+        run: node tools/probe-swex-order-response.js
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -35,5 +39,6 @@ jobs:
           path: |
             research/swex-download-probe.json
             research/swex-order-controls.json
+            research/swex-order-response-probe.json
           if-no-files-found: warn
           retention-days: 30
