@@ -3,9 +3,10 @@
 const fs=require("fs");
 const path=require("path");
 
+const PROBE_VERSION="1.4.1";
 const OUT=process.env.OUT||"research/swex-order-controls.json";
 const DATASETS=["600.029","600.003","600.004","600.034","600.016"];
-const UA={"User-Agent":"Sundowner-Intelligence-SI4-SWEX/1.4","Accept":"text/html,*/*;q=0.8"};
+const UA={"User-Agent":`Sundowner-Intelligence-SI4-SWEX/${PROBE_VERSION}`,"Accept":"text/html,*/*;q=0.8"};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 async function fetchRetry(url){
@@ -65,7 +66,7 @@ function parseForm(html,base){
     const r=await fetchRetry(url),html=await r.text();
     datasets.push({dataset_id:id,url,status:r.status,final_url:r.url,title:strip((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)||[])[1]),forms:parseForm(html,r.url)});
   }
-  const out={status:"RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION",generated:new Date().toISOString(),authority:"NSF NCAR/EOL CODIAC order forms",purpose:"Capture exact public order-form controls before any automated acquisition request is attempted.",rules:{get_only:true,order_submission:false,credentials_used:false,missing_values_not_invented:true,fire_outcome_used:false,future_observation_leakage:false},datasets};
+  const out={status:"RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION",probe_version:PROBE_VERSION,generated:new Date().toISOString(),authority:"NSF NCAR/EOL CODIAC order forms",purpose:"Capture exact public order-form controls before any automated acquisition request is attempted.",rules:{get_only:true,order_submission:false,credentials_used:false,missing_values_not_invented:true,fire_outcome_used:false,future_observation_leakage:false},datasets};
   fs.mkdirSync(path.dirname(OUT),{recursive:true});
   fs.writeFileSync(OUT,JSON.stringify(out,null,2)+"\n");
   console.log(JSON.stringify(datasets.map(d=>({dataset_id:d.dataset_id,status:d.status,forms:d.forms.length,order_controls:d.forms.filter(f=>/codiac\/fgr/.test(f.action)).flatMap(f=>f.controls).length})),null,2));
