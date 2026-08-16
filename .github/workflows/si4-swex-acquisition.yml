@@ -7,6 +7,7 @@ on:
       - 'tools/probe-swex-downloads.js'
       - 'tools/probe-swex-order-controls.js'
       - 'tools/probe-swex-order-response.js'
+      - 'tools/request-swex-profiler-trial.js'
       - '.github/workflows/si4-swex-acquisition.yml'
   workflow_dispatch:
 
@@ -16,7 +17,7 @@ permissions:
 jobs:
   probe-authoritative-swex-downloads:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,12 +27,20 @@ jobs:
           node --check tools/probe-swex-downloads.js
           node --check tools/probe-swex-order-controls.js
           node --check tools/probe-swex-order-response.js
+          node --check tools/request-swex-profiler-trial.js
       - name: Resolve authoritative SWEX acquisition endpoints with bounded retry
         run: node tools/probe-swex-downloads.js
       - name: Inspect exact public CODIAC order controls without submitting an order
         run: node tools/probe-swex-order-controls.js
       - name: Probe CODIAC response with minimal selection and no contact information
         run: node tools/probe-swex-order-response.js
+      - name: Submit one-file public profiler acquisition trial using repository commit contact
+        shell: bash
+        run: |
+          set -euo pipefail
+          email="$(git log -1 --format=%ae)"
+          test -n "$email"
+          SWEX_ORDER_EMAIL="$email" node tools/request-swex-profiler-trial.js
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -40,5 +49,6 @@ jobs:
             research/swex-download-probe.json
             research/swex-order-controls.json
             research/swex-order-response-probe.json
+            research/swex-profiler-order-trial.json
           if-no-files-found: warn
           retention-days: 30
