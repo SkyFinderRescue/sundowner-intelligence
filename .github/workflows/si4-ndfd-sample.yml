@@ -28,30 +28,42 @@ jobs:
         run: |
           python -m pip install --quiet 'eccodes==2.44.0'
           python -m eccodes selfcheck
-      - name: Decode official operational CONUS NDFD wind samples
+      - name: Decode no-hindsight operational CONUS NDFD sample
         run: python tools/inspect-ndfd-grib-sample.py
-      - name: Verify real Santa Barbara coverage, F24 and research guards
+      - name: Verify fixed cutoff, exact valid time, Santa Barbara coverage and research guards
         run: |
           python - <<'PY'
           import json
+          from datetime import datetime
           x=json.load(open('research/ndfd-grib-sample.json'))
           assert x['status']=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION'
-          assert x['rules']['future_observation_leakage'] is False
-          assert x['rules']['wrong_geographic_sector_rejected'] is True
+          r=x['rules']
+          assert r['future_observation_leakage'] is False
+          assert r['hindsight_selection'] is False
+          assert r['wrong_geographic_sector_rejected'] is True
+          assert r['latest_archive_revision_after_cutoff_forbidden'] is True
+          assert r['target_valid_time_must_match_exactly'] is True
+          assert r['common_snapshot_across_wdir_wspd_wgust'] is True
+          target=datetime.fromisoformat(x['target_valid_utc'].replace('Z','+00:00'))
+          cutoff=datetime.fromisoformat(x['fixed_lead_cutoff_utc'].replace('Z','+00:00'))
+          available=datetime.fromisoformat(x['selected_snapshot_available_utc'].replace('Z','+00:00'))
+          assert available <= cutoff
+          assert (target-available).total_seconds()/3600 >= 24
+          assert x['max_nearest_station_distance_km'] < 20, x['max_nearest_station_distance_km']
           expected={'wdir':'YBUZ98','wgust':'YWUZ98','wspd':'YCUZ98'}
+          suffix=x['selected_snapshot_suffix']
           for p,wmo in expected.items():
               s=x['samples'][p]
               assert s['wmo_super']==wmo, (p,s['wmo_super'])
-              assert s['message_count'] >= 24, (p,s['message_count'])
               assert len(s['sha256']) == 64
-              assert s['max_nearest_station_distance_km'] is not None and s['max_nearest_station_distance_km'] < 20, (p,s['max_nearest_station_distance_km'])
-              assert len(s['step24_messages']) >= 1, f'{p}: no fixed-24h grid in source object'
-              for m in s['step24_messages']:
-                  sv=m.get('station_values') or {}
-                  assert len(sv)==5
-                  assert all(v.get('value') is not None for v in sv.values()), (p,sv)
-                  assert all(v.get('distance_km',999) < 20 for v in sv.values()), (p,sv)
-          print('Operational CONUS NDFD wind files cover Santa Barbara and contain usable F24 grids')
+              assert s['source_key'].endswith('_KWBN_'+suffix), (p,s['source_key'],suffix)
+              m=s['target_message']
+              assert m['valid_time_utc']==x['target_valid_utc'], (p,m['valid_time_utc'])
+              sv=m.get('station_values') or {}
+              assert len(sv)==5
+              assert all(v.get('value') is not None for v in sv.values()), (p,sv)
+              assert all(v.get('distance_km',999) < 20 for v in sv.values()), (p,sv)
+          print('Operational CONUS NDFD sample passes no-hindsight fixed-cutoff Santa Barbara verification')
           PY
       - uses: actions/upload-artifact@v4
         if: always()
