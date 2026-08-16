@@ -1,0 +1,31 @@
+name: SI-4 NDFD WMO Lookup Inspection
+
+on:
+  push:
+    branches: ["si4-ndfd-benchmark"]
+    paths:
+      - 'tools/inspect-ndfd-wmo-lookup.py'
+      - '.github/workflows/si4-ndfd-lookup.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --quiet pandas xlrd
+      - run: python tools/inspect-ndfd-wmo-lookup.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-ndfd-wmo-lookup
+          path: research/ndfd-wmo-lookup-inspection.json
+          if-no-files-found: error
+          retention-days: 30
