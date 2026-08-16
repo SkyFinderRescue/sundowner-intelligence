@@ -1,0 +1,49 @@
+name: SI-4 NDFD Archive Probe
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/probe-ndfd-archive.js'
+      - 'research/NWS_NDFD_BENCHMARK_DESIGN.md'
+      - '.github/workflows/si4-ndfd-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: si4-ndfd-probe-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check
+        run: node --check tools/probe-ndfd-archive.js
+      - name: Discover authoritative NDFD wind archive layout
+        run: node tools/probe-ndfd-archive.js
+      - name: Enforce research-only archive guard
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const x=JSON.parse(fs.readFileSync('research/ndfd-archive-probe.json'));
+          if(x.status!=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION') throw Error('research guard missing');
+          if(x.source?.bucket!=='noaa-ndfd-pds') throw Error('wrong NDFD source bucket');
+          if(!Array.isArray(x.parameter_prefixes)||!x.parameter_prefixes.length) throw Error('no archive parameter prefixes found');
+          if(x.rules?.future_observation_leakage!==false) throw Error('leakage rule missing');
+          console.log({parameter_prefix_count:x.parameter_prefixes.length,wind_candidates:x.wind_candidates});
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-ndfd-archive-probe
+          path: research/ndfd-archive-probe.json
+          if-no-files-found: error
+          retention-days: 30
