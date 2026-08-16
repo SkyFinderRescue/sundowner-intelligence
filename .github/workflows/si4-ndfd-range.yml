@@ -28,9 +28,9 @@ jobs:
         run: |
           python -m pip install --quiet 'eccodes==2.44.0'
           python -m eccodes selfcheck
-      - name: Extract exact F24 WMO bulletins by HTTP range
+      - name: Extract target valid-time WMO bulletins by HTTP range
         run: python tools/extract-ndfd-f24-range.py
-      - name: Verify exact headings, valid time and Santa Barbara coverage
+      - name: Verify official valid-day/hour headings, target time and Santa Barbara coverage
         run: |
           python - <<'PY'
           import json
@@ -38,17 +38,20 @@ jobs:
           assert x['status']=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION'
           assert x['rules']['future_observation_leakage'] is False
           assert x['rules']['range_request_full_file_fallback_forbidden'] is True
+          assert x['rules']['official_wmo_valid_day_hour_heading_required'] is True
           assert x['max_nearest_station_distance_km'] < 20, x['max_nearest_station_distance_km']
-          expected={'wdir':'YBUB00','wspd':'YCUB00','wgust':'YWUB00'}
+          # Target is 2025-01-16 01Z inside super-files dated 2025-01-15: B=day+1, 01=valid hour.
+          expected={'wdir':'YBUB01','wspd':'YCUB01','wgust':'YWUB01'}
           for p,h in expected.items():
               r=x['results'][p]
+              assert r['expected_target_bulletin']==h, (p,r['expected_target_bulletin'])
               assert r['target_bulletin']==h, (p,r['target_bulletin'])
               assert r['decoded']['valid_time_utc']==x['target_valid_utc'], (p,r['decoded'])
               assert len(r['sha256_grib_message'])==64
               assert len(r['station_values'])==5
               assert all(v['value'] is not None and v['distance_km']<20 for v in r['station_values'].values())
           assert x['transfer']['fraction_of_full_superfiles'] < 0.35, x['transfer']
-          print('Range-based exact F24 extraction passed')
+          print('Range-based exact valid-time extraction passed')
           PY
       - uses: actions/upload-artifact@v4
         if: always()
