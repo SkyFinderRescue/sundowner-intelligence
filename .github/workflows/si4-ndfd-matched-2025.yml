@@ -1,0 +1,79 @@
+name: SI-4 NDFD Exact Matched 2025 Benchmark
+
+on:
+  push:
+    branches: [si4-ndfd-benchmark]
+    paths:
+      - 'tools/build-matched-si4-ndfd-2025.js'
+      - 'tools/score-matched-si4-ndfd-2025.js'
+      - 'research/NDFD_2024_FROZEN_RULES.json'
+      - '.github/workflows/si4-ndfd-matched-2025.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  matched-score:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download authoritative frozen SI-4 and NDFD artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/si4 /tmp/ndfd
+          gh run download 31925677059 -R "$GITHUB_REPOSITORY" -n si4-all-season-frozen-holdout -D /tmp/si4
+          gh run download 31970887477 -R "$GITHUB_REPOSITORY" -n si4-ndfd-frozen-score-2025 -D /tmp/ndfd
+          test -s /tmp/si4/si4-calibration-candidate.json
+          test -s /tmp/si4/hrrr-upper-fixed-lead-all-season.json
+          test -s /tmp/ndfd/ndfd-holdout-range-2025.json
+      - name: Build exact common 2025 station-valid-time table
+        env:
+          NDFD: /tmp/ndfd/ndfd-holdout-range-2025.json
+          CANDIDATE: /tmp/si4/si4-calibration-candidate.json
+          UPPER: /tmp/si4/hrrr-upper-fixed-lead-all-season.json
+          OUT: /tmp/matched-si4-ndfd-2025.json
+        run: |
+          ok=0
+          for attempt in 1 2 3; do
+            echo "matched predictor reconstruction attempt ${attempt}/3"
+            if node tools/build-matched-si4-ndfd-2025.js; then ok=1; break; fi
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt*30)); fi
+          done
+          test "$ok" -eq 1
+          node - <<'NODE'
+          const x=require('/tmp/matched-si4-ndfd-2025.json');
+          if(x.status!=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION') throw Error('research guard missing');
+          if(x.source_rows!==195) throw Error(`unexpected source rows ${x.source_rows}`);
+          if(x.matched_rows<180) throw Error(`insufficient exact matched coverage ${x.matched_rows}/195`);
+          if(x.rules.future_observations_label_only!==true||x.rules.ndfd_probability_invented!==false) throw Error('benchmark guard failed');
+          console.log({matched_rows:x.matched_rows,missing:x.missing.length});
+          NODE
+      - name: Score SI-3/SI-4 and deterministic NDFD fairly
+        env:
+          INPUT: /tmp/matched-si4-ndfd-2025.json
+          RULES: research/NDFD_2024_FROZEN_RULES.json
+          OUT: /tmp/matched-si4-ndfd-report-2025.json
+        run: |
+          node tools/score-matched-si4-ndfd-2025.js
+          node - <<'NODE'
+          const x=require('/tmp/matched-si4-ndfd-report-2025.json');
+          if(x.rules.ndfd_probability_not_invented!==true) throw Error('NDFD probability guard failed');
+          if(x.rules.ndfd_thresholds_frozen_from_2024_only!==true) throw Error('2024 threshold freeze guard failed');
+          console.log(JSON.stringify(x.overall,null,2));
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-ndfd-exact-matched-2025
+          path: |
+            /tmp/matched-si4-ndfd-2025.json
+            /tmp/matched-si4-ndfd-report-2025.json
+          if-no-files-found: warn
+          retention-days: 30
