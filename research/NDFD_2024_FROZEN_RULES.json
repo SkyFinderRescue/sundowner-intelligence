@@ -1,0 +1,76 @@
+{
+  "status": "RESEARCH_ONLY_2024_RULE_FREEZE_NOT_2025_SKILL",
+  "branch": "si4-ndfd-benchmark",
+  "source_commit": "1eb9ed26f1239ea607b4ef1a68d7616ecbd63a74",
+  "source_workflow": {
+    "name": "SI-4 NDFD 2024 Range Development Sample",
+    "run_number": 8,
+    "run_id": 31959667817,
+    "artifact_name": "si4-ndfd-development-range-2024",
+    "artifact_id": 9267277653,
+    "artifact_sha256": "b6fa199be2a36771c60d45c58b56373988b58bb1b57a12e1bea6d4c446f9ef60"
+  },
+  "development_sample": {
+    "calendar_year": 2024,
+    "predeclared_targets": 96,
+    "exact_f24_cases": 45,
+    "station_rows": 225,
+    "missing_targets": 51,
+    "holdout_2025_accessed": false
+  },
+  "rules": {
+    "fixed_lead_hours": 24,
+    "exact_step_24_required": true,
+    "future_observation_leakage": false,
+    "fire_outcome_used": false,
+    "missing_values_preserved": true,
+    "same_station_grid_match_rule": "nearest predeclared NDFD grid point; no strongest-cell selection after verification",
+    "threshold_selection_period": "2024-only",
+    "threshold_selection_objective": "maximize CSI; tie-break lower FAR; then closest threshold",
+    "minimum_observed_positive_rows_to_freeze": 30,
+    "do_not_manufacture_nws_sundowner_probability": true
+  },
+  "frozen_strong_wind_rule": {
+    "verification_observed_gust_threshold_mph": 30,
+    "ndfd_forecast_gust_threshold_mph": 28,
+    "development_observed_positive_rows": 40,
+    "development_metrics": {
+      "tp": 25,
+      "fp": 5,
+      "tn": 180,
+      "fn": 15,
+      "pod": 0.625,
+      "far": 0.16666666666666666,
+      "precision": 0.8333333333333334,
+      "csi": 0.5555555555555556,
+      "specificity": 0.972972972972973
+    }
+  },
+  "not_frozen_for_insufficient_2024_support": [
+    {
+      "verification_observed_gust_threshold_mph": 35,
+      "selected_candidate_ndfd_gust_threshold_mph": 29,
+      "observed_positive_rows": 26
+    },
+    {
+      "verification_observed_gust_threshold_mph": 40,
+      "selected_candidate_ndfd_gust_threshold_mph": 39,
+      "observed_positive_rows": 9
+    },
+    {
+      "verification_observed_gust_threshold_mph": 45,
+      "selected_candidate_ndfd_gust_threshold_mph": 33,
+      "observed_positive_rows": 3
+    }
+  ],
+  "sundowner_event_rule": {
+    "status": "UNFROZEN",
+    "reason": "The 2024 strong-wind scan is not an independently verified Sundowner-event label set. Direction/event thresholds must not be inferred from gust diagnostics alone."
+  },
+  "holdout_policy": {
+    "2025_strong_wind_score_allowed_after_this_freeze": true,
+    "2025_sundowner_event_threshold_score_allowed": false,
+    "2025_is_score_only": true,
+    "no_2025_tuning": true
+  }
+}
