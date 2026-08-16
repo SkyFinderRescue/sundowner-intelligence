@@ -1,0 +1,130 @@
+name: SI-4 NDFD 2025 Frozen Score-Only Benchmark
+
+on:
+  push:
+    branches: ["si4-ndfd-benchmark"]
+    paths:
+      - 'research/NDFD_2024_FROZEN_RULES.json'
+      - 'tools/run-ndfd-pilot-range.py'
+      - 'tools/run-ndfd-holdout-range.py'
+      - 'tools/score-ndfd-holdout-2025.py'
+      - '.github/workflows/si4-ndfd-holdout-2025.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: si4-ndfd-holdout-2025
+  cancel-in-progress: true
+
+jobs:
+  score-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      OUT: research/ndfd-holdout-range-2025.json
+      INPUT: research/ndfd-holdout-range-2025.json
+      RULES: research/NDFD_2024_FROZEN_RULES.json
+      SCORE_OUT: research/ndfd-holdout-strong-wind-2025.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install GRIB2 decoder
+        run: |
+          python -m pip install --quiet 'eccodes==2.44.0'
+          python -m eccodes selfcheck
+      - name: Verify 2024 rules were frozen before 2025 score
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('research/NDFD_2024_FROZEN_RULES.json'))
+          assert x['status']=='RESEARCH_ONLY_2024_RULE_FREEZE_NOT_2025_SKILL'
+          assert x['development_sample']['holdout_2025_accessed'] is False
+          assert x['holdout_policy']['2025_strong_wind_score_allowed_after_this_freeze'] is True
+          assert x['holdout_policy']['2025_is_score_only'] is True
+          assert x['holdout_policy']['no_2025_tuning'] is True
+          assert x['sundowner_event_rule']['status']=='UNFROZEN'
+          assert x['frozen_strong_wind_rule']['verification_observed_gust_threshold_mph']==30
+          assert x['frozen_strong_wind_rule']['ndfd_forecast_gust_threshold_mph']==28
+          print('Frozen 2024 deterministic strong-wind rule verified; 2025 is score-only')
+          PY
+      - name: Predeclare matched systematic 2025 score grid
+        run: |
+          python - <<'PY' >> "$GITHUB_ENV"
+          from datetime import datetime, timezone
+          # Exact same event-agnostic calendar grid used for 2024 development.
+          # It is declared before any 2025 score is inspected.
+          targets=[]
+          for month in range(1,13):
+              for day in (1,4,8,11,15,18,22,25):
+                  targets.append(datetime(2025,month,day,1,tzinfo=timezone.utc).isoformat())
+          assert len(targets)==96
+          print('TARGETS='+','.join(targets))
+          PY
+      - name: Extract predeclared 2025 exact-F24 NDFD guidance and matching observations
+        run: python tools/run-ndfd-holdout-range.py
+      - name: Verify score-only archive/provenance guards
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('research/ndfd-holdout-range-2025.json'))
+          assert x['status']=='RESEARCH_ONLY_2025_SCORE_ONLY_NOT_FOR_TUNING'
+          assert x['rules']['2025_score_only'] is True
+          assert x['rules']['2024_thresholds_frozen_before_access'] is True
+          assert x['rules']['no_2025_tuning'] is True
+          assert x['rules']['future_observation_leakage'] is False
+          assert x['rules']['fire_outcome_used'] is False
+          assert x['rules']['range_request_full_file_fallback_forbidden'] is True
+          assert x['rules']['exact_step_24_required'] is True
+          assert len(x['targets'])==96
+          assert len(x['cases']) + len(x['missing_targets']) == 96
+          assert len(x['rows']) == 5 * len(x['cases'])
+          assert all(r['target_valid_utc'].startswith('2025-') for r in x['rows'])
+          assert all(c['target_valid_utc'].startswith('2025-') for c in x['cases'])
+          assert all(c['effective_lead_hours'] >= 24 for c in x['cases'])
+          for c in x['cases']:
+              for p in ('wdir','wspd','wgust'):
+                  s=c['sources'][p]
+                  assert s['source_key']
+                  assert len(s['sha256_grib_message'])==64
+                  assert s['valid_time_utc']==c['target_valid_utc']
+                  assert str(s['step'])=='24'
+          assert x['transfer']['fraction_of_full_superfiles'] < 0.15, x['transfer']
+          print({
+              'exact_f24_cases':len(x['cases']),
+              'station_rows':len(x['rows']),
+              'missing_targets':len(x['missing_targets']),
+              'rows_with_hads':x['diagnostics']['rows_with_hads'],
+              'transfer':x['transfer'],
+          })
+          PY
+      - name: Score frozen 2024 deterministic threshold on 2025 without tuning
+        run: python tools/score-ndfd-holdout-2025.py
+      - name: Verify no Sundowner probability/event rule was manufactured
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('research/ndfd-holdout-strong-wind-2025.json'))
+          assert x['status']=='RESEARCH_ONLY_FROZEN_2025_NDFD_SCORE_NOT_SUNDOWNER_PROBABILITY'
+          assert x['guards']['2025_score_only'] is True
+          assert x['guards']['no_2025_tuning'] is True
+          assert x['guards']['thresholds_selected_before_2025_score'] is True
+          assert x['guards']['future_observation_leakage'] is False
+          assert x['guards']['fire_outcome_used'] is False
+          assert x['guards']['not_a_sundowner_probability'] is True
+          assert x['frozen_rule']['observed_gust_threshold_mph']==30
+          assert x['frozen_rule']['ndfd_gust_threshold_mph']==28
+          print(json.dumps({'overall':x['overall'],'regimes':x['regimes'],'archive_coverage':x['archive_coverage']},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-ndfd-frozen-score-2025
+          path: |
+            research/ndfd-holdout-range-2025.json
+            research/ndfd-holdout-strong-wind-2025.json
+          if-no-files-found: warn
+          retention-days: 30
