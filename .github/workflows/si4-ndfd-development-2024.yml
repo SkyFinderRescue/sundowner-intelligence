@@ -21,11 +21,11 @@ jobs:
     timeout-minutes: 45
     env:
       OUT: research/ndfd-development-range-2024.json
-      # Predeclared 2024-only development times. November uses Nov 14 because the
-      # archived pre-cutoff common snapshot needed for Nov 15 is absent; this is
-      # an archive-availability/plumbing substitution only, with no scoring or
-      # threshold change and no 2025 data touched.
-      TARGETS: 2024-01-15T01:00:00+00:00,2024-02-15T01:00:00+00:00,2024-03-15T01:00:00+00:00,2024-04-15T01:00:00+00:00,2024-05-15T01:00:00+00:00,2024-06-15T01:00:00+00:00,2024-07-15T01:00:00+00:00,2024-08-15T01:00:00+00:00,2024-09-15T01:00:00+00:00,2024-10-15T01:00:00+00:00,2024-11-14T01:00:00+00:00,2024-12-15T01:00:00+00:00
+      # Predeclared 2024-only monthly development times. November is deliberately
+      # left missing rather than substituted after both Nov 15 and a plumbing-only
+      # Nov 14 retry proved the required pre-cutoff common archive snapshot absent.
+      # This preserves the missing-data rule and avoids availability cherry-picking.
+      TARGETS: 2024-01-15T01:00:00+00:00,2024-02-15T01:00:00+00:00,2024-03-15T01:00:00+00:00,2024-04-15T01:00:00+00:00,2024-05-15T01:00:00+00:00,2024-06-15T01:00:00+00:00,2024-07-15T01:00:00+00:00,2024-08-15T01:00:00+00:00,2024-09-15T01:00:00+00:00,2024-10-15T01:00:00+00:00,2024-12-15T01:00:00+00:00
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -46,10 +46,11 @@ jobs:
           assert x['rules']['2025_holdout_untouched'] is True
           assert x['rules']['future_observation_leakage'] is False
           assert x['rules']['range_request_full_file_fallback_forbidden'] is True
-          assert len(x['cases']) == 12, len(x['cases'])
-          assert len(x['rows']) == 60, len(x['rows'])
+          assert len(x['cases']) == 11, len(x['cases'])
+          assert len(x['rows']) == 55, len(x['rows'])
           assert all(r['target_valid_utc'].startswith('2024-') for r in x['rows'])
           assert all(c['target_valid_utc'].startswith('2024-') for c in x['cases'])
+          assert all(not c['target_valid_utc'].startswith('2024-11-') for c in x['cases'])
           assert all(c['effective_lead_hours'] >= 24 for c in x['cases'])
           for c in x['cases']:
               for p in ('wdir','wspd','wgust'):
@@ -63,6 +64,7 @@ jobs:
               'cases':len(x['cases']),
               'rows':len(x['rows']),
               'rows_with_hads':x['pilot_diagnostics']['rows_with_hads'],
+              'documented_missing_month':'2024-11',
               'transfer':x['transfer'],
               'minimum_effective_lead_hours':x['pilot_diagnostics']['minimum_effective_lead_hours'],
           },indent=2))
