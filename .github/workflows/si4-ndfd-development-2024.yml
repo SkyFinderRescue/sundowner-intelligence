@@ -5,6 +5,7 @@ on:
     branches: ["si4-ndfd-benchmark"]
     paths:
       - 'tools/run-ndfd-pilot-range.py'
+      - 'tools/filter-ndfd-exact-f24.py'
       - '.github/workflows/si4-ndfd-development-2024.yml'
   workflow_dispatch:
 
@@ -37,6 +38,8 @@ jobs:
           python -m eccodes selfcheck
       - name: Run predeclared 2024-only range sample
         run: python tools/run-ndfd-pilot-range.py
+      - name: Preserve only exact F24 guidance
+        run: python tools/filter-ndfd-exact-f24.py
       - name: Verify development-sample guards and provenance
         run: |
           python - <<'PY'
@@ -46,11 +49,13 @@ jobs:
           assert x['rules']['2025_holdout_untouched'] is True
           assert x['rules']['future_observation_leakage'] is False
           assert x['rules']['range_request_full_file_fallback_forbidden'] is True
-          assert len(x['cases']) == 11, len(x['cases'])
-          assert len(x['rows']) == 55, len(x['rows'])
+          assert x['rules']['exact_step_24_required'] is True
+          assert x['rules']['non_exact_step_preserved_as_missing'] is True
+          assert len(x['targets']) == 11, len(x['targets'])
+          assert len(x['cases']) + len(x['missing_targets']) == 11
+          assert len(x['rows']) == 5 * len(x['cases']), (len(x['rows']),len(x['cases']))
           assert all(r['target_valid_utc'].startswith('2024-') for r in x['rows'])
           assert all(c['target_valid_utc'].startswith('2024-') for c in x['cases'])
-          assert all(not c['target_valid_utc'].startswith('2024-11-') for c in x['cases'])
           assert all(c['effective_lead_hours'] >= 24 for c in x['cases'])
           for c in x['cases']:
               for p in ('wdir','wspd','wgust'):
@@ -61,9 +66,10 @@ jobs:
                   assert str(s['step']) == '24'
           assert x['transfer']['fraction_of_full_superfiles'] < 0.15, x['transfer']
           print(json.dumps({
-              'cases':len(x['cases']),
+              'exact_f24_cases':len(x['cases']),
               'rows':len(x['rows']),
               'rows_with_hads':x['pilot_diagnostics']['rows_with_hads'],
+              'missing_targets':x['missing_targets'],
               'documented_missing_month':'2024-11',
               'transfer':x['transfer'],
               'minimum_effective_lead_hours':x['pilot_diagnostics']['minimum_effective_lead_hours'],
