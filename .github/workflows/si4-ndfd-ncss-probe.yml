@@ -1,0 +1,40 @@
+name: SI-4 NDFD NCEI Subset Probe
+
+on:
+  push:
+    branches: ["si4-ndfd-benchmark"]
+    paths:
+      - 'tools/probe-ndfd-ncss.js'
+      - '.github/workflows/si4-ndfd-ncss-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check tools/probe-ndfd-ncss.js
+      - run: node tools/probe-ndfd-ncss.js
+      - name: Summarize service availability
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const x=JSON.parse(fs.readFileSync('research/ndfd-ncss-probe.json'));
+          if(x.status!=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION')throw Error('research guard missing');
+          const m=Object.fromEntries(x.results.map(r=>[r.name,{ok:r.ok,status:r.status,content_type:r.content_type,bytes_received:r.bytes_received}]));
+          console.log(JSON.stringify(m,null,2));
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-ndfd-ncss-probe
+          path: research/ndfd-ncss-probe.json
+          if-no-files-found: warn
+          retention-days: 30
