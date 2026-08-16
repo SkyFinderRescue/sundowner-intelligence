@@ -5,6 +5,7 @@ on:
     branches: ["si4-ndfd-benchmark"]
     paths:
       - 'tools/run-ndfd-pilot-range.py'
+      - 'tools/run-ndfd-development-range.py'
       - 'tools/filter-ndfd-exact-f24.py'
       - '.github/workflows/si4-ndfd-development-2024.yml'
   workflow_dispatch:
@@ -36,7 +37,7 @@ jobs:
           python -m pip install --quiet 'eccodes==2.44.0'
           python -m eccodes selfcheck
       - name: Run predeclared 2024-only range sample
-        run: python tools/run-ndfd-pilot-range.py
+        run: python tools/run-ndfd-development-range.py
       - name: Preserve only exact F24 guidance
         run: python tools/filter-ndfd-exact-f24.py
       - name: Verify development-sample guards and provenance
@@ -48,6 +49,7 @@ jobs:
           assert x['rules']['2025_holdout_untouched'] is True
           assert x['rules']['future_observation_leakage'] is False
           assert x['rules']['range_request_full_file_fallback_forbidden'] is True
+          assert x['rules']['predeclared_missing_targets_preserved'] is True
           assert x['rules']['exact_step_24_required'] is True
           assert x['rules']['non_exact_step_preserved_as_missing'] is True
           assert len(x['targets']) == 48, len(x['targets'])
