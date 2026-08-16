@@ -1,0 +1,73 @@
+name: SI-4 NDFD 2024 Range Development Sample
+
+on:
+  push:
+    branches: ["si4-ndfd-benchmark"]
+    paths:
+      - 'tools/run-ndfd-pilot-range.py'
+      - '.github/workflows/si4-ndfd-development-2024.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: si4-ndfd-development-2024
+  cancel-in-progress: true
+
+jobs:
+  sample:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      OUT: research/ndfd-development-range-2024.json
+      TARGETS: 2024-01-15T01:00:00+00:00,2024-02-15T01:00:00+00:00,2024-03-15T01:00:00+00:00,2024-04-15T01:00:00+00:00,2024-05-15T01:00:00+00:00,2024-06-15T01:00:00+00:00,2024-07-15T01:00:00+00:00,2024-08-15T01:00:00+00:00,2024-09-15T01:00:00+00:00,2024-10-15T01:00:00+00:00,2024-11-15T01:00:00+00:00,2024-12-15T01:00:00+00:00
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install GRIB2 decoder
+        run: |
+          python -m pip install --quiet 'eccodes==2.44.0'
+          python -m eccodes selfcheck
+      - name: Run predeclared 2024-only range sample
+        run: python tools/run-ndfd-pilot-range.py
+      - name: Verify development-sample guards and provenance
+        run: |
+          python - <<'PY'
+          import json
+          from datetime import datetime, timezone
+          x=json.load(open('research/ndfd-development-range-2024.json'))
+          assert x['status']=='RESEARCH_ONLY_PIPELINE_PILOT_NOT_SKILL_EVIDENCE'
+          assert x['rules']['2025_holdout_untouched'] is True
+          assert x['rules']['future_observation_leakage'] is False
+          assert x['rules']['range_request_full_file_fallback_forbidden'] is True
+          assert len(x['cases']) == 12, len(x['cases'])
+          assert len(x['rows']) == 60, len(x['rows'])
+          assert all(r['target_valid_utc'].startswith('2024-') for r in x['rows'])
+          assert all(c['target_valid_utc'].startswith('2024-') for c in x['cases'])
+          assert all(c['effective_lead_hours'] >= 24 for c in x['cases'])
+          for c in x['cases']:
+              for p in ('wdir','wspd','wgust'):
+                  s=c['sources'][p]
+                  assert s['source_key']
+                  assert len(s['sha256_grib_message']) == 64
+                  assert s['valid_time_utc'] == c['target_valid_utc']
+                  assert str(s['step']) == '24'
+          assert x['transfer']['fraction_of_full_superfiles'] < 0.15, x['transfer']
+          print(json.dumps({
+              'cases':len(x['cases']),
+              'rows':len(x['rows']),
+              'rows_with_hads':x['pilot_diagnostics']['rows_with_hads'],
+              'transfer':x['transfer'],
+              'minimum_effective_lead_hours':x['pilot_diagnostics']['minimum_effective_lead_hours'],
+          },indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-ndfd-development-range-2024
+          path: research/ndfd-development-range-2024.json
+          if-no-files-found: warn
+          retention-days: 30
