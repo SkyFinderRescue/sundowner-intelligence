@@ -1,0 +1,70 @@
+name: SI-4 NDFD Range Pilot Equivalence
+
+on:
+  push:
+    branches: ["si4-ndfd-benchmark"]
+    paths:
+      - 'tools/run-ndfd-pilot-range.py'
+      - '.github/workflows/si4-ndfd-pilot-range.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: si4-ndfd-range-pilot
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install GRIB2 decoder
+        run: |
+          python -m pip install --quiet 'eccodes==2.44.0'
+          python -m eccodes selfcheck
+      - name: Run range-optimized 2024 NDFD/HADS pilot
+        run: python tools/run-ndfd-pilot-range.py
+      - name: Verify equivalence with validated full-file pilot
+        run: |
+          python - <<'PY'
+          import json, math
+          x=json.load(open('research/ndfd-pilot-range-2024.json'))
+          d=x['pilot_diagnostics']
+          assert x['status']=='RESEARCH_ONLY_PIPELINE_PILOT_NOT_SKILL_EVIDENCE'
+          assert x['rules']['2025_holdout_untouched'] is True
+          assert x['rules']['future_observation_leakage'] is False
+          assert x['rules']['range_request_full_file_fallback_forbidden'] is True
+          assert d['rows_total']==10 and d['rows_with_hads']==10, d
+          assert abs(d['mean_abs_gust_error_mph']-1.89756621331424)<1e-9, d
+          assert abs(d['mean_direction_error_deg']-58.7)<1e-9, d
+          assert abs(d['max_grid_distance_km']-1.2248563116335218)<1e-9, d
+          assert abs(d['minimum_effective_lead_hours']-24.020555555555557)<1e-9, d
+          assert x['transfer']['fraction_of_full_superfiles'] < 0.15, x['transfer']
+          expected={
+            ('2024-01-15T01:00:00Z','Gaviota'):(320.0,19.46134574087328,25.27738010021472),
+            ('2024-01-15T01:00:00Z','Refugio'):(310.0,21.92197566213312,28.85647816750176),
+            ('2024-07-15T01:00:00Z','Gaviota'):(280.0,9.17143879742304,11.40837508947744),
+            ('2024-07-15T01:00:00Z','Carpinteria'):(250.0,5.816034359341439,6.9345025053686395),
+          }
+          rows={(r['target_valid_utc'],r['station_name']):r for r in x['rows']}
+          for k,(wd,ws,wg) in expected.items():
+            r=rows[k]
+            assert abs(r['ndfd_wind_direction_deg']-wd)<1e-9,(k,r)
+            assert abs(r['ndfd_wind_speed_mph']-ws)<1e-9,(k,r)
+            assert abs(r['ndfd_gust_mph']-wg)<1e-9,(k,r)
+          print('Range pilot exactly reproduces validated full-file pilot')
+          print(json.dumps(x['transfer'],indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-ndfd-range-pilot
+          path: research/ndfd-pilot-range-2024.json
+          if-no-files-found: warn
+          retention-days: 30
