@@ -2,6 +2,7 @@
 import hashlib
 import json
 import os
+import re
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -69,8 +70,42 @@ def lon180(lon):
     return ((float(lon) + 180.0) % 360.0) - 180.0
 
 
+def parse_step_hours(value, unit_code=None):
+    if value is None:
+        return None
+    s = str(value).strip().lower()
+    m = re.fullmatch(r"(-?\d+(?:\.\d+)?)([mhd])?", s)
+    if m:
+        n = float(m.group(1))
+        unit = m.group(2)
+        if unit == "m":
+            return n / 60.0
+        if unit == "h":
+            return n
+        if unit == "d":
+            return n * 24.0
+        # GRIB2 Code Table 4.4: 0=minute, 1=hour, 2=day.
+        if unit_code == 0:
+            return n / 60.0
+        if unit_code == 1:
+            return n
+        if unit_code == 2:
+            return n * 24.0
+    return None
+
+
+def meta_step_hours(meta):
+    unit = meta.get("indicatorOfUnitOfTimeRange")
+    for key in ("endStep", "step", "stepRange"):
+        h = parse_step_hours(meta.get(key), unit)
+        if h is not None:
+            return h
+    return parse_step_hours(meta.get("forecastTime"), unit)
+
+
 def is_f24(meta):
-    return meta.get("endStep") == 24 or meta.get("forecastTime") == 24 or str(meta.get("stepRange")) == "24"
+    h = meta_step_hours(meta)
+    return h is not None and abs(h - 24.0) < 1e-9
 
 
 def station_sample(gid):
@@ -105,10 +140,8 @@ def inspect(parameter, spec):
                 break
             try:
                 meta = {k: safe_get(gid, k) for k in META_KEYS}
+                meta["normalized_step_hours"] = meta_step_hours(meta)
                 message_meta.append(meta)
-                # Nearest-grid lookup is intentionally restricted to fixed-F24 messages.
-                # This preserves the exact same source/selection rule while avoiding hundreds
-                # of unnecessary whole-grid nearest-neighbor scans per file.
                 if is_f24(meta):
                     scored = dict(meta)
                     scored["station_values"] = station_sample(gid)
@@ -117,6 +150,8 @@ def inspect(parameter, spec):
                 codes_release(gid)
 
     distances = [v["distance_km"] for m in f24 for v in (m.get("station_values") or {}).values() if v.get("distance_km") is not None]
+    normalized_steps = sorted({m["normalized_step_hours"] for m in message_meta if m.get("normalized_step_hours") is not None})
+    raw_steps = sorted({str(m.get("step")) for m in message_meta if m.get("step") is not None})
     return {
         "parameter": parameter,
         "element": spec["element"],
@@ -127,7 +162,8 @@ def inspect(parameter, spec):
         "bytes": len(raw),
         "sha256": sha,
         "message_count": len(message_meta),
-        "available_end_steps": sorted({m.get("endStep") for m in message_meta if isinstance(m.get("endStep"), (int, float))}),
+        "available_step_strings": raw_steps,
+        "available_step_hours": normalized_steps,
         "max_nearest_station_distance_km": max(distances) if distances else None,
         "step24_messages": f24,
         "first_message": message_meta[0] if message_meta else None,
@@ -149,6 +185,7 @@ out = {
         "hindsight_selection": False,
         "wrong_geographic_sector_rejected": True,
         "station_sampling_restricted_to_fixed_f24": True,
+        "grib_time_units_normalized_before_f24_selection": True,
     },
 }
 try:
@@ -159,4 +196,4 @@ except CodesInternalError as exc:
 
 OUT.parent.mkdir(parents=True, exist_ok=True)
 OUT.write_text(json.dumps(out, indent=2) + "\n")
-print(json.dumps({p: {"source_key": s["source_key"], "message_count": s["message_count"], "steps": s["available_end_steps"], "max_distance_km": s["max_nearest_station_distance_km"], "step24_count": len(s["step24_messages"]), "sha256": s["sha256"]} for p, s in out["samples"].items()}, indent=2))
+print(json.dumps({p: {"source_key": s["source_key"], "message_count": s["message_count"], "steps_hours": s["available_step_hours"], "max_distance_km": s["max_nearest_station_distance_km"], "step24_count": len(s["step24_messages"]), "sha256": s["sha256"]} for p, s in out["samples"].items()}, indent=2))
