@@ -12,7 +12,6 @@ from eccodes import CodesInternalError, codes_get, codes_grib_find_nearest, code
 OUT = Path(os.environ.get("OUT", "research/ndfd-grib-sample.json"))
 BASE = "https://noaa-ndfd-pds.s3.amazonaws.com/"
 DATE = os.environ.get("SAMPLE_DATE", "2025/01/15")
-# Exact operational 2.5-km CONUS WMO super headings from NOAA's NDFDelem_fullres_202206.xls.
 SAMPLES = {
     "wdir": {"wmo_super": "YBUZ98", "element": "Wind Direction"},
     "wgust": {"wmo_super": "YWUZ98", "element": "Wind Gust Speed"},
@@ -59,7 +58,6 @@ def discover_key(parameter, wmo_super):
     keys = sorted(s3_keys(prefix))
     if not keys:
         raise RuntimeError(f"No NOAA NDFD archive object found for {prefix}")
-    # Use the earliest archive object for this integrity-only sample; no verification observations are consulted.
     return keys[0], keys
 
 
@@ -69,6 +67,10 @@ def lon_for_eccodes(lon):
 
 def lon180(lon):
     return ((float(lon) + 180.0) % 360.0) - 180.0
+
+
+def is_f24(meta):
+    return meta.get("endStep") == 24 or meta.get("forecastTime") == 24 or str(meta.get("stepRange")) == "24"
 
 
 def station_sample(gid):
@@ -88,25 +90,33 @@ def station_sample(gid):
 
 def inspect(parameter, spec):
     key, matching_keys = discover_key(parameter, spec["wmo_super"])
-    path = Path("/tmp") / f"ndfd-conus-{parameter}.grb2"
+    local_path = Path("/tmp") / f"ndfd-conus-{parameter}.grb2"
     url = BASE + key
-    urllib.request.urlretrieve(url, path)
-    raw = path.read_bytes()
+    urllib.request.urlretrieve(url, local_path)
+    raw = local_path.read_bytes()
     sha = hashlib.sha256(raw).hexdigest()
-    messages = []
-    with path.open("rb") as fh:
+
+    message_meta = []
+    f24 = []
+    with local_path.open("rb") as fh:
         while True:
             gid = codes_grib_new_from_file(fh)
             if gid is None:
                 break
             try:
                 meta = {k: safe_get(gid, k) for k in META_KEYS}
-                meta["station_values"] = station_sample(gid)
-                messages.append(meta)
+                message_meta.append(meta)
+                # Nearest-grid lookup is intentionally restricted to fixed-F24 messages.
+                # This preserves the exact same source/selection rule while avoiding hundreds
+                # of unnecessary whole-grid nearest-neighbor scans per file.
+                if is_f24(meta):
+                    scored = dict(meta)
+                    scored["station_values"] = station_sample(gid)
+                    f24.append(scored)
             finally:
                 codes_release(gid)
-    step24 = [m for m in messages if m.get("endStep") == 24 or m.get("forecastTime") == 24 or str(m.get("stepRange")) == "24"]
-    distances = [v["distance_km"] for m in messages for v in (m.get("station_values") or {}).values() if v.get("distance_km") is not None]
+
+    distances = [v["distance_km"] for m in f24 for v in (m.get("station_values") or {}).values() if v.get("distance_km") is not None]
     return {
         "parameter": parameter,
         "element": spec["element"],
@@ -116,11 +126,11 @@ def inspect(parameter, spec):
         "archive_objects_with_same_prefix": matching_keys,
         "bytes": len(raw),
         "sha256": sha,
-        "message_count": len(messages),
-        "available_end_steps": sorted({m.get("endStep") for m in messages if isinstance(m.get("endStep"), (int, float))}),
+        "message_count": len(message_meta),
+        "available_end_steps": sorted({m.get("endStep") for m in message_meta if isinstance(m.get("endStep"), (int, float))}),
         "max_nearest_station_distance_km": max(distances) if distances else None,
-        "step24_messages": step24,
-        "first_message": messages[0] if messages else None,
+        "step24_messages": f24,
+        "first_message": message_meta[0] if message_meta else None,
     }
 
 
@@ -138,6 +148,7 @@ out = {
         "future_observation_leakage": False,
         "hindsight_selection": False,
         "wrong_geographic_sector_rejected": True,
+        "station_sampling_restricted_to_fixed_f24": True,
     },
 }
 try:
