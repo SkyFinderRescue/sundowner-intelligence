@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 import hashlib
 import json
-import math
 import os
 import urllib.request
 from pathlib import Path
 
-import numpy as np
-import grib2io
+from eccodes import (
+    CodesInternalError,
+    codes_get,
+    codes_grib_find_nearest,
+    codes_grib_new_from_file,
+    codes_release,
+)
 
 OUT = Path(os.environ.get("OUT", "research/ndfd-grib-sample.json"))
 BASE = "https://noaa-ndfd-pds.s3.amazonaws.com/"
@@ -23,36 +27,22 @@ STATIONS = {
     "Montecito": (34.45, -119.63),
     "Carpinteria": (34.42, -119.52),
 }
+META_KEYS = [
+    "shortName", "name", "units", "typeOfLevel", "level", "dataDate", "dataTime",
+    "step", "stepRange", "startStep", "endStep", "validityDate", "validityTime",
+    "forecastTime", "indicatorOfUnitOfTimeRange", "centre", "subCentre",
+    "gridType", "Ni", "Nj", "numberOfPoints", "typeOfGeneratingProcess"
+]
 
 
-def attr(msg, name):
+def safe_get(gid, key):
     try:
-        value = getattr(msg, name)
-        if callable(value):
-            return None
-        if isinstance(value, (np.integer, np.floating)):
-            return value.item()
-        if hasattr(value, "isoformat"):
-            return value.isoformat()
-        if isinstance(value, (str, int, float, bool)) or value is None:
-            return value
-        return str(value)
+        v = codes_get(gid, key)
+        if isinstance(v, (str, int, float, bool)) or v is None:
+            return v
+        return str(v)
     except Exception:
         return None
-
-
-def lon180(lon):
-    a = np.asarray(lon, dtype=float)
-    return ((a + 180.0) % 360.0) - 180.0
-
-
-def nearest(lats, lons, target_lat, target_lon):
-    lons180 = lon180(lons)
-    # Small-domain nearest-neighbor distance approximation; selection is fixed by station coordinates only.
-    scale = math.cos(math.radians(target_lat))
-    d2 = (np.asarray(lats) - target_lat) ** 2 + ((lons180 - target_lon) * scale) ** 2
-    idx = np.unravel_index(np.nanargmin(d2), d2.shape)
-    return idx, float(np.asarray(lats)[idx]), float(lons180[idx]), float(math.sqrt(float(d2[idx])))
 
 
 def inspect(parameter, key):
@@ -61,36 +51,32 @@ def inspect(parameter, key):
     urllib.request.urlretrieve(url, path)
     raw = path.read_bytes()
     sha = hashlib.sha256(raw).hexdigest()
-    f = grib2io.open(path, "r", save_index=False, use_index=False)
     messages = []
-    for n, msg in enumerate(f, start=1):
-        if n > 12:
-            break
-        meta = {name: attr(msg, name) for name in [
-            "shortName", "name", "fullName", "units", "level", "refDate", "validDate",
-            "forecastTime", "leadTime", "duration", "discipline", "parameterCategory",
-            "parameterNumber", "gridDefinitionTemplateNumber", "nx", "ny", "shape"
-        ]}
-        try:
-            lats, lons = msg.latlons()
-            data = np.asarray(msg.data)
-            station_values = {}
-            for station, (lat, lon) in STATIONS.items():
-                idx, glat, glon, dd = nearest(lats, lons, lat, lon)
-                val = data[idx]
-                station_values[station] = {
-                    "grid_lat": glat,
-                    "grid_lon": glon,
-                    "grid_distance_deg_approx": dd,
-                    "value": None if np.ma.is_masked(val) or not np.isfinite(float(val)) else float(val),
-                }
-            meta["station_values"] = station_values
-            meta["grid_min"] = float(np.nanmin(data))
-            meta["grid_max"] = float(np.nanmax(data))
-        except Exception as exc:
-            meta["decode_error"] = str(exc)
-        messages.append(meta)
-    f.close()
+    with path.open("rb") as fh:
+        n = 0
+        while True:
+            gid = codes_grib_new_from_file(fh)
+            if gid is None:
+                break
+            n += 1
+            try:
+                meta = {k: safe_get(gid, k) for k in META_KEYS}
+                station_values = {}
+                for station, (lat, lon) in STATIONS.items():
+                    nearest = codes_grib_find_nearest(gid, lat, lon)[0]
+                    station_values[station] = {
+                        "grid_lat": float(nearest.lat),
+                        "grid_lon": float(nearest.lon),
+                        "distance_km": float(nearest.distance),
+                        "grid_index": int(nearest.index),
+                        "value": float(nearest.value),
+                    }
+                meta["station_values"] = station_values
+                messages.append(meta)
+            finally:
+                codes_release(gid)
+            if n >= 12:
+                break
     return {
         "parameter": parameter,
         "source_url": url,
@@ -106,6 +92,7 @@ out = {
     "status": "RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION",
     "purpose": "Decode source-verified NOAA NDFD WMO wind files and verify their message metadata/grid coverage at fixed Santa Barbara validation stations before building the matched benchmark.",
     "source_bucket": "noaa-ndfd-pds",
+    "decoder": "ECMWF ecCodes Python interface",
     "samples": {},
     "rules": {
         "production_change": False,
@@ -114,9 +101,12 @@ out = {
         "hindsight_selection": False,
     },
 }
-for parameter, key in SAMPLES.items():
-    out["samples"][parameter] = inspect(parameter, key)
+try:
+    for parameter, key in SAMPLES.items():
+        out["samples"][parameter] = inspect(parameter, key)
+except CodesInternalError as exc:
+    raise SystemExit(f"ecCodes decode failure: {exc}")
 
 OUT.parent.mkdir(parents=True, exist_ok=True)
 OUT.write_text(json.dumps(out, indent=2) + "\n")
-print(json.dumps({p: {"messages": s["messages_sampled"], "sha256": s["sha256"]} for p, s in out["samples"].items()}, indent=2))
+print(json.dumps({p: {"messages": s["messages_sampled"], "sha256": s["sha256"], "first": s["messages"][0] if s["messages"] else None} for p, s in out["samples"].items()}, indent=2))
