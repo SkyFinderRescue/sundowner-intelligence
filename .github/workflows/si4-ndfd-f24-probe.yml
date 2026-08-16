@@ -1,0 +1,49 @@
+name: SI-4 NDFD Exact F24 Object Probe
+
+on:
+  push:
+    branches: ["si4-ndfd-benchmark"]
+    paths:
+      - 'tools/probe-ndfd-f24-objects.js'
+      - '.github/workflows/si4-ndfd-f24-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: si4-ndfd-f24-object-probe
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check tools/probe-ndfd-f24-objects.js
+      - run: node tools/probe-ndfd-f24-objects.js
+      - name: Verify official CONUS headings and archive result
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const x=JSON.parse(fs.readFileSync('research/ndfd-f24-object-probe.json'));
+          if(x.status!=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION') throw Error('research guard missing');
+          const want={wdir:['YBUZ98','YBUB00'],wspd:['YCUZ98','YCUB00'],wgust:['YWUZ98','YWUB00']};
+          for(const [p,[s,f]] of Object.entries(want)){
+            const q=x.parameters[p];
+            if(q.super!==s||q.f24!==f) throw Error(`${p} WMO lookup mismatch`);
+            if(!Array.isArray(q.super_objects)||!q.super_objects.length) throw Error(`${p} super archive missing`);
+          }
+          console.log(JSON.stringify(Object.fromEntries(Object.entries(x.parameters).map(([p,q])=>[p,{exact:q.exact_objects.length,super:q.super_objects.length}])),null,2));
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-ndfd-f24-object-probe
+          path: research/ndfd-f24-object-probe.json
+          if-no-files-found: error
+          retention-days: 30
