@@ -7,6 +7,7 @@ on:
       - 'tools/run-ndfd-pilot-range.py'
       - 'tools/run-ndfd-development-range.py'
       - 'tools/filter-ndfd-exact-f24.py'
+      - 'tools/score-ndfd-development-2024.py'
       - '.github/workflows/si4-ndfd-development-2024.yml'
   workflow_dispatch:
 
@@ -23,6 +24,7 @@ jobs:
     timeout-minutes: 45
     env:
       OUT: research/ndfd-development-range-2024.json
+      SCORE_OUT: research/ndfd-development-strong-wind-2024.json
       # Systematic, predeclared 2024-only development grid: 01Z on days 1, 8, 15,
       # and 22 of every month. Exact F24 guidance that is absent stays missing;
       # no post-result date substitution is allowed. 2025 remains untouched.
@@ -75,10 +77,27 @@ jobs:
               'minimum_effective_lead_hours':x['pilot_diagnostics']['minimum_effective_lead_hours'],
           },indent=2))
           PY
+      - name: Score 2024-only deterministic strong-wind threshold support
+        run: python tools/score-ndfd-development-2024.py
+      - name: Verify 2025 remains untouched and Sundowner threshold remains unfrozen
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('research/ndfd-development-strong-wind-2024.json'))
+          assert x['status']=='RESEARCH_ONLY_2024_DEVELOPMENT_NOT_2025_SKILL'
+          assert x['rules']['2024_only'] is True
+          assert x['rules']['2025_holdout_untouched'] is True
+          assert x['rules']['future_observation_leakage'] is False
+          assert x['rules']['not_a_sundowner_event_score'] is True
+          assert x['freeze_decision']['note'].startswith('Sundowner event-rule thresholds remain unfrozen')
+          print(json.dumps(x['freeze_decision'],indent=2))
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: si4-ndfd-development-range-2024
-          path: research/ndfd-development-range-2024.json
+          path: |
+            research/ndfd-development-range-2024.json
+            research/ndfd-development-strong-wind-2024.json
           if-no-files-found: warn
           retention-days: 30
