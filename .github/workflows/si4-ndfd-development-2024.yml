@@ -22,11 +22,10 @@ jobs:
     timeout-minutes: 45
     env:
       OUT: research/ndfd-development-range-2024.json
-      # Predeclared 2024-only monthly development times. November is deliberately
-      # left missing rather than substituted after both Nov 15 and a plumbing-only
-      # Nov 14 retry proved the required pre-cutoff common archive snapshot absent.
-      # This preserves the missing-data rule and avoids availability cherry-picking.
-      TARGETS: 2024-01-15T01:00:00+00:00,2024-02-15T01:00:00+00:00,2024-03-15T01:00:00+00:00,2024-04-15T01:00:00+00:00,2024-05-15T01:00:00+00:00,2024-06-15T01:00:00+00:00,2024-07-15T01:00:00+00:00,2024-08-15T01:00:00+00:00,2024-09-15T01:00:00+00:00,2024-10-15T01:00:00+00:00,2024-12-15T01:00:00+00:00
+      # Systematic, predeclared 2024-only development grid: 01Z on days 1, 8, 15,
+      # and 22 of every month. Exact F24 guidance that is absent stays missing;
+      # no post-result date substitution is allowed. 2025 remains untouched.
+      TARGETS: 2024-01-01T01:00:00+00:00,2024-01-08T01:00:00+00:00,2024-01-15T01:00:00+00:00,2024-01-22T01:00:00+00:00,2024-02-01T01:00:00+00:00,2024-02-08T01:00:00+00:00,2024-02-15T01:00:00+00:00,2024-02-22T01:00:00+00:00,2024-03-01T01:00:00+00:00,2024-03-08T01:00:00+00:00,2024-03-15T01:00:00+00:00,2024-03-22T01:00:00+00:00,2024-04-01T01:00:00+00:00,2024-04-08T01:00:00+00:00,2024-04-15T01:00:00+00:00,2024-04-22T01:00:00+00:00,2024-05-01T01:00:00+00:00,2024-05-08T01:00:00+00:00,2024-05-15T01:00:00+00:00,2024-05-22T01:00:00+00:00,2024-06-01T01:00:00+00:00,2024-06-08T01:00:00+00:00,2024-06-15T01:00:00+00:00,2024-06-22T01:00:00+00:00,2024-07-01T01:00:00+00:00,2024-07-08T01:00:00+00:00,2024-07-15T01:00:00+00:00,2024-07-22T01:00:00+00:00,2024-08-01T01:00:00+00:00,2024-08-08T01:00:00+00:00,2024-08-15T01:00:00+00:00,2024-08-22T01:00:00+00:00,2024-09-01T01:00:00+00:00,2024-09-08T01:00:00+00:00,2024-09-15T01:00:00+00:00,2024-09-22T01:00:00+00:00,2024-10-01T01:00:00+00:00,2024-10-08T01:00:00+00:00,2024-10-15T01:00:00+00:00,2024-10-22T01:00:00+00:00,2024-11-01T01:00:00+00:00,2024-11-08T01:00:00+00:00,2024-11-15T01:00:00+00:00,2024-11-22T01:00:00+00:00,2024-12-01T01:00:00+00:00,2024-12-08T01:00:00+00:00,2024-12-15T01:00:00+00:00,2024-12-22T01:00:00+00:00
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -51,8 +50,8 @@ jobs:
           assert x['rules']['range_request_full_file_fallback_forbidden'] is True
           assert x['rules']['exact_step_24_required'] is True
           assert x['rules']['non_exact_step_preserved_as_missing'] is True
-          assert len(x['targets']) == 11, len(x['targets'])
-          assert len(x['cases']) + len(x['missing_targets']) == 11
+          assert len(x['targets']) == 48, len(x['targets'])
+          assert len(x['cases']) + len(x['missing_targets']) == 48
           assert len(x['rows']) == 5 * len(x['cases']), (len(x['rows']),len(x['cases']))
           assert all(r['target_valid_utc'].startswith('2024-') for r in x['rows'])
           assert all(c['target_valid_utc'].startswith('2024-') for c in x['cases'])
@@ -69,8 +68,7 @@ jobs:
               'exact_f24_cases':len(x['cases']),
               'rows':len(x['rows']),
               'rows_with_hads':x['pilot_diagnostics']['rows_with_hads'],
-              'missing_targets':x['missing_targets'],
-              'documented_missing_month':'2024-11',
+              'missing_target_count':len(x['missing_targets']),
               'transfer':x['transfer'],
               'minimum_effective_lead_hours':x['pilot_diagnostics']['minimum_effective_lead_hours'],
           },indent=2))
