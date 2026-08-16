@@ -21,7 +21,11 @@ jobs:
     timeout-minutes: 45
     env:
       OUT: research/ndfd-development-range-2024.json
-      TARGETS: 2024-01-15T01:00:00+00:00,2024-02-15T01:00:00+00:00,2024-03-15T01:00:00+00:00,2024-04-15T01:00:00+00:00,2024-05-15T01:00:00+00:00,2024-06-15T01:00:00+00:00,2024-07-15T01:00:00+00:00,2024-08-15T01:00:00+00:00,2024-09-15T01:00:00+00:00,2024-10-15T01:00:00+00:00,2024-11-15T01:00:00+00:00,2024-12-15T01:00:00+00:00
+      # Predeclared 2024-only development times. November uses Nov 14 because the
+      # archived pre-cutoff common snapshot needed for Nov 15 is absent; this is
+      # an archive-availability/plumbing substitution only, with no scoring or
+      # threshold change and no 2025 data touched.
+      TARGETS: 2024-01-15T01:00:00+00:00,2024-02-15T01:00:00+00:00,2024-03-15T01:00:00+00:00,2024-04-15T01:00:00+00:00,2024-05-15T01:00:00+00:00,2024-06-15T01:00:00+00:00,2024-07-15T01:00:00+00:00,2024-08-15T01:00:00+00:00,2024-09-15T01:00:00+00:00,2024-10-15T01:00:00+00:00,2024-11-14T01:00:00+00:00,2024-12-15T01:00:00+00:00
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -37,7 +41,6 @@ jobs:
         run: |
           python - <<'PY'
           import json
-          from datetime import datetime, timezone
           x=json.load(open('research/ndfd-development-range-2024.json'))
           assert x['status']=='RESEARCH_ONLY_PIPELINE_PILOT_NOT_SKILL_EVIDENCE'
           assert x['rules']['2025_holdout_untouched'] is True
