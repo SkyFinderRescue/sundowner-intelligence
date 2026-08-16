@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -37,6 +38,23 @@ def step_hours(step):
         return None
 
 
+def transient_child_failure(text):
+    """Classify only infrastructure/data-service failures for bounded retry."""
+    markers = (
+        "TimeoutError",
+        "timed out",
+        "HTTP Error 500",
+        "HTTP Error 502",
+        "HTTP Error 503",
+        "HTTP Error 504",
+        "Remote end closed connection",
+        "Connection reset",
+        "Temporary failure",
+        "URLError",
+    )
+    return any(marker in text for marker in markers)
+
+
 cases = []
 rows = []
 missing_targets = []
@@ -54,15 +72,31 @@ with tempfile.TemporaryDirectory(prefix="si4-ndfd-holdout-") as td:
         env = os.environ.copy()
         env["TARGETS"] = target
         env["OUT"] = str(child_out)
-        proc = subprocess.run(
-            [sys.executable, str(CHILD)],
-            env=env,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        if proc.returncode != 0:
+
+        proc = None
+        combined = ""
+        for attempt in range(1, 4):
+            if child_out.exists():
+                child_out.unlink()
+            proc = subprocess.run(
+                [sys.executable, str(CHILD)],
+                env=env,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
             combined = (proc.stdout or "") + "\n" + (proc.stderr or "")
+            if proc.returncode == 0:
+                break
+            if "No pre-cutoff common snapshot contains" in combined:
+                break
+            if not transient_child_failure(combined) or attempt == 3:
+                break
+            time.sleep(2 ** (attempt - 1))
+
+        if proc is None:
+            raise RuntimeError(f"NDFD range child did not execute for {target}")
+        if proc.returncode != 0:
             if "No pre-cutoff common snapshot contains" in combined:
                 missing_targets.append({
                     "target_valid_utc": target.replace("+00:00", "Z"),
@@ -137,6 +171,7 @@ rules.update({
     "non_exact_step_is_missing_not_substituted": True,
     "no_2025_tuning": True,
     "not_a_sundowner_probability": True,
+    "transient_child_retry_only": True,
 })
 
 out = {
