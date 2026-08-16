@@ -34,19 +34,19 @@ def source_calendar_date(key):
 
 
 def target_bulletin(spec):
-    # NOAA's official NDFDelem lookup encodes the valid calendar day/hour in the
-    # individual WMO heading inside the VP.001-003 super-file: A=source day,
-    # B=source day+1, C=+2, D=+3, etc. Example: target 2025-01-16 01Z inside a
-    # 2025-01-15 super-file is ...B01, not a generic ...B00 "24h" code.
+    # Verified against the official NDFDelem lookup AND the actual embedded
+    # bulletin sequence in YBUZ98_KWBN_202501150047. The source/reference day
+    # uses code B (e.g. B02 is valid Jan 15 02Z); the next calendar day is C,
+    # then D, etc. Thus Jan 16 01Z inside a Jan 15 super-file is ...C01.
     delta = (TARGET_VALID.date() - source_calendar_date(spec["key"])).days
-    if delta < 0 or delta > 7:
+    if delta < 0 or delta > 6:
         raise RuntimeError(f"Target day offset {delta} is outside supported NDFD WMO heading range")
-    day_code = chr(ord("A") + delta)
+    day_code = chr(ord("B") + delta)
     return f"{spec['heading_prefix']}{day_code}{TARGET_VALID.hour:02d}"
 
 
 def request_range(url, start, end):
-    req = urllib.request.Request(url, headers={"User-Agent": "Sundowner-Intelligence-SI4-NDFD-Range/1.1", "Range": f"bytes={start}-{end}"})
+    req = urllib.request.Request(url, headers={"User-Agent": "Sundowner-Intelligence-SI4-NDFD-Range/1.2", "Range": f"bytes={start}-{end}"})
     with urllib.request.urlopen(req, timeout=45) as r:
         data = r.read(); status = getattr(r, "status", None); cr = r.headers.get("Content-Range")
     if status not in (200, 206): raise RuntimeError(f"Unexpected HTTP status {status} for {url}")
