@@ -17,6 +17,26 @@ if not TARGETS:
 if any(not t.startswith("2025-") for t in TARGETS):
     raise RuntimeError("Holdout wrapper is hard-guarded to predeclared 2025 targets only")
 
+
+def step_hours(step):
+    """Normalize ecCodes step strings without changing benchmark rules."""
+    s = str(step).strip().lower()
+    if s.endswith("m"):
+        try:
+            return float(s[:-1]) / 60.0
+        except ValueError:
+            return None
+    if s.endswith("h"):
+        try:
+            return float(s[:-1])
+        except ValueError:
+            return None
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
 cases = []
 rows = []
 missing_targets = []
@@ -59,8 +79,33 @@ with tempfile.TemporaryDirectory(prefix="si4-ndfd-holdout-") as td:
         child = json.load(open(child_out))
         if base_rules is None:
             base_rules = dict(child.get("rules", {}))
-        cases.extend(child.get("cases", []))
-        rows.extend(child.get("rows", []))
+
+        child_cases = child.get("cases", [])
+        child_rows = child.get("rows", [])
+        if len(child_cases) != 1:
+            raise RuntimeError(f"Expected exactly one child case for {target}, got {len(child_cases)}")
+
+        case = child_cases[0]
+        observed_steps = {p: case.get("sources", {}).get(p, {}).get("step") for p in ("wdir", "wspd", "wgust")}
+        exact_f24 = all(step_hours(v) == 24.0 for v in observed_steps.values())
+        if not exact_f24:
+            # This is archive/plumbing availability, not model evidence. The 2025
+            # score-only benchmark requires the same exact F24 definition frozen
+            # before holdout access, so a 24h30m (e.g. 1470m) bulletin is missing,
+            # not a substitute case.
+            missing_targets.append({
+                "target_valid_utc": target.replace("+00:00", "Z"),
+                "reason": "EXACT_F24_BULLETIN_UNAVAILABLE",
+                "observed_steps": observed_steps,
+                "source_keys": {
+                    p: case.get("sources", {}).get(p, {}).get("source_key")
+                    for p in ("wdir", "wspd", "wgust")
+                },
+            })
+        else:
+            cases.append(case)
+            rows.extend(child_rows)
+
         tr = child.get("transfer", {})
         for key in ("source_superfile_bytes", "range_scan_bytes", "target_grib_bytes"):
             transfer[key] += int(tr.get(key) or 0)
@@ -73,9 +118,11 @@ transfer["fraction_of_full_superfiles"] = (
 
 matched = [r for r in rows if r.get("observation") is not None]
 
+
 def mean(vals):
     vals = [v for v in vals if isinstance(v, (int, float)) and math.isfinite(v)]
     return sum(vals) / len(vals) if vals else None
+
 
 rules = base_rules or {}
 rules.update({
@@ -87,6 +134,7 @@ rules.update({
     "predeclared_missing_targets_preserved": True,
     "range_request_full_file_fallback_forbidden": True,
     "exact_step_24_required": True,
+    "non_exact_step_is_missing_not_substituted": True,
     "no_2025_tuning": True,
     "not_a_sundowner_probability": True,
 })
@@ -94,7 +142,7 @@ rules.update({
 out = {
     "status": "RESEARCH_ONLY_2025_SCORE_ONLY_NOT_FOR_TUNING",
     "generated": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-    "purpose": "Predeclared 2025 score-only NDFD F24 sample using rules frozen from 2024 development. Missing archive targets remain missing; no target substitution or coefficient/threshold tuning is permitted.",
+    "purpose": "Predeclared 2025 score-only NDFD F24 sample using rules frozen from 2024 development. Missing or non-exact-F24 archive targets remain missing; no target substitution or coefficient/threshold tuning is permitted.",
     "targets": [t.replace("+00:00", "Z") for t in TARGETS],
     "cases": cases,
     "rows": rows,
