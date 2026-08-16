@@ -24,8 +24,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install NOAA GRIB2 reader
-        run: python -m pip install --quiet 'grib2io>=2.7,<3' numpy
+      - name: Install GRIB2 decoder
+        run: |
+          python -m pip install --quiet 'eccodes==2.44.0'
+          python -m eccodes selfcheck
       - name: Decode official archived NDFD wind samples
         run: python tools/inspect-ndfd-grib-sample.py
       - name: Verify Santa Barbara station coverage and research guards
