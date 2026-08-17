@@ -7,8 +7,8 @@ const BUCKET="noaa-rrfs-pds";
 const ROOT="retro_output_final/";
 const OUT=process.env.OUT||"research/si4-rrfs-retro-inventory.json";
 const TIMEOUT_MS=Number(process.env.PROBE_TIMEOUT_MS||20000);
-const MAX_DEPTH=Number(process.env.RRFS_PROBE_DEPTH||4);
-const MAX_PREFIXES=Number(process.env.RRFS_PROBE_PREFIXES||80);
+const MAX_DEPTH=Number(process.env.RRFS_PROBE_DEPTH||5);
+const MAX_PREFIXES=Number(process.env.RRFS_PROBE_PREFIXES||120);
 
 function decodeXml(s){return String(s||"").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#39;/g,"'");}
 function tags(block,name){return [...block.matchAll(new RegExp(`<${name}>([\\s\\S]*?)<\\/${name}>`,"g"))].map(m=>decodeXml(m[1]));}
@@ -23,7 +23,7 @@ function parseList(xml){
 async function fetchText(url){
   const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),TIMEOUT_MS);
   try{
-    const r=await fetch(url,{signal:ctl.signal,headers:{"User-Agent":"Sundowner-Intelligence-SI4-RRFS-Retro-Probe/1.0"}});
+    const r=await fetch(url,{signal:ctl.signal,headers:{"User-Agent":"Sundowner-Intelligence-SI4-RRFS-Retro-Probe/1.1"}});
     const text=await r.text();
     return {ok:r.ok,status:r.status,url,text};
   } finally { clearTimeout(timer); }
@@ -43,14 +43,22 @@ async function list(prefix,{delimiter="/",maxKeys=1000}={}){
 function classify(text){
   const s=text.toLowerCase();
   return {
-    spring_2024:/2024.*05|may.*2024|spring/.test(s),
-    winter_2024:/2024.*0[12]|jan|feb|winter/.test(s),
-    summer_2023:/2023.*07|jul|summer/.test(s),
-    deterministic:/control|det|rrfs(?!ens)|prslev|2dfld/.test(s),
+    spring_2024:/202405\d{2}|may.*2024|spring/.test(s),
+    winter_2024:/20240[12]\d{2}|jan|feb|winter/.test(s),
+    summer_2023:/202307\d{2}|jul|summer/.test(s),
+    deterministic:/control|det|prslev|2dfld/.test(s),
     ensemble:/ens|refs|member|m0\d\d/.test(s),
     pressure:/prslev|pressure/.test(s),
     surface:/2dfld|sfc|surface/.test(s)
   };
+}
+function priority(prefix,depth){
+  const c=classify(prefix);
+  let score=depth*10;
+  if(c.spring_2024||c.winter_2024)score+=100;
+  if(/202405(02|12)|202401(08|16)/.test(prefix))score+=40;
+  if(/\/(00|12)\/$/.test(prefix))score+=20;
+  return score;
 }
 async function main(){
   const root=await list(ROOT);
@@ -59,6 +67,7 @@ async function main(){
   const nodes=[{...root,depth:0,classification:classify(ROOT)}];
   const seen=new Set([ROOT]);
   while(queue.length&&nodes.length<MAX_PREFIXES){
+    queue.sort((a,b)=>priority(b.prefix,b.depth)-priority(a.prefix,a.depth));
     const item=queue.shift();
     if(seen.has(item.prefix)||item.depth>MAX_DEPTH)continue;
     seen.add(item.prefix);
@@ -73,6 +82,7 @@ async function main(){
   const summary={
     root_prefixes:root.prefixes,
     nodes_probed:nodes.length,
+    max_depth_reached:Math.max(...nodes.map(n=>n.depth)),
     objects_observed:allObjects.length,
     spring_2024_nodes:spring.length,
     winter_2024_nodes:winter.length,
@@ -95,5 +105,6 @@ async function main(){
   fs.writeFileSync(OUT,JSON.stringify(out,null,2)+"\n");
   console.log(JSON.stringify(summary,null,2));
   if(!summary.spring_2024_nodes&&!summary.winter_2024_nodes){console.error("No documented 2024 retrospective lane was discovered within bounded probe depth; inspect artifact before changing paths.");process.exitCode=2;}
+  if(summary.max_depth_reached<3){console.error("RRFS retrospective probe did not descend to forecast-cycle depth; treat as inventory plumbing failure.");process.exitCode=3;}
 }
 main().catch(e=>{console.error(e.stack||e);process.exit(1);});
