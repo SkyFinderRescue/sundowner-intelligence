@@ -1,0 +1,49 @@
+name: SI-4 RRFS REFS Shadow Archive Probe
+
+on:
+  push:
+    branches: [si4-rrfs-shadow]
+    paths:
+      - 'tools/probe-si4-rrfs-shadow.py'
+      - '.github/workflows/si4-rrfs-shadow-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install anonymous S3 client
+        run: python -m pip install --quiet boto3
+      - name: Syntax check
+        run: python -m py_compile tools/probe-si4-rrfs-shadow.py
+      - name: Inventory NOAA RRFS/REFS retrospective and public prefixes
+        run: python tools/probe-si4-rrfs-shadow.py --out research/si4-rrfs-shadow-inventory.json
+      - name: Enforce research-only provenance guards
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('research/si4-rrfs-shadow-inventory.json'))
+          assert x['status']=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION'
+          assert x['rules']['rrfs_refs_shadow_only'] is True
+          assert x['rules']['verifying_observations_loaded'] is False
+          assert x['rules']['future_observations_used'] is False
+          assert x['rules']['fire_association_used'] is False
+          assert x['rules']['production_change_authorized'] is False
+          assert x['source']['bucket']=='noaa-rrfs-pds'
+          print({'roots': list(x['roots']), 'guards': 'pass'})
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-rrfs-shadow-inventory
+          path: research/si4-rrfs-shadow-inventory.json
+          if-no-files-found: warn
+          retention-days: 30
