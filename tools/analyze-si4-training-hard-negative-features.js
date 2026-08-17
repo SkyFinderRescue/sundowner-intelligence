@@ -57,10 +57,34 @@ const diagnosticMain = String.raw`
   const hard = hardNegativeRows(rows);
   const events = rows.filter(r => r.y === 1);
   const ordinaryNegatives = rows.filter(r => r.y === 0 && !S.hardNegativeFlag({pressureSupport:r.x[1],mountainWaveScore:r.wave.score,eventObserved:false}).isHardNegative);
+  const TARGET_DIR = {Gaviota:345, Refugio:355};
 
   function contributions(r){
     return r.x.map((v,j)=>model.weights[j]*((v-model.mean[j])/model.sd[j]));
   }
+  function angleDiff(a,b){
+    if(!Number.isFinite(Number(a))||!Number.isFinite(Number(b))) return null;
+    return Math.abs((((Number(a)-Number(b))+540)%360)-180);
+  }
+  function extraValue(r,name){
+    const target=TARGET_DIR[r.zone];
+    if(name==="surface_direction_error_deg") return angleDiff(r.modelDir,target);
+    if(name==="surface_direction_alignment") return Number.isFinite(target)&&Number.isFinite(r.modelDir)?dc(r.modelDir,target):null;
+    if(name==="surface_cross_barrier_gust_mph") return Number.isFinite(target)&&Number.isFinite(r.modelDir)&&Number.isFinite(r.modelGust)?r.modelGust*dc(r.modelDir,target):null;
+    if(name==="model_gust_mph") return Number.isFinite(r.modelGust)?r.modelGust:null;
+    if(name==="wave_mean_cross_barrier_mph") return Number.isFinite(r.wave?.meanCrossBarrier)?r.wave.meanCrossBarrier:null;
+    if(name==="ridge_stability_n_per_sec") return Number.isFinite(r.wave?.nPerSec)?r.wave.nPerSec:null;
+    if(name==="froude") return Number.isFinite(r.wave?.froude)?r.wave.froude:null;
+    if(name==="critical_height_m") return Number.isFinite(r.wave?.critical?.criticalHeightM)?r.wave.critical.criticalHeightM:null;
+    if(name==="critical_below_3km") return r.wave?.critical?.present?(r.wave.critical.below3km?1:0):0;
+    if(name==="hour_utc") return Number(String(r.time||"").slice(11,13));
+    return null;
+  }
+  const EXTRA_NAMES=[
+    "surface_direction_error_deg","surface_direction_alignment","surface_cross_barrier_gust_mph","model_gust_mph",
+    "wave_mean_cross_barrier_mph","ridge_stability_n_per_sec","froude","critical_height_m","critical_below_3km","hour_utc"
+  ];
+
   function group(name, arr){
     const features = {};
     for(let j=0;j<FEATURE_NAMES.length;j++){
@@ -69,12 +93,16 @@ const diagnosticMain = String.raw`
         logit_contribution: summarize(arr.map(r=>contributions(r)[j]))
       };
     }
+    const extra = {};
+    for(const n of EXTRA_NAMES) extra[n]=summarize(arr.map(r=>extraValue(r,n)));
     const byZone = {};
     for(const z of [...new Set(arr.map(r=>r.zone))]){
       const a=arr.filter(r=>r.zone===z);
-      byZone[z]={n:a.length,candidate_probability:summarize(a.map(candidate)),baseline_probability:summarize(a.map(r=>r.baseline))};
+      const zoneExtra={};
+      for(const n of EXTRA_NAMES) zoneExtra[n]=summarize(a.map(r=>extraValue(r,n)));
+      byZone[z]={n:a.length,candidate_probability:summarize(a.map(candidate)),baseline_probability:summarize(a.map(r=>r.baseline)),extra_diagnostics:zoneExtra};
     }
-    return {name,n:arr.length,candidate_probability:summarize(arr.map(candidate)),baseline_probability:summarize(arr.map(r=>r.baseline)),features,by_zone:byZone};
+    return {name,n:arr.length,candidate_probability:summarize(arr.map(candidate)),baseline_probability:summarize(arr.map(r=>r.baseline)),features,extra_diagnostics:extra,by_zone:byZone};
   }
 
   const featureContrast = {};
@@ -88,21 +116,31 @@ const diagnosticMain = String.raw`
       hard_negative_minus_ordinary_negative_mean_logit_contribution:(mean(hc)-mean(oc))
     };
   }
+  const extraContrast={};
+  for(const n of EXTRA_NAMES){
+    const hn=hard.map(r=>extraValue(r,n)), ev=events.map(r=>extraValue(r,n)), on=ordinaryNegatives.map(r=>extraValue(r,n));
+    extraContrast[n]={
+      hard_negative_minus_event_mean:(mean(hn)-mean(ev)),
+      hard_negative_minus_ordinary_negative_mean:(mean(hn)-mean(on)),
+      hard_negative_summary:summarize(hn),event_summary:summarize(ev),ordinary_negative_summary:summarize(on)
+    };
+  }
 
   const out={
     status:"RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION",
     generated:new Date().toISOString(),
     purpose:"2024-training-only western hard-negative feature/contribution diagnostic. No 2025 observations are loaded and no model coefficients are changed.",
     frozen_design:{train_start:TRAIN_START,train_end:TRAIN_END,forecast_lead_hours:24,upper_air_cache:upper.meta},
-    rules:{future_observations_loaded:false,fire_association_used:false,model_coefficients_changed:false,diagnostic_only:true},
+    rules:{future_observations_loaded:false,fire_association_used:false,model_coefficients_changed:false,diagnostic_only:true,extra_diagnostics_not_model_features:true},
     counts:{western_rows:rows.length,events:events.length,hard_negatives:hard.length,ordinary_negatives:ordinaryNegatives.length},
     model:{feature_names:FEATURE_NAMES,intercept:model.intercept,weights:model.weights,mean:model.mean,sd:model.sd},
     groups:{events:group("events",events),hard_negatives:group("hard_negatives",hard),ordinary_negatives:group("ordinary_negatives",ordinaryNegatives)},
-    feature_contrast:featureContrast
+    feature_contrast:featureContrast,
+    unused_physics_contrast:extraContrast
   };
   fs.mkdirSync(require("path").dirname(OUT),{recursive:true});
   fs.writeFileSync(OUT,JSON.stringify(out,null,2)+"\n");
-  console.log(JSON.stringify({counts:out.counts,hard_negative_probability:out.groups.hard_negatives.candidate_probability,feature_contrast:out.feature_contrast},null,2));
+  console.log(JSON.stringify({counts:out.counts,hard_negative_probability:out.groups.hard_negatives.candidate_probability,feature_contrast:out.feature_contrast,unused_physics_contrast:out.unused_physics_contrast},null,2));
 })().catch(e=>{console.error(e.stack||e);process.exit(1);});
 `;
 
