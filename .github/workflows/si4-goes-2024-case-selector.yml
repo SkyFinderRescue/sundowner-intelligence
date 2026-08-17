@@ -47,12 +47,13 @@ jobs:
           if(x.status!=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION'||x.rules.development_year!==2024||x.rules.holdout_2025_loaded!==false)process.exit(2);
           if(x.selected_counts.events<8||x.selected_counts.hard_negatives<8)process.exit(3);
           for(const group of Object.values(x.selected))for(const r of group){
-            if(!r.valid_time.startsWith('2024-')||!r.forecast_issuance_time.startsWith('2024-')&& !r.forecast_issuance_time.startsWith('2023-'))process.exit(4);
-            if(Object.values(r.solar_window).some(s=>s.solar_elevation_deg>-6))process.exit(5);
+            if(!r.valid_time.startsWith('2024-')||(!r.forecast_issuance_time.startsWith('2024-')&&!r.forecast_issuance_time.startsWith('2023-')))process.exit(4);
+            if(!r.solar_window['0']?.night_eligible||!r.solar_window['1']?.night_eligible)process.exit(5);
+            if(!['evening','night','predawn'].includes(r.local_period))process.exit(6);
           }
           const dates=[...x.selected.events,...x.selected.hard_negatives].map(r=>r.kind+'|'+r.local_night_date);
-          if(new Set(dates).size!==dates.length)process.exit(6);
-          console.log(JSON.stringify({candidate_counts:x.candidate_counts,selected_counts:x.selected_counts},null,2));
+          if(new Set(dates).size!==dates.length)process.exit(7);
+          console.log(JSON.stringify({candidate_counts:x.candidate_counts,selected_counts:x.selected_counts,periods:{events:x.selected.events.map(r=>r.local_period),hard_negatives:x.selected.hard_negatives.map(r=>r.local_period)}},null,2));
           NODE
       - uses: actions/upload-artifact@v4
         if: always()
