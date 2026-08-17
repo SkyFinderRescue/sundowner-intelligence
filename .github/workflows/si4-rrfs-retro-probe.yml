@@ -1,0 +1,44 @@
+name: SI-4 RRFS Retrospective Inventory Probe
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/probe-si4-rrfs-retro.js'
+      - 'research/SI4_RRFS_REFS_SHADOW_MANIFEST.md'
+      - '.github/workflows/si4-rrfs-retro-probe.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Probe NOAA RRFS final retrospective inventory
+        run: node tools/probe-si4-rrfs-retro.js
+      - name: Verify research-only provenance guards
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const x=JSON.parse(fs.readFileSync('research/si4-rrfs-retro-inventory.json'));
+          if(x.status!=='RESEARCH_ONLY_SHADOW_GUIDANCE') throw Error('shadow-only status missing');
+          if(!x.rules?.future_observations_label_only) throw Error('future-observation label-only guard missing');
+          if(!x.rules?.missing_files_remain_missing) throw Error('missing-data guard missing');
+          if(!x.rules?.model_tuning_from_2025_forbidden) throw Error('2025 tuning prohibition missing');
+          if(x.source?.bucket!=='s3://noaa-rrfs-pds/') throw Error('unexpected RRFS bucket');
+          console.log(x.summary);
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-rrfs-retro-inventory
+          path: research/si4-rrfs-retro-inventory.json
+          if-no-files-found: warn
+          retention-days: 30
