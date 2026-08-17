@@ -1,0 +1,63 @@
+name: SI-4 GOES 2024 Case Selector
+
+on:
+  push:
+    branches: [si4-research]
+    paths:
+      - 'tools/select-si4-goes-2024-cases.js'
+      - '.github/workflows/si4-goes-2024-case-selector.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  select-2024-cases:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TRAIN_START: '2024-01-01'
+      TRAIN_END: '2024-12-31'
+      TEST_START: '2024-01-01'
+      TEST_END: '2024-12-31'
+      PER_CLASS: '12'
+      OUT: research/goes-marine-2024-case-manifest.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check selector
+        run: node --check tools/select-si4-goes-2024-cases.js
+      - name: Download authoritative fixed-24h upper-air cache
+        run: |
+          mkdir -p /tmp/si4
+          gh run download 31925677059 --repo "$GITHUB_REPOSITORY" -n si4-all-season-frozen-holdout -D /tmp/si4
+          test -s /tmp/si4/hrrr-upper-fixed-lead-all-season.json
+      - name: Select deterministic independent-night cases
+        env:
+          UPPER_CACHE: /tmp/si4/hrrr-upper-fixed-lead-all-season.json
+        run: node tools/select-si4-goes-2024-cases.js
+      - name: Verify development-only contract
+        run: |
+          node - <<'NODE'
+          const x=require('./research/goes-marine-2024-case-manifest.json');
+          if(x.status!=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION'||x.rules.development_year!==2024||x.rules.holdout_2025_loaded!==false)process.exit(2);
+          if(x.selected_counts.events<8||x.selected_counts.hard_negatives<8)process.exit(3);
+          for(const group of Object.values(x.selected))for(const r of group){
+            if(!r.valid_time.startsWith('2024-')||!r.forecast_issuance_time.startsWith('2024-')&& !r.forecast_issuance_time.startsWith('2023-'))process.exit(4);
+            if(Object.values(r.solar_window).some(s=>s.solar_elevation_deg>-6))process.exit(5);
+          }
+          const dates=[...x.selected.events,...x.selected.hard_negatives].map(r=>r.kind+'|'+r.local_night_date);
+          if(new Set(dates).size!==dates.length)process.exit(6);
+          console.log(JSON.stringify({candidate_counts:x.candidate_counts,selected_counts:x.selected_counts},null,2));
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-goes-2024-case-manifest
+          path: research/goes-marine-2024-case-manifest.json
+          if-no-files-found: warn
+          retention-days: 30
