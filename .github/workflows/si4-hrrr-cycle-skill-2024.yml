@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
+      GH_TOKEN: ${{ github.token }}
       MANIFEST: /tmp/si4-cycle/goes-marine-2024-cv-manifest.json
       CYCLES: /tmp/si4-cycle/hrrr-cycle-2024-targets.json
       OUT: research/hrrr-cycle-skill-2024.json
