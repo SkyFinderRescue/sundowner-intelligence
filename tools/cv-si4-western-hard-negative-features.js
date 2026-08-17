@@ -27,7 +27,7 @@ const main=String.raw`
     const projected=(Number.isFinite(r.modelGust)&&Number.isFinite(r.modelDir)&&Number.isFinite(t))?r.modelGust*dc(r.modelDir,t):null;
     const below3=r.wave?.critical?.below3km?1:0;
     const meanCross=Number(r.wave?.meanCrossBarrier);
-    if(![projected,below3,meanCross].every(Number.isFinite))throw new Error(`missing predeclared augmented diagnostic at ${r.time} ${r.zone}`);
+    if(![projected,below3,meanCross].every(Number.isFinite))throw new Error("missing predeclared augmented diagnostic at "+r.time+" "+r.zone);
     return [...r.x,projected,below3,meanCross];
   }
   function clone(rows,aug){return rows.map(r=>({...r,x:aug?augX(r):r.x.slice()}));}
@@ -47,7 +47,7 @@ const main=String.raw`
   for(const f of folds){
     const tr=all.filter(r=>r.time.slice(0,10)>="2024-01-01"&&r.time.slice(0,10)<=f.train_end);
     const te=all.filter(r=>r.time.slice(0,10)>=f.test_start&&r.time.slice(0,10)<=f.test_end);
-    if(tr.length<350||te.length<100)throw new Error(`insufficient fold rows ${f.name}: train=${tr.length} test=${te.length}`);
+    if(tr.length<350||te.length<100)throw new Error("insufficient fold rows "+f.name+": train="+tr.length+" test="+te.length);
     results.push({...f,train_n:tr.length,test_n:te.length,current:score(tr,te,false),augmented:score(tr,te,true)});
   }
   function weighted(key,variant){
