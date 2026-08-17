@@ -6,6 +6,7 @@ on:
     paths:
       - 'tools/build-matched-si4-ndfd-2025.js'
       - 'tools/score-matched-si4-ndfd-2025.js'
+      - 'tools/extract-hrrr-upper-target-times.py'
       - 'research/NDFD_2024_FROZEN_RULES.json'
       - '.github/workflows/si4-ndfd-matched-2025.yml'
   workflow_dispatch:
@@ -17,12 +18,17 @@ permissions:
 jobs:
   matched-score:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install indexed HRRR subset reader
+        run: python -m pip install --quiet 'herbie-data>=2025.7' 'cfgrib>=0.9.15' 'xarray>=2025.1' pandas numpy scikit-learn
       - name: Download authoritative frozen SI-4 and NDFD artifacts
         env:
           GH_TOKEN: ${{ github.token }}
@@ -31,13 +37,32 @@ jobs:
           gh run download 31925677059 -R "$GITHUB_REPOSITORY" -n si4-all-season-frozen-holdout -D /tmp/si4
           gh run download 31970887477 -R "$GITHUB_REPOSITORY" -n si4-ndfd-frozen-score-2025 -D /tmp/ndfd
           test -s /tmp/si4/si4-calibration-candidate.json
-          test -s /tmp/si4/hrrr-upper-fixed-lead-all-season.json
           test -s /tmp/ndfd/ndfd-holdout-range-2025.json
+      - name: Extract exact HRRR F24 profiles for frozen NDFD valid times
+        run: |
+          ok=0
+          for attempt in 1 2 3; do
+            echo "exact HRRR target-time extraction attempt ${attempt}/3"
+            if python tools/extract-hrrr-upper-target-times.py --targets /tmp/ndfd/ndfd-holdout-range-2025.json --fxx 24 --out /tmp/hrrr-upper-ndfd-targets-2025.json; then ok=1; break; fi
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt*30)); fi
+          done
+          test "$ok" -eq 1
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/hrrr-upper-ndfd-targets-2025.json'))
+          assert x['status']=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION'
+          assert x['failure_count']==0, x['failures']
+          assert len(x['requested_valid_times'])==39, len(x['requested_valid_times'])
+          assert len(x['rows'])==39*8, len(x['rows'])
+          assert x['rules']['exact_target_valid_times_only'] is True
+          assert x['rules']['model_coefficients_changed'] is False
+          print({'valid_times':len(x['requested_valid_times']),'rows':len(x['rows'])})
+          PY
       - name: Build exact common 2025 station-valid-time table
         env:
           NDFD: /tmp/ndfd/ndfd-holdout-range-2025.json
           CANDIDATE: /tmp/si4/si4-calibration-candidate.json
-          UPPER: /tmp/si4/hrrr-upper-fixed-lead-all-season.json
+          UPPER: /tmp/hrrr-upper-ndfd-targets-2025.json
           OUT: /tmp/matched-si4-ndfd-2025.json
         run: |
           ok=0
@@ -73,6 +98,7 @@ jobs:
         with:
           name: si4-ndfd-exact-matched-2025
           path: |
+            /tmp/hrrr-upper-ndfd-targets-2025.json
             /tmp/matched-si4-ndfd-2025.json
             /tmp/matched-si4-ndfd-report-2025.json
           if-no-files-found: warn
