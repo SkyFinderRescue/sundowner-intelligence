@@ -16,7 +16,9 @@ const PRESSURE_LEVELS=[925,850,700,600,500];
 const SURFACE_PATTERNS=[/GUST:surface:/,/UGRD:10 m above ground:/,/VGRD:10 m above ground:/];
 // RRFS retrospective naming predates the final operational convention. Probe only
 // documented/observed product-name variants and preserve a 404 as missing data.
-const SURFACE_PRODUCTS=["2dfld","2dfld.3km","natlev","natlev.3km"];
+// The retrospective prslev files are also checked because the post-processed GRIB
+// inventory can legitimately contain surface/10-m records in the same object.
+const SURFACE_PRODUCTS=["prslev","2dfld","2dfld.3km","natlev","natlev.3km"];
 
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 async function request(url,{method="GET",attempts=3}={}){
@@ -24,7 +26,7 @@ async function request(url,{method="GET",attempts=3}={}){
   for(let i=0;i<attempts;i++){
     const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),TIMEOUT_MS);
     try{
-      const r=await fetch(url,{method,signal:ctl.signal,headers:{"User-Agent":"Sundowner-Intelligence-SI4-RRFS-F24-Probe/1.1"}});
+      const r=await fetch(url,{method,signal:ctl.signal,headers:{"User-Agent":"Sundowner-Intelligence-SI4-RRFS-F24-Probe/1.2"}});
       const text=method==="HEAD"?"":await r.text();
       if(r.ok||r.status<500)return {ok:r.ok,status:r.status,headers:Object.fromEntries(r.headers.entries()),text,url};
       last={ok:false,status:r.status,headers:Object.fromEntries(r.headers.entries()),text,url};
