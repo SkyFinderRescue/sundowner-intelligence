@@ -39,23 +39,30 @@ function nightWindow(issue){
   const offsets=[0,1,3,6];
   const solar=Object.fromEntries(offsets.map(h=>{
     const t=new Date(hourDate(issue).getTime()-h*3600e3).toISOString();
-    return [String(h),{time:t,solar_elevation_deg:solarElevationDeg(t)}];
+    const elev=solarElevationDeg(t);
+    return [String(h),{time:t,solar_elevation_deg:elev,night_eligible:Number.isFinite(elev)&&elev<=-6}];
   }));
-  return {eligible:Object.values(solar).every(x=>Number.isFinite(x.solar_elevation_deg)&&x.solar_elevation_deg<=-6),solar};
+  // Current and 1-h satellite state are required. 3-h/6-h trends are optional and
+  // stay missing when they would cross into daylight; this avoids biasing the case
+  // set toward predawn events merely to obtain a six-hour nighttime history.
+  return {eligible:solar["0"].night_eligible&&solar["1"].night_eligible,solar};
 }
-function localDate(iso){
-  return new Date(hourDate(iso).getTime()-8*3600e3).toISOString().slice(0,10);
+function laParts(iso){
+  const d=hourDate(iso), fmt=new Intl.DateTimeFormat("en-US",{timeZone:"America/Los_Angeles",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",hourCycle:"h23"});
+  const p=Object.fromEntries(fmt.formatToParts(d).filter(x=>x.type!=="literal").map(x=>[x.type,x.value]));
+  return {date:p.year+"-"+p.month+"-"+p.day,hour:Number(p.hour)};
 }
+function localPeriod(hour){if(hour>=18&&hour<=21)return"evening";if(hour>=22||hour<=2)return"night";if(hour>=3&&hour<=6)return"predawn";return"other";}
 function monthKey(iso){return hourDate(iso).toISOString().slice(5,7);}
 function rankRows(rows,kind){
   const out=[];
   for(const r of rows){
-    const issue=issueForValid(r.time), nw=nightWindow(issue);
-    if(!nw.eligible)continue;
+    const issue=issueForValid(r.time), nw=nightWindow(issue), lp=laParts(r.time), period=localPeriod(lp.hour);
+    if(!nw.eligible||period==="other")continue;
     out.push({
       kind,zone:r.zone,valid_time:r.time,forecast_issuance_time:issue,
       development_label:r.y,
-      local_night_date:localDate(r.time),month_utc:monthKey(r.time),
+      local_night_date:lp.date,local_hour:lp.hour,local_period:period,month_utc:monthKey(r.time),
       baseline_probability:r.baseline,
       pressure_support:r.x[1],mountain_wave_index:r.wave?.score,
       model_gust_mph:r.modelGust,model_direction_deg:r.modelDir,
@@ -70,11 +77,12 @@ function rankRows(rows,kind){
   return out;
 }
 function choose(candidates,n){
-  const chosen=[],dates=new Set(),monthZone=new Set();
+  const chosen=[],dates=new Set(),diversity=new Set();
+  // First pass forces coverage across zone + local-night period + month when possible.
   for(const r of candidates){
-    const key=r.month_utc+"|"+r.zone;
-    if(dates.has(r.local_night_date)||monthZone.has(key))continue;
-    chosen.push(r);dates.add(r.local_night_date);monthZone.add(key);
+    const key=r.month_utc+"|"+r.zone+"|"+r.local_period;
+    if(dates.has(r.local_night_date)||diversity.has(key))continue;
+    chosen.push(r);dates.add(r.local_night_date);diversity.add(key);
     if(chosen.length>=n)return chosen;
   }
   for(const r of candidates){
@@ -96,16 +104,16 @@ function choose(candidates,n){
   const out={
     status:"RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION",
     generated:new Date().toISOString(),
-    purpose:"Bounded deterministic 2024-only western GOES Nighttime Microphysics development case set: independent civil nights, event vs hard-negative labels.",
+    purpose:"Bounded deterministic 2024-only western GOES Nighttime Microphysics development case set: distinct Santa Barbara civil nights, event vs hard-negative labels, with realistic evening/night/predawn coverage.",
     source:{upper_air:upper.meta,regime:"western",zones:["Gaviota","Refugio"]},
-    rules:{development_year:2024,holdout_2025_loaded:false,forecast_lead_hours:24,goes_snapshot_offsets_hours:[0,1,3,6],maximum_solar_elevation_deg:-6,distinct_nights:true,fire_association_used:false,production_change_authorized:false},
+    rules:{development_year:2024,holdout_2025_loaded:false,forecast_lead_hours:24,required_goes_snapshot_offsets_hours:[0,1],optional_goes_snapshot_offsets_hours:[3,6],maximum_solar_elevation_deg:-6,distinct_nights_within_class:true,fire_association_used:false,production_change_authorized:false},
     candidate_counts:{event_nighttime:eventCandidates.length,hard_negative_nighttime:hardCandidates.length},
     selected_counts:{events:selected.events.length,hard_negatives:selected.hard_negatives.length},
     selected
   };
   fs.mkdirSync(require("path").dirname(OUT),{recursive:true});
   fs.writeFileSync(OUT,JSON.stringify(out,null,2)+"\n");
-  console.log(JSON.stringify({candidate_counts:out.candidate_counts,selected_counts:out.selected_counts,events:selected.events.map(x=>({zone:x.zone,valid:x.valid_time,issue:x.forecast_issuance_time,date:x.local_night_date})),hard_negatives:selected.hard_negatives.map(x=>({zone:x.zone,valid:x.valid_time,issue:x.forecast_issuance_time,date:x.local_night_date}))},null,2));
+  console.log(JSON.stringify({candidate_counts:out.candidate_counts,selected_counts:out.selected_counts,events:selected.events.map(x=>({zone:x.zone,valid:x.valid_time,issue:x.forecast_issuance_time,date:x.local_night_date,hour:x.local_hour,period:x.local_period})),hard_negatives:selected.hard_negatives.map(x=>({zone:x.zone,valid:x.valid_time,issue:x.forecast_issuance_time,date:x.local_night_date,hour:x.local_hour,period:x.local_period}))},null,2));
 })().catch(e=>{console.error(e.stack||e);process.exit(1)});
 `;
 
