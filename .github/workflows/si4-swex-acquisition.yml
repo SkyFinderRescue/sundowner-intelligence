@@ -7,7 +7,6 @@ on:
       - 'tools/probe-swex-downloads.js'
       - 'tools/probe-swex-order-controls.js'
       - 'tools/probe-swex-order-response.js'
-      - 'tools/request-swex-profiler-trial.js'
       - '.github/workflows/si4-swex-acquisition.yml'
   workflow_dispatch:
 
@@ -27,20 +26,16 @@ jobs:
           node --check tools/probe-swex-downloads.js
           node --check tools/probe-swex-order-controls.js
           node --check tools/probe-swex-order-response.js
-          node --check tools/request-swex-profiler-trial.js
       - name: Resolve authoritative SWEX acquisition endpoints with bounded retry
         run: node tools/probe-swex-downloads.js
       - name: Inspect exact public CODIAC order controls without submitting an order
         run: node tools/probe-swex-order-controls.js
       - name: Probe CODIAC response with minimal selection and no contact information
         run: node tools/probe-swex-order-response.js
-      - name: Submit one-file public profiler acquisition trial using repository commit contact
-        shell: bash
+      - name: Preserve accepted one-file profiler order without resubmitting
         run: |
-          set -euo pipefail
-          email="$(git log -1 --format=%ae)"
-          test -n "$email"
-          SWEX_ORDER_EMAIL="$email" node tools/request-swex-profiler-trial.js
+          echo 'The final-QC dataset 600.034 one-file profiler order was already accepted by NCAR/EOL.'
+          echo 'Do not submit another order from CI. Await delivery and ingest the delivered file once available.'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -49,6 +44,5 @@ jobs:
             research/swex-download-probe.json
             research/swex-order-controls.json
             research/swex-order-response-probe.json
-            research/swex-profiler-order-trial.json
           if-no-files-found: warn
           retention-days: 30
