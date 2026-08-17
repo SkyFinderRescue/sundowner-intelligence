@@ -68,7 +68,7 @@ const diagnosticMain = String.raw`
   }
   function coupling(r){
     const target=TARGET_DIR[r.zone];
-    const raw=upper.map.get(\`\${r.time}|\${r.zone}\`);
+    const raw=upper.map.get(r.time+"|"+r.zone);
     const profile=toScienceProfile(raw||[]);
     if(!target||profile.length<4)return null;
     return S.surfaceCouplingIndex({
@@ -80,7 +80,7 @@ const diagnosticMain = String.raw`
   }
   const couplingCache=new Map();
   function couplingFor(r){
-    const key=\`\${r.time}|\${r.zone}\`;
+    const key=r.time+"|"+r.zone;
     if(!couplingCache.has(key))couplingCache.set(key,coupling(r));
     return couplingCache.get(key);
   }
