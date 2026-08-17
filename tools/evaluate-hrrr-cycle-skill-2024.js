@@ -15,13 +15,19 @@ if(cycles.rules?.development_year!==2024||cycles.rules?.holdout_2025_loaded!==fa
 const TARGET={Gaviota:345,Refugio:355,Goleta:0,"San Marcos Pass":10,"Mission Canyon":15,Montecito:20,"Toro Canyon":22,Carpinteria:25};
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const mean=a=>{const x=a.filter(Number.isFinite);return x.length?x.reduce((s,v)=>s+v,0)/x.length:null;};
+const hourKey=r=>String(r.valid_time).slice(0,13);
+const rowKey=r=>`${hourKey(r)}|${r.zone}`;
 const groups=new Map();
-for(const r of cycles.rows||[]){const k=`${String(r.valid_time).slice(0,13)}|${r.zone}`;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(r);}
+for(const r of cycles.rows||[]){const k=rowKey(r);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(r);}
 const selected=[];
 for(const g of ["events","hard_negatives"]){for(const r of manifest.selected?.[g]||[])selected.push({...r,kind:g,y:g==="events"?1:0});}
 function profile(p){return(p||[]).map(x=>({pressureHpa:+x.pressureHpa,heightM:+x.heightM,temperatureC:+x.temperatureC,windSpeed:+x.windSpeedMph,windDirection:+x.windDirectionDeg,relativeHumidityPct:Number.isFinite(+x.relativeHumidityPct)?+x.relativeHumidityPct:null}));}
-function features(r){const key=`${String(r.valid_time).slice(0,13)}|${r.zone}`,m=(groups.get(key)||[]).slice().sort((a,b)=>a.forecast_lead_hours-b.forecast_lead_hours),target=TARGET[r.zone];if(!Number.isFinite(target)||m.length<3)return null;const vals=m.map(x=>{const w=S.mountainWaveIndex(profile(x.profile),target);return{lead:+x.forecast_lead_hours,wave:w.score,cross:w.meanCrossBarrier,critical:w.critical?.criticalHeightM??null};});const wa=S.cycleAgreement(vals.map(x=>x.wave*100)),ca=S.cycleAgreement(vals.map(x=>x.cross));const crit=vals.map(x=>x.critical).filter(Number.isFinite);const confidence=mean([wa.score,ca.score]);return{...r,cycles:vals,n_cycles:vals.length,wave_spread_points:wa.spread,cross_spread_mph:ca.spread,critical_spread_m:crit.length>=2?Math.max(...crit)-Math.min(...crit):null,cycle_confidence:confidence,baseline_probability:+r.baseline_probability};}
-const rows=selected.map(features).filter(Boolean).sort((a,b)=>new Date(a.valid_time)-new Date(b.valid_time));
+function features(r){const key=rowKey(r),m=(groups.get(key)||[]).slice().sort((a,b)=>a.forecast_lead_hours-b.forecast_lead_hours),target=TARGET[r.zone];if(!Number.isFinite(target)||m.length<3)return null;const vals=m.map(x=>{const w=S.mountainWaveIndex(profile(x.profile),target);return{lead:+x.forecast_lead_hours,wave:w.score,cross:w.meanCrossBarrier,critical:w.critical?.criticalHeightM??null};});const wa=S.cycleAgreement(vals.map(x=>x.wave*100)),ca=S.cycleAgreement(vals.map(x=>x.cross));const crit=vals.map(x=>x.critical).filter(Number.isFinite);const confidence=mean([wa.score,ca.score]);return{...r,cycles:vals,n_cycles:vals.length,wave_spread_points:wa.spread,cross_spread_mph:ca.spread,critical_spread_m:crit.length>=2?Math.max(...crit)-Math.min(...crit):null,cycle_confidence:confidence,baseline_probability:+r.baseline_probability};}
+// valid_time values are intentionally compact ISO-hour strings such as 2024-06-16T06.
+// Some JavaScript runtimes treat that form as Invalid Date, so chronology is handled by
+// lexicographic ISO-hour keys rather than Date parsing. This is plumbing only; labels,
+// probabilities, thresholds, candidate transforms and scoring are unchanged.
+const rows=selected.map(features).filter(Boolean).sort((a,b)=>hourKey(a).localeCompare(hourKey(b))||String(a.zone).localeCompare(String(b.zone)));
 if(rows.length<40)throw Error(`too few matched cycle rows ${rows.length}`);
 const candidates={
  mild_confidence_tempering:r=>clamp(r.baseline_probability*(0.75+0.25*r.cycle_confidence),0.001,0.999),
@@ -34,13 +40,23 @@ function thresholdForPod(a,pf,target=.60){const ev=a.filter(r=>r.y);if(!ev.lengt
 function classM(a,pf,t){let tp=0,fp=0,tn=0,fn=0;for(const r of a){const q=pf(r)>=t;if(q&&r.y)tp++;else if(q)fp++;else if(r.y)fn++;else tn++;}return{tp,fp,tn,fn,pod:tp+fn?tp/(tp+fn):null,hard_negative_fpr:fp+tn?fp/(fp+tn):null};}
 function summary(a,pf){const hn=a.filter(r=>!r.y);return{n:a.length,events:a.filter(r=>r.y).length,brier:brier(a,pf),auc:auc(a,pf),hard_negative_brier:brier(hn,pf)};}
 // Expanding chronological folds. Thresholds are selected on prior 2024 rows only, then frozen for the next block.
-const nights=[...new Set(rows.map(r=>String(r.valid_time).slice(0,10)))].sort();
+const nights=[...new Set(rows.map(r=>hourKey(r).slice(0,10)))].sort();
 const cuts=[Math.floor(nights.length*.4),Math.floor(nights.length*.7),nights.length];
-const folds=[];let prev=cuts[0];
-for(let fi=1;fi<cuts.length;fi++){const trainN=new Set(nights.slice(0,prev)),testN=new Set(nights.slice(prev,cuts[fi]));const tr=rows.filter(r=>trainN.has(String(r.valid_time).slice(0,10))),te=rows.filter(r=>testN.has(String(r.valid_time).slice(0,10)));prev=cuts[fi];if(tr.filter(r=>r.y).length<5||tr.filter(r=>!r.y).length<5||te.filter(r=>r.y).length<3||te.filter(r=>!r.y).length<3)continue;const rec={train_n:tr.length,test_n:te.length,train_start:tr[0].valid_time,train_end:tr.at(-1).valid_time,test_start:te[0].valid_time,test_end:te.at(-1).valid_time,baseline:{threshold:thresholdForPod(tr,base),...summary(te,base)}};rec.baseline.threshold_metrics=classM(te,base,rec.baseline.threshold);rec.candidates={};for(const[name,pf]of Object.entries(candidates)){const t=thresholdForPod(tr,pf);rec.candidates[name]={threshold:t,...summary(te,pf),threshold_metrics:classM(te,pf,t)};}folds.push(rec);}
+const folds=[];const testKeys=new Set();let prev=cuts[0];
+for(let fi=1;fi<cuts.length;fi++){
+  const trainN=new Set(nights.slice(0,prev)),testN=new Set(nights.slice(prev,cuts[fi]));
+  const tr=rows.filter(r=>trainN.has(hourKey(r).slice(0,10))),te=rows.filter(r=>testN.has(hourKey(r).slice(0,10)));
+  prev=cuts[fi];
+  if(tr.filter(r=>r.y).length<5||tr.filter(r=>!r.y).length<5||te.filter(r=>r.y).length<3||te.filter(r=>!r.y).length<3)continue;
+  for(const r of te)testKeys.add(rowKey(r));
+  const rec={train_n:tr.length,test_n:te.length,train_start:tr[0].valid_time,train_end:tr.at(-1).valid_time,test_start:te[0].valid_time,test_end:te.at(-1).valid_time,baseline:{threshold:thresholdForPod(tr,base),...summary(te,base)}};
+  rec.baseline.threshold_metrics=classM(te,base,rec.baseline.threshold);
+  rec.candidates={};
+  for(const[name,pf]of Object.entries(candidates)){const t=thresholdForPod(tr,pf);rec.candidates[name]={threshold:t,...summary(te,pf),threshold_metrics:classM(te,pf,t)};}
+  folds.push(rec);
+}
 if(folds.length<2)throw Error(`need >=2 valid chronological folds; got ${folds.length}`);
-const testKeys=new Set();for(const f of folds){for(const r of rows)if(new Date(r.valid_time)>=new Date(f.test_start)&&new Date(r.valid_time)<=new Date(f.test_end))testKeys.add(`${r.valid_time}|${r.zone}`);}
-const pooled=rows.filter(r=>testKeys.has(`${r.valid_time}|${r.zone}`));
+const pooled=rows.filter(r=>testKeys.has(rowKey(r)));
 const baseline=summary(pooled,base);baseline.mean_fold_pod=mean(folds.map(f=>f.baseline.threshold_metrics.pod));baseline.mean_fold_hard_negative_fpr=mean(folds.map(f=>f.baseline.threshold_metrics.hard_negative_fpr));
 const results={};const eligible=[];
 for(const[name,pf]of Object.entries(candidates)){const s=summary(pooled,pf);s.mean_fold_pod=mean(folds.map(f=>f.candidates[name].threshold_metrics.pod));s.mean_fold_hard_negative_fpr=mean(folds.map(f=>f.candidates[name].threshold_metrics.hard_negative_fpr));s.gates={overall_brier:s.brier<=baseline.brier,hard_negative_brier:s.hard_negative_brier<=baseline.hard_negative_brier,auc_noninferior:s.auc>=baseline.auc-.01,pod_noninferior:s.mean_fold_pod>=baseline.mean_fold_pod-.05,hard_negative_fpr:s.mean_fold_hard_negative_fpr<=baseline.mean_fold_hard_negative_fpr};s.passes_all=Object.values(s.gates).every(Boolean);if(s.passes_all)eligible.push(name);results[name]=s;}
