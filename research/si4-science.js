@@ -23,7 +23,7 @@ function interpolateZero(z1,z2,u1,u2){
 }
 
 function normalizeProfile(levels,targetDirection){
-  return levels
+  return (levels||[])
     .map(row=>{
       const p=Number(row.pressureHpa);
       const z=Number.isFinite(Number(row.heightM))?Number(row.heightM):STANDARD_HEIGHT_M[p];
@@ -86,14 +86,126 @@ function mountainWaveIndex(levels,targetDirection,{ridgeHeightM=1050}={}){
   return {score,meanCrossBarrier:meanCross,nPerSec:n,froude,critical:crit,stability:stab};
 }
 
-function marineLayerResistance({lowCloudPct,rh925,boundaryLayerHeightM,coastalRhPct,coastalTempDewpointSpreadF}={}){
+function inversionAndJetStructure(levels,targetDirection,{ridgeHeightM=1050,maxJetHeightM=3500}={}){
+  const p=normalizeProfile(levels,targetDirection);
+  const low=p.filter(r=>r.heightM<=maxJetHeightM&&Number.isFinite(r.crossBarrier));
+  if(!low.length) return {
+    jetHeightM:null,jetCrossBarrier:null,jetHeightRelativeRidgeM:null,
+    lowestCrossBarrier:null,jetSurfaceDrop:null,inversionStrengthC:null,
+    maxThetaGradientKPerKm:null,lowLevelReversal:false
+  };
+  const jet=low.reduce((best,r)=>!best||r.crossBarrier>best.crossBarrier?r:best,null);
+  const lowest=low[0];
+  let inversionStrengthC=0,maxThetaGradientKPerKm=null;
+  for(let i=0;i<low.length-1;i++){
+    const a=low[i],b=low[i+1],dz=b.heightM-a.heightM;
+    if(dz<=0)continue;
+    const dt=Number(b.temperatureC)-Number(a.temperatureC);
+    if(Number.isFinite(dt))inversionStrengthC=Math.max(inversionStrengthC,dt);
+    if(Number.isFinite(a.thetaK)&&Number.isFinite(b.thetaK)){
+      const grad=(b.thetaK-a.thetaK)/(dz/1000);
+      if(!Number.isFinite(maxThetaGradientKPerKm)||grad>maxThetaGradientKPerKm)maxThetaGradientKPerKm=grad;
+    }
+  }
+  const aloft=low.filter(r=>r.heightM>=ridgeHeightM&&r.heightM<=3200);
+  const strongestAloft=aloft.length?Math.max(...aloft.map(r=>r.crossBarrier)):null;
+  const lowLevelReversal=Number.isFinite(strongestAloft)&&strongestAloft>=8&&Number.isFinite(lowest.crossBarrier)&&lowest.crossBarrier<=0;
+  return {
+    jetHeightM:jet?jet.heightM:null,
+    jetCrossBarrier:jet?jet.crossBarrier:null,
+    jetHeightRelativeRidgeM:jet?jet.heightM-ridgeHeightM:null,
+    lowestCrossBarrier:Number.isFinite(lowest.crossBarrier)?lowest.crossBarrier:null,
+    jetSurfaceDrop:jet&&Number.isFinite(lowest.crossBarrier)?Math.max(0,jet.crossBarrier-lowest.crossBarrier):null,
+    inversionStrengthC,
+    maxThetaGradientKPerKm,
+    lowLevelReversal
+  };
+}
+
+function hydraulicJumpRotorSusceptibility(levels,targetDirection,{ridgeHeightM=1050}={}){
+  const wave=mountainWaveIndex(levels,targetDirection,{ridgeHeightM});
+  const structure=inversionAndJetStructure(levels,targetDirection,{ridgeHeightM});
+  const nearCriticalFroude=Number.isFinite(wave.froude)?clamp(1-Math.abs(wave.froude-1)/.9):0;
+  const shear=Number.isFinite(structure.jetSurfaceDrop)?clamp((structure.jetSurfaceDrop-6)/24):0;
+  const reversal=structure.lowLevelReversal?1:0;
+  const stable=Number.isFinite(structure.maxThetaGradientKPerKm)?clamp((structure.maxThetaGradientKPerKm-2)/10):0;
+  const score=clamp(.34*nearCriticalFroude+.28*shear+.23*reversal+.15*stable);
+  return {
+    score,
+    diagnosticOnly:true,
+    nearCriticalFroude,
+    shearScore:shear,
+    lowLevelReversal:structure.lowLevelReversal,
+    stableLayerScore:stable,
+    froude:wave.froude,
+    structure
+  };
+}
+
+function marineLayerResistance({
+  lowCloudPct,rh925,boundaryLayerHeightM,coastalRhPct,coastalTempDewpointSpreadF,
+  inversionStrengthC,marineIntrusionScore,channelEddyScore
+}={}){
   const cloud=Number.isFinite(Number(lowCloudPct))?clamp(Number(lowCloudPct)/100):.5;
   const rh=Number.isFinite(Number(rh925))?clamp((Number(rh925)-45)/50):.45;
   const shallow=Number.isFinite(Number(boundaryLayerHeightM))?clamp((1600-Number(boundaryLayerHeightM))/1300):.45;
   const coastRh=Number.isFinite(Number(coastalRhPct))?clamp((Number(coastalRhPct)-55)/40):.4;
   const saturation=Number.isFinite(Number(coastalTempDewpointSpreadF))?clamp((8-Number(coastalTempDewpointSpreadF))/8):.4;
-  const score=clamp(.28*cloud+.24*rh+.24*shallow+.14*coastRh+.10*saturation);
+  let score=clamp(.28*cloud+.24*rh+.24*shallow+.14*coastRh+.10*saturation);
+  if(Number.isFinite(Number(inversionStrengthC))){
+    const inversion=clamp((Number(inversionStrengthC)-.5)/5.5);
+    score=clamp(.82*score+.18*inversion);
+  }
+  if(Number.isFinite(Number(marineIntrusionScore)))score=clamp(.88*score+.12*clamp(Number(marineIntrusionScore)));
+  if(Number.isFinite(Number(channelEddyScore)))score=clamp(.92*score+.08*clamp(Number(channelEddyScore)));
   return {score,gateOpen:score<.38,gateMarginal:score>=.38&&score<.62,gateClosed:score>=.62};
+}
+
+function surfaceCouplingIndex({
+  levels,targetDirection,regime="hybrid",pressureSupport,
+  lowCloudPct,rh925,boundaryLayerHeightM,coastalRhPct,coastalTempDewpointSpreadF,
+  marineIntrusionScore,channelEddyScore,ridgeHeightM=1050
+}={}){
+  const wave=mountainWaveIndex(levels||[],targetDirection,{ridgeHeightM});
+  const structure=inversionAndJetStructure(levels||[],targetDirection,{ridgeHeightM});
+  const rotor=hydraulicJumpRotorSusceptibility(levels||[],targetDirection,{ridgeHeightM});
+  const marine=marineLayerResistance({
+    lowCloudPct,rh925,boundaryLayerHeightM,coastalRhPct,coastalTempDewpointSpreadF,
+    inversionStrengthC:structure.inversionStrengthC,marineIntrusionScore,channelEddyScore
+  });
+  const jetHeight=Number(structure.jetHeightRelativeRidgeM);
+  const jetHeightAccess=Number.isFinite(jetHeight)?clamp(1-Math.max(0,jetHeight-500)/2200):.45;
+  const jetDrop=Number(structure.jetSurfaceDrop);
+  const jetDropAccess=Number.isFinite(jetDrop)?clamp(1-jetDrop/34):.45;
+  const jetAccess=clamp(.58*jetHeightAccess+.42*jetDropAccess);
+  const mixing=Number.isFinite(Number(boundaryLayerHeightM))?clamp((Number(boundaryLayerHeightM)-250)/1500):.5;
+  const weights={
+    western:{marine:.38,rotor:.18,access:.26,mixing:.18},
+    hybrid:{marine:.30,rotor:.23,access:.27,mixing:.20},
+    eastern:{marine:.22,rotor:.28,access:.30,mixing:.20}
+  }[String(regime).toLowerCase()]||{marine:.30,rotor:.23,access:.27,mixing:.20};
+  const resistance=clamp(weights.marine*marine.score+weights.rotor*rotor.score+(1-weights.marine-weights.rotor)*(1-jetAccess));
+  const coupling=clamp(
+    weights.access*jetAccess+
+    weights.mixing*mixing+
+    .25*wave.score+
+    (1-weights.access-weights.mixing-.25)*(1-resistance)
+  );
+  const p=Number(pressureSupport);
+  const atmosphericSupport=Number.isFinite(p)?clamp(.62*wave.score+.38*clamp(p)):wave.score;
+  return {
+    regime:String(regime).toLowerCase(),
+    atmosphericSupport,
+    surfaceCoupling:coupling,
+    surfaceEventSupport:clamp(atmosphericSupport*coupling),
+    jetAccess,
+    mixing,
+    resistance,
+    marineResistance:marine,
+    hydraulicJumpRotor:rotor,
+    structure,
+    wave
+  };
 }
 
 function cycleAgreement(values){
@@ -129,9 +241,9 @@ function classifyTransition(zoneProbabilities,previousZoneProbabilities={}){
   return {state,evolution,west,hybrid,east,maxProbability:active};
 }
 
-function hardNegativeFlag({pressureSupport,mountainWaveScore,marineResistanceScore,eventObserved}){
+function hardNegativeFlag({pressureSupport,mountainWaveScore,marineResistanceScore,surfaceCouplingScore,eventObserved}){
   const setup=(Number(pressureSupport)||0)>=.58 || (Number(mountainWaveScore)||0)>=.58;
-  const blocked=(Number(marineResistanceScore)||0)>=.58;
+  const blocked=(Number(marineResistanceScore)||0)>=.58 || (Number.isFinite(Number(surfaceCouplingScore))&&Number(surfaceCouplingScore)<.36);
   return {isHardNegative:!!(setup&&!eventObserved),likelyMarineBlocked:!!(setup&&!eventObserved&&blocked)};
 }
 
@@ -142,5 +254,6 @@ function applyTerrainResponse(rawGustMph,{biasMph=0,directionBiasMph=0,stability
 
 module.exports={
   signedCrossBarrier,potentialTemperatureK,estimateMeanStateCriticalLevel,ridgeLayerStability,
-  mountainWaveIndex,marineLayerResistance,cycleAgreement,classifyTransition,hardNegativeFlag,applyTerrainResponse
+  mountainWaveIndex,inversionAndJetStructure,hydraulicJumpRotorSusceptibility,
+  marineLayerResistance,surfaceCouplingIndex,cycleAgreement,classifyTransition,hardNegativeFlag,applyTerrainResponse
 };
