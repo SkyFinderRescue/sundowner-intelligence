@@ -16,6 +16,40 @@ def load_base():
     s=importlib.util.spec_from_file_location('si4_goes_base',p);m=importlib.util.module_from_spec(s);s.loader.exec_module(m);return m
 
 
+def install_coherent_scan_selector(base):
+    """Plumbing-only guard: choose the newest complete ABI band triplet.
+
+    The original extractor chose the newest eligible file independently per band.
+    Around scan-boundary transitions that can mix adjacent CONUS scans and produce
+    a 10-minute cross-band end-time span. This selector keeps the same issuance,
+    age and <=5-minute coherence rules, but searches complete triplets instead of
+    changing any scientific feature, mask, threshold, label or model coefficient.
+    """
+    def select_scans(issue, max_age_min=25.0):
+        keys=[]
+        for offset in (0,-1): keys.extend(base.list_prefix(base.hour_prefix(issue+dt.timedelta(hours=offset))))
+        parsed=[p for k in keys if (p:=base.parse_key(k)) and p['band'] in base.BANDS and p['end']<=issue]
+        by={b:sorted([p for p in parsed if p['band']==b],key=lambda p:p['end'],reverse=True) for b in base.BANDS}
+        if any(not by[b] for b in base.BANDS):
+            missing=[b for b in base.BANDS if not by[b]]
+            raise RuntimeError(f'no issuance-safe scans found for bands {missing} before {issue.isoformat()}')
+        anchors=by[13]
+        for anchor in anchors:
+            chosen={13:anchor}
+            for b in (7,15):
+                chosen[b]=min(by[b],key=lambda p:abs((p['end']-anchor['end']).total_seconds()))
+            ends=[p['end'] for p in chosen.values()]
+            span=(max(ends)-min(ends)).total_seconds()/60.0
+            ages=[(issue-p['end']).total_seconds()/60.0 for p in chosen.values()]
+            if span<=5.0 and max(ages)<=max_age_min:
+                return chosen
+        newest={b:by[b][0] for b in base.BANDS}
+        ends=[p['end'] for p in newest.values()]
+        span=(max(ends)-min(ends)).total_seconds()/60.0
+        raise RuntimeError(f'no coherent issuance-safe ABI band triplet within {max_age_min} min; newest span {span:.1f} min')
+    base.select_scans=select_scans
+
+
 def iso(s): return dt.datetime.fromisoformat(str(s).replace('Z','+00:00')).astimezone(dt.timezone.utc)
 def finite(v): return v is not None and isinstance(v,(int,float)) and math.isfinite(v)
 def median(snap,domain,key): return snap['domains'][domain][key]['median']
@@ -43,7 +77,6 @@ def stats(labels,values):
       'best_oriented_auc':None if raw is None else max(raw,1-raw),
       'orientation':None if raw is None else ('higher_event' if raw>=.5 else 'lower_event')
     }
-
 def snapshot_feature(s,case,offset):
     zone=case['zone'].lower()
     coast=f'{zone}_coast'; channel=f'{zone}_channel'
@@ -60,14 +93,13 @@ def snapshot_feature(s,case,offset):
       'western_minus_eastern_btd13_07':sub(median(s,'western_sector','btd_c13_minus_c07_k'),median(s,'eastern_sector','btd_c13_minus_c07_k')),
       'western_minus_eastern_bt13':sub(median(s,'western_sector','bt_c13_k'),median(s,'eastern_sector','bt_c13_k')),
     }
-
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument('--cases',default='/tmp/goes-cases/goes-marine-2024-case-manifest.json')
     ap.add_argument('--masks',default='research/GOES_MARINE_MASKS_V2.json')
     ap.add_argument('--per-class',type=int,default=8)
     ap.add_argument('--out',default='research/goes-marine-2024-feature-screen.json')
-    args=ap.parse_args();base=load_base();manifest=json.load(open(args.cases));masks=json.load(open(args.masks))
+    args=ap.parse_args();base=load_base();install_coherent_scan_selector(base);manifest=json.load(open(args.cases));masks=json.load(open(args.masks))
     if manifest['rules']['development_year']!=2024 or manifest['rules']['holdout_2025_loaded'] is not False:raise RuntimeError('case manifest is not 2024-only')
     if masks['rules']['2025_satellite_data_used_to_define_masks'] is not False:raise RuntimeError('mask leakage guard failed')
     cases=[]
