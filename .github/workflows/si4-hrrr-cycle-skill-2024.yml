@@ -1,0 +1,105 @@
+name: SI-4 HRRR Cycle Skill 2024
+
+on:
+  push:
+    branches: [si4-hrrr-cycle-skill]
+    paths:
+      - 'tools/extract-hrrr-cycle-targets.py'
+      - 'tools/evaluate-hrrr-cycle-skill-2024.js'
+      - 'research/si4-science.js'
+      - '.github/workflows/si4-hrrr-cycle-skill-2024.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  cycle-skill-2024:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      MANIFEST: /tmp/si4-cycle/goes-marine-2024-cv-manifest.json
+      CYCLES: /tmp/si4-cycle/hrrr-cycle-2024-targets.json
+      OUT: research/hrrr-cycle-skill-2024.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install indexed HRRR subset reader
+        run: python -m pip install --quiet 'herbie-data>=2025.7' 'cfgrib>=0.9.15' 'xarray>=2025.1' pandas numpy scikit-learn
+      - name: Syntax checks
+        run: |
+          python -m py_compile tools/extract-hrrr-cycle-targets.py
+          node --check tools/evaluate-hrrr-cycle-skill-2024.js
+      - name: Download frozen 2024-only development case manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/si4-cycle/source
+          gh run download 32003204983 --repo "$GITHUB_REPOSITORY" -n si4-goes-2024-chronological-cv -D /tmp/si4-cycle/source
+          src=$(find /tmp/si4-cycle/source -name 'goes-marine-2024-cv-manifest.json' -print -quit)
+          test -n "$src"
+          cp "$src" "$MANIFEST"
+          node - <<'NODE'
+          const x=require(process.env.MANIFEST);
+          if(x.status!=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION')process.exit(2);
+          if(x.rules.development_year!==2024||x.rules.holdout_2025_loaded!==false)process.exit(3);
+          if((x.selected?.events||[]).length!==40||(x.selected?.hard_negatives||[]).length!==40)process.exit(4);
+          if([...(x.selected.events||[]),...(x.selected.hard_negatives||[])].some(r=>!String(r.valid_time).startsWith('2024-')))process.exit(5);
+          console.log({events:x.selected.events.length,hard_negatives:x.selected.hard_negatives.length});
+          NODE
+      - name: Extract exact same-valid-time HRRR cycles with bounded infrastructure retry
+        shell: bash
+        run: |
+          set -u
+          ok=0
+          for attempt in 1 2 3; do
+            echo "targeted HRRR cycle extraction attempt ${attempt}/3"
+            rm -f "$CYCLES"
+            if python tools/extract-hrrr-cycle-targets.py --manifest "$MANIFEST" --out "$CYCLES" --workers 6; then
+              ok=1
+              break
+            fi
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt*30)); fi
+          done
+          test "$ok" -eq 1
+      - name: Verify cycle extraction provenance
+        run: |
+          python - <<'PY'
+          import json,os
+          x=json.load(open(os.environ['CYCLES']))
+          assert x['status']=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION'
+          assert x['rules']['development_year']==2024 and x['rules']['holdout_2025_loaded'] is False
+          assert x['rules']['future_observations_used'] is False and x['rules']['fire_outcome_used'] is False
+          assert x['rules']['leads_hours']==[18,24,30,36]
+          assert x['failure_count']==0
+          assert x['rows'] and all(str(r['valid_time']).startswith('2024-') for r in x['rows'])
+          print({'target_cases':x['target_case_count'],'requests':x['request_group_count'],'rows':len(x['rows'])})
+          PY
+      - name: Run predeclared 2024 chronological cycle-confidence skill screen
+        run: node tools/evaluate-hrrr-cycle-skill-2024.js "$MANIFEST" "$CYCLES"
+      - name: Verify evidence contract
+        run: |
+          node - <<'NODE'
+          const x=require('./research/hrrr-cycle-skill-2024.json');
+          if(x.status!=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION')process.exit(2);
+          if(x.rules.development_year!==2024||x.rules.holdout_2025_loaded!==false)process.exit(3);
+          if(x.rules.production_change_authorized!==false||x.rules.fire_outcome_used!==false)process.exit(4);
+          if(x.counts.valid_folds<2||x.counts.pooled_test_rows<20)process.exit(5);
+          console.log(JSON.stringify({counts:x.counts,cycle:x.cycle_descriptives,baseline:x.baseline,candidates:x.candidates,eligible:x.eligible_for_larger_2024_cycle_test},null,2));
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-hrrr-cycle-skill-2024
+          path: |
+            /tmp/si4-cycle/goes-marine-2024-cv-manifest.json
+            /tmp/si4-cycle/hrrr-cycle-2024-targets.json
+            research/hrrr-cycle-skill-2024.json
+          if-no-files-found: warn
+          retention-days: 30
