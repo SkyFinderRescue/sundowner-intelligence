@@ -15,8 +15,15 @@ if(idx<0)throw Error("unable to isolate SI-4 builder definitions");
 const defs=source.slice(0,idx);
 
 const main=String.raw`
+function hourDate(value){
+  const s=String(value||"");
+  const iso=/^\d{4}-\d{2}-\d{2}T\d{2}$/.test(s)?s+":00:00Z":s;
+  const d=new Date(iso);
+  if(!Number.isFinite(d.getTime()))throw Error("invalid hourly timestamp: "+s);
+  return d;
+}
 function solarElevationDeg(iso,latDeg=34.42,lonDeg=-119.80){
-  const t=new Date(iso); if(!Number.isFinite(t.getTime())) return null;
+  const t=hourDate(iso);
   const y=t.getUTCFullYear(), start=Date.UTC(y,0,0), n=Math.floor((Date.UTC(y,t.getUTCMonth(),t.getUTCDate())-start)/86400000);
   const hour=t.getUTCHours()+t.getUTCMinutes()/60+t.getUTCSeconds()/3600;
   const gamma=2*Math.PI/365*(n-1+(hour-12)/24);
@@ -27,21 +34,19 @@ function solarElevationDeg(iso,latDeg=34.42,lonDeg=-119.80){
   const cosz=Math.max(-1,Math.min(1,Math.sin(lat)*Math.sin(decl)+Math.cos(lat)*Math.cos(decl)*Math.cos(ha)));
   return 90-Math.acos(cosz)*180/Math.PI;
 }
-function issueForValid(valid){return new Date(new Date(valid).getTime()-24*3600e3).toISOString();}
+function issueForValid(valid){return new Date(hourDate(valid).getTime()-24*3600e3).toISOString();}
 function nightWindow(issue){
   const offsets=[0,1,3,6];
   const solar=Object.fromEntries(offsets.map(h=>{
-    const t=new Date(new Date(issue).getTime()-h*3600e3).toISOString();
+    const t=new Date(hourDate(issue).getTime()-h*3600e3).toISOString();
     return [String(h),{time:t,solar_elevation_deg:solarElevationDeg(t)}];
   }));
   return {eligible:Object.values(solar).every(x=>Number.isFinite(x.solar_elevation_deg)&&x.solar_elevation_deg<=-6),solar};
 }
 function localDate(iso){
-  // Fixed PST/PDT is unnecessary for de-duplication; UTC date plus 12h shift keeps
-  // evening/night Santa Barbara rows on a stable civil-night bucket.
-  return new Date(new Date(iso).getTime()-8*3600e3).toISOString().slice(0,10);
+  return new Date(hourDate(iso).getTime()-8*3600e3).toISOString().slice(0,10);
 }
-function monthKey(iso){return new Date(iso).toISOString().slice(5,7);}
+function monthKey(iso){return hourDate(iso).toISOString().slice(5,7);}
 function rankRows(rows,kind){
   const out=[];
   for(const r of rows){
@@ -57,24 +62,21 @@ function rankRows(rows,kind){
       solar_window:nw.solar
     });
   }
-  // Prefer more diagnostic cases within class, but selection remains deterministic.
   out.sort((a,b)=>{
-    const sa=kind==="event"?(Number(a.pressure_support)||0)+(Number(a.mountain_wave_index)||0):(Number(a.pressure_support)||0)+(Number(a.mountain_wave_index)||0);
-    const sb=kind==="event"?(Number(b.pressure_support)||0)+(Number(b.mountain_wave_index)||0):(Number(b.pressure_support)||0)+(Number(b.mountain_wave_index)||0);
+    const sa=(Number(a.pressure_support)||0)+(Number(a.mountain_wave_index)||0);
+    const sb=(Number(b.pressure_support)||0)+(Number(b.mountain_wave_index)||0);
     return sb-sa||String(a.valid_time).localeCompare(String(b.valid_time))||String(a.zone).localeCompare(String(b.zone));
   });
   return out;
 }
 function choose(candidates,n){
   const chosen=[],dates=new Set(),monthZone=new Set();
-  // First pass spreads cases across month + zone.
   for(const r of candidates){
     const key=r.month_utc+"|"+r.zone;
     if(dates.has(r.local_night_date)||monthZone.has(key))continue;
     chosen.push(r);dates.add(r.local_night_date);monthZone.add(key);
     if(chosen.length>=n)return chosen;
   }
-  // Second pass fills remaining slots with distinct nights.
   for(const r of candidates){
     if(dates.has(r.local_night_date))continue;
     chosen.push(r);dates.add(r.local_night_date);
