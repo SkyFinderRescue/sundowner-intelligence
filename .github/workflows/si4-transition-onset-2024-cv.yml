@@ -5,7 +5,9 @@ on:
     branches: [main]
     paths:
       - 'research/SI4_TRANSITION_ONSET_2024_PREDECLARED.md'
+      - 'research/SI4_TRANSITION_ONSET_ARCHIVE_AVAILABILITY_NOTE.md'
       - 'tools/evaluate-si4-transition-onset-2024-cv.js'
+      - 'tools/run-si4-transition-onset-2024-cv-archive6h.js'
       - '.github/workflows/si4-transition-onset-2024-cv.yml'
   workflow_dispatch:
 
@@ -23,7 +25,9 @@ jobs:
         with:
           node-version: '22'
       - name: Syntax check
-        run: node --check tools/evaluate-si4-transition-onset-2024-cv.js
+        run: |
+          node --check tools/evaluate-si4-transition-onset-2024-cv.js
+          node --check tools/run-si4-transition-onset-2024-cv-archive6h.js
       - name: Download authoritative frozen all-season artifact
         env:
           GH_TOKEN: ${{ github.token }}
@@ -37,19 +41,23 @@ jobs:
           grep -q 'holdout_2025_loaded:false' tools/evaluate-si4-transition-onset-2024-cv.js
           grep -q 'predeclared_gates:true' tools/evaluate-si4-transition-onset-2024-cv.js
           ! grep -q '2025-' tools/evaluate-si4-transition-onset-2024-cv.js
+          grep -q 'produced \*\*zero eligible rows\*\*' research/SI4_TRANSITION_ONSET_ARCHIVE_AVAILABILITY_NOTE.md
+          grep -q 'prior(time,6)' tools/run-si4-transition-onset-2024-cv-archive6h.js
       - name: Run predeclared transition-onset chronological CV
         env:
           UPPER_CACHE: /tmp/si4-frozen/hrrr-upper-fixed-lead-all-season.json
           OUT: research/si4-transition-onset-2024-cv.json
-        run: node tools/evaluate-si4-transition-onset-2024-cv.js
+        run: node tools/run-si4-transition-onset-2024-cv-archive6h.js
       - name: Verify provenance and promotion lock
         run: |
           node - <<'NODE'
           const x=require('./research/si4-transition-onset-2024-cv.json');
           if(x.status!=='RESEARCH_ONLY_2024_DEVELOPMENT') process.exit(2);
-          if(x.rules.holdout_2025_loaded!==false||x.rules.future_observations_label_only!==true) process.exit(3);
-          if(x.rules.fire_association_outcome_only!==true||x.rules.production_change_authorized!==false) process.exit(4);
-          if(x.rules.predeclared_hypothesis!==true||x.rules.predeclared_gates!==true) process.exit(5);
+          if(x.candidate!=='transition_onset_v1a_archive6h') process.exit(3);
+          if(x.rules.holdout_2025_loaded!==false||x.rules.future_observations_label_only!==true) process.exit(4);
+          if(x.rules.fire_association_outcome_only!==true||x.rules.production_change_authorized!==false) process.exit(5);
+          if(x.rules.predeclared_hypothesis!==true||x.rules.predeclared_gates!==true) process.exit(6);
+          if(x.rules.archive_cadence_adaptation!=='vertical_profile_tendency_6h_surface_tendency_3h') process.exit(7);
           console.log({rows:x.counts.rows,triggered:x.counts.triggered_rows,event_pod:x.candidate_metrics.events.pod,eligible:x.winner_eligible_for_single_frozen_2025_score});
           NODE
       - uses: actions/upload-artifact@v4
