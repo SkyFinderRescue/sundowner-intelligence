@@ -9,6 +9,7 @@ on:
       - 'tools/merge-hrrr-upper-chunks.py'
       - 'tools/build-si4-calibration.js'
       - 'tools/summarize-si4-holdout.js'
+      - 'tools/score-si4-event-spatial-frozen-2025.js'
       - 'research/si4-science.js'
   workflow_dispatch:
 
@@ -75,7 +76,7 @@ jobs:
           done
           test "$ok" -eq 1
           python - <<'PY'
-          import json, os
+          import json
           f='/tmp/hrrr-upper-${{ matrix.month }}.json'
           x=json.load(open(f))
           assert x['status']=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION'
@@ -95,7 +96,7 @@ jobs:
   merge-and-score:
     name: Merge + frozen 2025 holdout score
     runs-on: ubuntu-latest
-    timeout-minutes: 100
+    timeout-minutes: 120
     needs: upper-month
     steps:
       - uses: actions/checkout@v4
@@ -131,6 +132,15 @@ jobs:
           INPUT: /tmp/si4-calibration-candidate.json
           OUT: /tmp/si4-holdout-summary.json
         run: node tools/summarize-si4-holdout.js
+      - name: Score frozen 2025 event timing and spatial correctness without tuning
+        env:
+          TRAIN_START: '2024-01-01'
+          TRAIN_END: '2024-12-31'
+          TEST_START: '2025-01-01'
+          TEST_END: '2025-12-31'
+          UPPER_CACHE: /tmp/hrrr-upper-fixed-lead-all-season.json
+          OUT: /tmp/si4-event-spatial-frozen-2025.json
+        run: node tools/score-si4-event-spatial-frozen-2025.js
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -139,5 +149,6 @@ jobs:
             /tmp/hrrr-upper-fixed-lead-all-season.json
             /tmp/si4-calibration-candidate.json
             /tmp/si4-holdout-summary.json
+            /tmp/si4-event-spatial-frozen-2025.json
           if-no-files-found: warn
           retention-days: 30
