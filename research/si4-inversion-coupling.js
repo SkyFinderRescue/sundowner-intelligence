@@ -29,8 +29,6 @@ function inversionBaseHeight(levels,targetDirection,{maxBaseHeightM=3000,minStre
     }
   }
   if(!candidates.length)return {present:false,baseHeightM:null,topHeightM:null,basePressureHpa:null,topPressureHpa:null,strengthC:null,gradientCPerKm:null,thicknessM:null,candidateCount:0};
-  // Lowest qualifying layer is the reproducible inversion base; strength is not
-  // used to choose a higher layer after the base is established.
   candidates.sort((a,b)=>a.baseHeightM-b.baseHeightM||b.gradientCPerKm-a.gradientCPerKm);
   return {present:true,...candidates[0],candidateCount:candidates.length};
 }
@@ -53,7 +51,10 @@ function refinedSurfaceCoupling({levels,targetDirection,regime="hybrid",pressure
   const jetRel=Number(structure.jetHeightRelativeRidgeM),drop=Number(structure.jetSurfaceDrop);
   const jetHeightAccess=Number.isFinite(jetRel)?clamp(1-Math.max(0,jetRel-400)/2200):null;
   const jetDropAccess=Number.isFinite(drop)?clamp(1-drop/34):null;
-  const jetAccess=Number.isFinite(jetHeightAccess)&&Number.isFinite(jetDropAccess)?.60*jetHeightAccess+.40*jetDropAccess:Number.isFinite(jetHeightAccess)?jetHeightAccess:jetDropAccess;
+  let jetAccess=null;
+  if(Number.isFinite(jetHeightAccess)&&Number.isFinite(jetDropAccess))jetAccess=.60*jetHeightAccess+.40*jetDropAccess;
+  else if(Number.isFinite(jetHeightAccess))jetAccess=jetHeightAccess;
+  else if(Number.isFinite(jetDropAccess))jetAccess=jetDropAccess;
   const mixing=Number.isFinite(Number(boundaryLayerHeightM))?clamp((Number(boundaryLayerHeightM)-250)/1500):null;
   const inversionBarrier=inversion.present?clamp((ridgeHeightM-inversion.baseHeightM+250)/1400)*clamp((inversion.strengthC-.25)/4.5):0;
   const moist925=Number.isFinite(rh925)?clamp((rh925-45)/50):null;
@@ -62,19 +63,10 @@ function refinedSurfaceCoupling({levels,targetDirection,regime="hybrid",pressure
   const wsum=components.reduce((s,c)=>s+c.weight,0),coupling=wsum?components.reduce((s,c)=>s+c.value*c.weight,0)/wsum:null;
   const ps=Number(pressureSupport),atmosphericSupport=Number.isFinite(ps)?clamp(.62*wave.score+.38*clamp(ps)):wave.score;
   return {
-    regime:String(regime).toLowerCase(),
-    inversion,
-    rh925:Number.isFinite(rh925)?rh925:null,
+    regime:String(regime).toLowerCase(),inversion,rh925:Number.isFinite(rh925)?rh925:null,
     boundaryLayerHeightM:Number.isFinite(Number(boundaryLayerHeightM))?Number(boundaryLayerHeightM):null,
-    wave,
-    structure,
-    hydraulicJumpRotor:{...rotor,diagnosticOnly:true},
-    jetAccess:Number.isFinite(jetAccess)?jetAccess:null,
-    mixing,
-    inversionBarrier,
-    components,
-    componentWeightAvailable:wsum,
-    atmosphericSupport,
+    wave,structure,hydraulicJumpRotor:{...rotor,diagnosticOnly:true},jetAccess:Number.isFinite(jetAccess)?jetAccess:null,
+    mixing,inversionBarrier,components,componentWeightAvailable:wsum,atmosphericSupport,
     surfaceCoupling:Number.isFinite(coupling)?coupling:null,
     surfaceEventSupport:Number.isFinite(coupling)?clamp(atmosphericSupport*coupling):null
   };
