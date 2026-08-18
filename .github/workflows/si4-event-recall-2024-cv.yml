@@ -1,8 +1,8 @@
 name: SI-4 Event Recall 2024 Chronological CV
 
 on:
-  push:
-    branches: [si4-research]
+  pull_request:
+    branches: [main]
     paths:
       - 'tools/evaluate-si4-event-recall-2024-cv.js'
       - '.github/workflows/si4-event-recall-2024-cv.yml'
