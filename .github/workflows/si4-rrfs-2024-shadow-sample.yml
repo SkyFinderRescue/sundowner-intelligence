@@ -23,7 +23,7 @@ permissions:
 jobs:
   shadow-sample:
     runs-on: ubuntu-latest
-    timeout-minutes: 80
+    timeout-minutes: 100
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -39,16 +39,14 @@ jobs:
           python -m py_compile tools/extract-si4-rrfs-f24-range.py
           python -m py_compile tools/run-si4-rrfs-2024-shadow-sample.py
           node --check tools/score-si4-rrfs-2024-shadow.js
-      - name: Extract eight predeclared 2024 RRFS F24 cases
+      - name: Extract sixteen predeclared 2024 RRFS F24 cases
         run: python tools/run-si4-rrfs-2024-shadow-sample.py
       - name: Verify 2024-only shadow provenance and completeness
         run: |
           python - <<'PY'
           import json
           x=json.load(open('research/si4-rrfs-f24-2024-shadow-sample.json'))
-          expected=[
-            ('20240502','12'),('20240506','12'),('20240510','12'),('20240514','12'),
-            ('20240518','12'),('20240522','12'),('20240526','12'),('20240530','12')]
+          expected=[(f'202405{day:02d}','12') for day in range(1,32,2)]
           got=[(c['date'],c['cycle']) for c in x['cases']]
           assert x['status']=='RESEARCH_ONLY_SHADOW_GUIDANCE'
           assert x['rules']['development_year']==2024
@@ -61,8 +59,8 @@ jobs:
           assert x['rules']['production_change_authorized'] is False
           assert x['failure_count']==0, x['failures']
           assert got==expected, got
-          assert x['summary']['cases_completed']==8
-          assert x['summary']['rows']==64
+          assert x['summary']['cases_completed']==16
+          assert x['summary']['rows']==128
           assert x['summary']['max_grid_distance_km'] is not None and x['summary']['max_grid_distance_km'] <= 4.0
           assert x['summary']['weighted_range_fraction'] is not None and x['summary']['weighted_range_fraction'] < 0.20
           assert all(str(r['run_time']).startswith('2024-05-') for r in x['rows'])
@@ -81,9 +79,9 @@ jobs:
           if(x.rules.development_year!==2024||x.rules.holdout_2025_loaded!==false) throw Error('2025 leakage guard failed');
           if(x.rules.forecast_hour_fixed!==24||x.rules.future_observations_label_only!==true||x.rules.fire_outcome_used!==false) throw Error('provenance rules failed');
           if(x.rules.missing_values_fabricated!==false||x.rules.probability_manufactured!==false||x.rules.rrfs_shadow_only!==true||x.rules.production_change_authorized!==false) throw Error('shadow policy failed');
-          if(x.counts.benchmark_zone_rows!==40) throw Error(`expected 40 benchmark rows, got ${x.counts.benchmark_zone_rows}`);
-          if(x.counts.rows_with_observation<20) throw Error(`insufficient independent observations: ${x.counts.rows_with_observation}`);
-          if(x.overall.rrfs.matched_gust_rows<20||x.overall.hrrr.matched_gust_rows<20) throw Error('insufficient matched gust evidence');
+          if(x.counts.benchmark_zone_rows<60) throw Error(`expected expanded benchmark evidence, got ${x.counts.benchmark_zone_rows}`);
+          if(x.counts.rows_with_observation<40) throw Error(`insufficient independent observations: ${x.counts.rows_with_observation}`);
+          if(x.overall.rrfs.matched_gust_rows<40||x.overall.hrrr.matched_gust_rows<40) throw Error('insufficient matched gust evidence');
           console.log(JSON.stringify({counts:x.counts,overall:x.overall},null,2));
           NODE
       - uses: actions/upload-artifact@v4
