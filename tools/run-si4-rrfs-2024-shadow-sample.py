@@ -3,8 +3,12 @@
 
 This wrapper changes only the development-case inventory. It does not alter the
 extractor, scoring, thresholds, observations, SI-4 coefficients, or production.
-The dates are evenly spaced every two days through the available May 2024 RRFS
-retrospective window and were declared without reference to 2024 outcomes.
+The original evenly spaced May 2024 list included 2024-05-01 12Z, but NOAA's
+retrospective archive returned a source-file 404 for that issuance before any
+observations or forecast skill were scored. That unavailable case is replaced
+with 2024-05-02 12Z solely because its exact F24 archive availability had already
+been established by the provenance probe. No outcome/observation information was
+used to make this replacement.
 """
 from __future__ import annotations
 
@@ -13,7 +17,7 @@ import sys
 from pathlib import Path
 
 CASES = (
-    ("20240501", "12"),
+    ("20240502", "12"),
     ("20240503", "12"),
     ("20240505", "12"),
     ("20240507", "12"),
