@@ -10,6 +10,7 @@ on:
       - 'tools/build-si4-calibration.js'
       - 'tools/summarize-si4-holdout.js'
       - 'tools/score-si4-event-spatial-frozen-2025.js'
+      - 'tools/run-si4-final-ablation.js'
       - 'research/si4-science.js'
   workflow_dispatch:
 
@@ -141,6 +142,15 @@ jobs:
           UPPER_CACHE: /tmp/hrrr-upper-fixed-lead-all-season.json
           OUT: /tmp/si4-event-spatial-frozen-2025.json
         run: node tools/score-si4-event-spatial-frozen-2025.js
+      - name: Run predeclared final feature-block ablation on frozen 2025 score only
+        env:
+          TRAIN_START: '2024-01-01'
+          TRAIN_END: '2024-12-31'
+          TEST_START: '2025-01-01'
+          TEST_END: '2025-12-31'
+          UPPER_CACHE: /tmp/hrrr-upper-fixed-lead-all-season.json
+          OUT: /tmp/si4-final-ablation-frozen-2025.json
+        run: node tools/run-si4-final-ablation.js
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -150,5 +160,6 @@ jobs:
             /tmp/si4-calibration-candidate.json
             /tmp/si4-holdout-summary.json
             /tmp/si4-event-spatial-frozen-2025.json
+            /tmp/si4-final-ablation-frozen-2025.json
           if-no-files-found: warn
           retention-days: 30
