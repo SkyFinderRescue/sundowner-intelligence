@@ -3,8 +3,8 @@
 
 This wrapper changes only the development-case inventory. It does not alter the
 extractor, scoring, thresholds, observations, SI-4 coefficients, or production.
-The dates are evenly spaced through the available May 2024 RRFS retrospective
-window and were declared without reference to 2024 outcomes.
+The dates are evenly spaced every two days through the available May 2024 RRFS
+retrospective window and were declared without reference to 2024 outcomes.
 """
 from __future__ import annotations
 
@@ -13,14 +13,22 @@ import sys
 from pathlib import Path
 
 CASES = (
-    ("20240502", "12"),
-    ("20240506", "12"),
-    ("20240510", "12"),
-    ("20240514", "12"),
-    ("20240518", "12"),
-    ("20240522", "12"),
-    ("20240526", "12"),
-    ("20240530", "12"),
+    ("20240501", "12"),
+    ("20240503", "12"),
+    ("20240505", "12"),
+    ("20240507", "12"),
+    ("20240509", "12"),
+    ("20240511", "12"),
+    ("20240513", "12"),
+    ("20240515", "12"),
+    ("20240517", "12"),
+    ("20240519", "12"),
+    ("20240521", "12"),
+    ("20240523", "12"),
+    ("20240525", "12"),
+    ("20240527", "12"),
+    ("20240529", "12"),
+    ("20240531", "12"),
 )
 
 
