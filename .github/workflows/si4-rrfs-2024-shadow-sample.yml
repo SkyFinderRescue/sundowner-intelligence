@@ -46,7 +46,10 @@ jobs:
           python - <<'PY'
           import json
           x=json.load(open('research/si4-rrfs-f24-2024-shadow-sample.json'))
-          expected=[(f'202405{day:02d}','12') for day in range(1,32,2)]
+          # May 1 12Z was replaced only because NOAA returned a source-file 404
+          # before any observation/skill scoring. May 2 availability was already
+          # established by the independent provenance probe.
+          expected=[('20240502','12')]+[(f'202405{day:02d}','12') for day in range(3,32,2)]
           got=[(c['date'],c['cycle']) for c in x['cases']]
           assert x['status']=='RESEARCH_ONLY_SHADOW_GUIDANCE'
           assert x['rules']['development_year']==2024
