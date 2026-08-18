@@ -25,6 +25,23 @@ Purpose: define the authoritative provenance and transition rules for the SI-4 R
    - `rrfs_public/` is structured to approximate the operational product set.
    - Final retrospective output exists under `retro_output_final/`, including winter 2024 and other official evaluation periods.
 
+## Verified retrospective availability gate — 2026-08-17
+
+The automated RRFS retrospective inventory/provenance probe completed successfully on `si4-research` at commit `ad8eacd71e47dd487f10003ee7dd76b0d2fa96d7` (workflow run `32076517756`). This is an availability/provenance milestone only; it is **not** forecast-skill evidence.
+
+- NOAA bucket: `s3://noaa-rrfs-pds/`
+- Retrospective lane observed: `retro_output_final/spring/`
+- Spring-2024 nodes observed: 119
+- Pressure-level retrospective objects observed by the inventory probe: 35,366
+- Exact fixed-24h test cases predeclared in 2024: 2024-05-02 12Z and 2024-05-12 12Z
+- Both exact F24 cases contained all required pressure fields at 925/850/700/600/500 hPa: UGRD, VGRD, TMP, HGT, RH
+- Both exact F24 `prslev` objects also contained the required surface fields: GUST, UGRD 10 m, VGRD 10 m
+- Surface and pressure records therefore can be extracted from the same issuance-safe `prslev` object for these verified cases, avoiding cross-product timing ambiguity.
+- Example verified key: `retro_output_final/spring/rrfs.20240502/12/rrfs.t12z.prslev.f024.conus.grib2`
+- The probe preserves S3 object ETag, content length, last-modified time, `.idx` ETag, exact message offsets, cycle and valid time.
+
+This result authorizes the next research step: build a range-based deterministic RRFS F24 extractor and a **2024-only** shadow-development sample using the same independent observations and exact valid times as the HRRR comparator. It does not authorize use of 2025 outcomes for tuning, blending RRFS into SI-4, or any production change.
+
 ## Shadow evaluation policy
 
 - RRFS and REFS remain shadow-only regardless of individual case performance.
