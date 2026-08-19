@@ -1,0 +1,75 @@
+name: SI-4 Upstream Thermal Archive Smoke
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'research/SI4_UPSTREAM_THERMAL_SUBSIDENCE_2024_PREDECLARED.md'
+      - 'tools/extract-si4-upstream-thermal-herbie.py'
+      - '.github/workflows/si4-upstream-thermal-archive-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  upstream-thermal-archive-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install indexed HRRR subset reader
+        run: python -m pip install --quiet 'herbie-data>=2025.7' 'cfgrib>=0.9.15' 'xarray>=2025.1' pandas numpy
+      - name: Syntax check
+        run: python -m py_compile tools/extract-si4-upstream-thermal-herbie.py
+      - name: Verify predeclared development lock
+        run: |
+          grep -q '2024-01-01 through 2024-12-31 only' research/SI4_UPSTREAM_THERMAL_SUBSIDENCE_2024_PREDECLARED.md
+          grep -q 'improve by at least \*\*+0.05 absolute\*\*' research/SI4_UPSTREAM_THERMAL_SUBSIDENCE_2024_PREDECLARED.md
+          grep -q 'holdout_2025_loaded' tools/extract-si4-upstream-thermal-herbie.py
+          ! grep -q '2025-' tools/extract-si4-upstream-thermal-herbie.py
+      - name: Extract one availability-only 2024 F24 smoke day
+        shell: bash
+        run: |
+          set -u
+          ok=0
+          for attempt in 1 2 3; do
+            if python tools/extract-si4-upstream-thermal-herbie.py --start 2024-04-01 --end 2024-04-01 --fxx 24 --out /tmp/si4-upstream-thermal-smoke.json; then
+              ok=1
+              break
+            fi
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt*20)); fi
+          done
+          test "$ok" -eq 1
+      - name: Verify fields, points, provenance and no production authorization
+        run: |
+          python - <<'PY'
+          import json, math
+          x=json.load(open('/tmp/si4-upstream-thermal-smoke.json'))
+          assert x['status']=='RESEARCH_ONLY_2024_DEVELOPMENT'
+          assert x['candidate_family']=='upstream_thermal_subsidence_v1'
+          assert x['forecast_lead_hours']==24
+          assert x['failure_count']==0
+          assert len(x['rows'])==20, len(x['rows'])
+          assert set(x['points'])=={'santa_ynez_valley','cuyama_interior','bakersfield_synoptic','santa_barbara_lee','western_channel'}
+          assert x['rules']['holdout_2025_loaded'] is False
+          assert x['rules']['production_change_authorized'] is False
+          for row in x['rows']:
+              assert row['valid_time'].startswith('2024-')
+              assert len(row['profile'])==3
+              for p in row['profile']:
+                  assert p['pressureHpa'] in (850,700,500)
+                  for k in ('temperatureC','heightM','uMps','vMps','windSpeedMph','windDirectionDeg','vvelPaS'):
+                      assert math.isfinite(float(p[k])), (row['point'],p['pressureHpa'],k,p[k])
+          print({'rows':len(x['rows']),'points':len(x['points']),'status':'archive-smoke-pass'})
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-upstream-thermal-archive-smoke
+          path: /tmp/si4-upstream-thermal-smoke.json
+          if-no-files-found: warn
+          retention-days: 30
