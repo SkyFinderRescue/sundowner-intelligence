@@ -12,10 +12,15 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: si4-upstream-thermal-2024-archive
+  cancel-in-progress: true
+
 jobs:
   archive-month:
     strategy:
       fail-fast: false
+      max-parallel: 3
       matrix:
         include:
           - {month: '01', start: '2024-01-01', end: '2024-01-31'}
