@@ -44,26 +44,55 @@ jobs:
           python-version: '3.12'
       - name: Install frozen indexed HRRR extractor dependencies
         run: python -m pip install --quiet 'herbie-data>=2025.7' 'cfgrib>=0.9.15' 'xarray>=2025.1' pandas numpy scikit-learn
-      - name: Extract frozen month at F24
-        run: >-
-          python tools/extract-si4-upstream-thermal-herbie.py
-          --start ${{ matrix.start }} --end ${{ matrix.end }} --fxx 24
-          --out research/si4-upstream-thermal-2024-${{ matrix.month }}.json
+      - name: Verify frozen development lock
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/extract-si4-upstream-thermal-herbie.py
+          grep -q 'holdout_2025_loaded' tools/extract-si4-upstream-thermal-herbie.py
+          ! grep -q '2025-' tools/extract-si4-upstream-thermal-herbie.py
+      - name: Extract frozen month at F24 with bounded infrastructure retry
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="research/si4-upstream-thermal-2024-${{ matrix.month }}.json"
+          ok=0
+          for attempt in 1 2 3; do
+            if python tools/extract-si4-upstream-thermal-herbie.py --start '${{ matrix.start }}' --end '${{ matrix.end }}' --fxx 24 --out "$out"; then
+              ok=1
+              break
+            fi
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt*30)); fi
+          done
+          test "$ok" -eq 1
       - name: Verify fail-closed month contract
         run: |
           python - <<'PY'
-          import json, os
+          import datetime as dt, json, math, os
           m=os.environ['MONTH']; start=os.environ['START']; end=os.environ['END']
           p=f'research/si4-upstream-thermal-2024-{m}.json'; x=json.load(open(p))
           assert x['status']=='RESEARCH_ONLY_2024_DEVELOPMENT'
           assert x['candidate_family']=='upstream_thermal_subsidence_v1'
           assert x['forecast_lead_hours']==24
           assert x['start']==start and x['end']==end
-          assert x['failure_count']==0
+          assert x['failure_count']==0, x.get('failures')
           assert x['rules']['holdout_2025_loaded'] is False
           assert x['rules']['production_change_authorized'] is False
           assert list(x['points'])==['santa_ynez_valley','cuyama_interior','bakersfield_synoptic','santa_barbara_lee','western_channel']
-          print({'month':m,'rows':len(x['rows']),'failures':x['failure_count']})
+          days=(dt.date.fromisoformat(end)-dt.date.fromisoformat(start)).days+1
+          assert len(x['rows'])==days*4*5, (len(x['rows']), days*20)
+          seen=set()
+          for row in x['rows']:
+              assert row['run_time'].startswith('2024-')
+              assert row['valid_time'].startswith('2024-')
+              assert row['forecast_lead_hours']==24
+              key=(row['run_time'],row['point'])
+              assert key not in seen; seen.add(key)
+              assert len(row['profile'])==3
+              assert {int(q['pressureHpa']) for q in row['profile']}=={850,700,500}
+              for q in row['profile']:
+                  for k in ('temperatureC','heightM','uMps','vMps','windSpeedMph','windDirectionDeg','vvelPaS'):
+                      assert math.isfinite(float(q[k])), (key,q['pressureHpa'],k,q[k])
+          print({'month':m,'rows':len(x['rows']),'failures':0,'status':'PASS'})
           PY
         env:
           MONTH: ${{ matrix.month }}
