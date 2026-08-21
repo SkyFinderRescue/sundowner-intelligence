@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "purpose": "Supplemental operational truth set for newly completed, clearly confirmed Sundowner events identified after the peer-reviewed/historical catalog was generated. Fire association remains a separate outcome field and is never the meteorological event definition.",
-  "generated": "2026-08-10",
+  "generated": "2026-08-20",
   "events": [
     {
       "event_id": "2026-07-27-sw-sba-western-sundowner",
@@ -120,6 +120,75 @@
         }
       ],
       "notes": "Treated as a separate repeat episode from July 27 because NWS documented a fresh ramp-up the following evening after daytime weakening. Not present in the 47-event central truth set or 57-record historical reconstruction library as of this update."
+    },
+    {
+      "event_id": "2026-08-18-19-sba-western-sundowner",
+      "date": "2026-08-18",
+      "end_date": "2026-08-19",
+      "tier": "B-operational-confirmed",
+      "confirmation_status": "confirmed_observed",
+      "regime": "western",
+      "zones_affected": ["southern Santa Barbara County", "southwest Santa Barbara County"],
+      "onset_local": "late afternoon/evening 2026-08-18",
+      "peak_local": null,
+      "end_local": "lingering into the morning of 2026-08-19",
+      "observed_wind": {
+        "peak_gust_mph": 35,
+        "location_scope": "southern Santa Barbara County",
+        "source_character": "NWS LOX surface-observation summary",
+        "notes": "NWS stated northerly winds were still gusting to 35 mph across southern Santa Barbara County at 7:59 AM PDT Aug 19 after an evening/overnight period explicitly described as gusty Sundowner winds."
+      },
+      "pressure": {
+        "north_south_gradient_peak_mb": null,
+        "sba_minus_bfl_mb": null,
+        "sba_minus_smx_mb": null,
+        "trend": null,
+        "notes": "No trusted observed pressure-gradient series was recovered for the event window; values remain null."
+      },
+      "thermodynamics": {
+        "observed_temperature_f": null,
+        "observed_relative_humidity_percent": null,
+        "notes": "No event-zone observed temperature/RH series was recovered from a trusted archive in this run. Forecast temperature/RH values are retained only as forecast context, not observations."
+      },
+      "upstream_context": {
+        "cuyama": null,
+        "santa_ynez_valley": null,
+        "southern_kern": null,
+        "notes": "No sufficiently specific trusted observed upstream station series was recovered; fields intentionally remain null."
+      },
+      "upper_air_model_context": {
+        "pattern": "NWS LOX described a strong upper high with 500-mb heights near 596 dam on Aug 19 and weaker-than-normal onshore flow. Observed sounding context indicated an 800-1000 ft marine layer regionally that morning.",
+        "forecast_context": "NWS fire-weather guidance on Aug 18 explicitly called for moderate Sundowner winds affecting southwest Santa Barbara County during late afternoon/evening hours through Wednesday.",
+        "source": "NWS LOX Area Forecast Discussion and Fire Weather Planning Forecast issued 2026-08-18/19"
+      },
+      "duration_hours_estimate": null,
+      "fire_associated": false,
+      "fire_name": null,
+      "fire_outcome_notes": "No trusted source identified a Santa Barbara County vegetation-fire ignition or spread episode tied to this Sundowner event. A structure fire occurred in Isla Vista early Aug 18, before the Sundowner window, and is not treated as associated.",
+      "sources": [
+        {
+          "organization": "National Weather Service Los Angeles/Oxnard",
+          "product": "Area Forecast Discussion FXUS66 KLOX 191718",
+          "issued": "2026-08-19T10:18:00-07:00",
+          "url": "https://weather.gfc.state.ga.us/nwsafd/FCSTS/LOXAFDLOX.HTM",
+          "evidence": "NWS reported lingering northerly winds gusting to 35 mph across southern Santa Barbara County and noted locally gusty Sundowners again that evening."
+        },
+        {
+          "organization": "National Weather Service Los Angeles/Oxnard",
+          "product": "Fire Weather Planning Forecast FNUS56 KLOX 182235",
+          "issued": "2026-08-18T15:35:00-07:00",
+          "url": "https://preview-forecast.weather.gov/product.php?format=CI&glossary=0&issuedby=LOX&product=FWF&site=MKX&version=1",
+          "evidence": "NWS explicitly described elevated fire weather across southwest Santa Barbara County due to gusty Sundowner winds and stated that moderate Sundowner winds would affect the area."
+        },
+        {
+          "organization": "CAL FIRE",
+          "product": "2026 Fire Season Incident Archive",
+          "issued": "checked 2026-08-20",
+          "url": "https://www.fire.ca.gov/incidents/2026",
+          "evidence": "No Santa Barbara County wildfire beginning Aug 18-19 appears in the statewide incident archive; this supports a non-fire outcome but is not used to define the meteorological event."
+        }
+      ],
+      "notes": "Operationally confirmed weak-to-moderate western Sundowner episode. The observed 35 mph gust meets the NWS significant-event gust threshold cited in the Sundowner climatology, but exact station-level thermodynamics, gradients, upstream observations and duration remain unavailable and are not inferred."
     }
   ]
 }
