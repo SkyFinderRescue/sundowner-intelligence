@@ -1,9 +1,9 @@
 {
   "version": "SI-operational-reconstruction-1.0",
-  "generated": "2026-08-10T19:00:00-07:00",
+  "generated": "2026-08-20T19:00:00-07:00",
   "method": "Operational reconstruction from trusted NWS observed statements and fire-weather products. Missing upstream, pressure-series, zone-specific thermodynamic, or upper-air values remain null; no values are inferred solely to complete the schema. Fire association is an outcome field only.",
-  "events_total": 2,
-  "reconstructed": 2,
+  "events_total": 3,
+  "reconstructed": 3,
   "failed": 0,
   "events": [
     {
@@ -131,6 +131,71 @@
       ],
       "reconstruction_status": "complete_with_explicit_nulls",
       "next_data_improvement": "Backfill exact hourly pressure gradients, Cuyama/Santa Ynez/southern Kern observations, zone station temperature/RH, and archived HRRR/upper-air fields when a trusted archive endpoint is available."
+    },
+    {
+      "event_id": "2026-08-18-19-sba-western-sundowner",
+      "date": "2026-08-18",
+      "end_date": "2026-08-19",
+      "tier": "B-operational-confirmed",
+      "regime": "western",
+      "fire_associated": false,
+      "fire_name": null,
+      "analysis_window_local": "2026-08-18 late afternoon/evening through the morning of 2026-08-19 PDT",
+      "timing": {
+        "onset_local": "late afternoon/evening 2026-08-18",
+        "confirmed_active_local": "07:59 PDT 2026-08-19 lingering phase",
+        "peak_local": null,
+        "end_local": "morning 2026-08-19; exact threshold end unavailable",
+        "duration_hours_estimate": null
+      },
+      "pressure": {
+        "north_south_gradient": {"peak_mb": null,"peak_time_local": null,"source": null},
+        "sba_minus_bfl": null,
+        "sba_minus_smx": null,
+        "trend": null,
+        "data_quality_note": "No trusted observed pressure-gradient series was recovered for this event window; fields remain null."
+      },
+      "upstream": {
+        "cuyama": null,
+        "santa_ynez_valley": null,
+        "southern_kern": null,
+        "data_quality_note": "No sufficiently specific trusted observed upstream station series was recovered; values intentionally remain null."
+      },
+      "model_upper_air_context": {
+        "synoptic_pattern": "NWS LOX described 500-mb heights near 596 dam on Aug 19 with a strong upper high and weaker-than-normal onshore flow.",
+        "surface_pattern": "NWS fire-weather guidance explicitly identified moderate Sundowner winds affecting southwest Santa Barbara County during late afternoon/evening hours through Wednesday.",
+        "observed_regional_sounding_context": "NWS reported an 800-1000 ft marine layer regionally on the morning of Aug 19.",
+        "925_hpa": null,
+        "850_hpa": null,
+        "700_hpa": null,
+        "500_hpa": null
+      },
+      "zones": {
+        "Gaviota": {"affected": null,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null,"notes": "Gaviota was forecast as the most likely location for isolated advisory-level gusts on Aug 19, but no exact observed station value was recovered, so affected status is left null."},
+        "Refugio": {"affected": null,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
+        "Goleta": {"affected": null,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
+        "San Marcos Pass": {"affected": null,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
+        "Mission Canyon": {"affected": null,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
+        "Montecito": {"affected": null,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
+        "Toro Canyon": {"affected": null,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
+        "Carpinteria": {"affected": null,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
+        "southern_santa_barbara_county": {"affected": true,"observed_peak_gust_mph": 35,"observed_temperature_f": null,"observed_min_rh_percent": null,"notes": "NWS surface-observation summary reported lingering northerly winds gusting to 35 mph across southern Santa Barbara County at 7:59 AM PDT Aug 19."}
+      },
+      "observed_thermodynamics": {
+        "temperature_f": null,
+        "relative_humidity_percent": null,
+        "data_quality_note": "No event-zone observed temperature/RH series was recovered from a trusted archive; forecast values are not substituted for observations."
+      },
+      "forecast_context_only": {
+        "fire_weather": "NWS Aug 18 fire-weather guidance called for moderate Sundowner winds in southwest Santa Barbara County, with broader valleys/mountains forecast at 95-105 F and 15-30 percent minimum RH. These are forecast context only and are not stored as event observations."
+      },
+      "source_evidence": [
+        "NWS LOX AFD issued 10:18 AM PDT Aug 19, 2026: surface observations showed lingering northerly winds gusting to 35 mph across southern Santa Barbara County; NWS also expected locally gusty Sundowners again that evening.",
+        "NWS LOX Fire Weather Planning Forecast issued 3:35 PM PDT Aug 18, 2026: moderate Sundowner winds were expected to affect southwest Santa Barbara County during late afternoon and evening hours through Wednesday.",
+        "CAL FIRE 2026 incident archive checked Aug 20: no Santa Barbara County wildfire beginning Aug 18-19 was listed; fire association is therefore retained as a separate non-fire outcome, not as an event criterion."
+      ],
+      "reconstruction_status": "complete_with_explicit_nulls",
+      "next_data_improvement": "Backfill station-level hourly winds, temperature/RH, observed SBA-SMX and SBA-BFL gradients, Cuyama/Santa Ynez/southern Kern observations, and archived HRRR/upper-air fields if a trusted historical observation endpoint becomes available."
     }
   ]
 }
