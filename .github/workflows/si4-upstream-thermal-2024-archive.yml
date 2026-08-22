@@ -36,7 +36,9 @@ jobs:
           - {month: '09', start: '2024-09-01', end: '2024-09-30'}
           - {month: '10', start: '2024-10-01', end: '2024-10-31'}
           - {month: '11', start: '2024-11-01', end: '2024-11-30'}
-          - {month: '12', start: '2024-12-01', end: '2024-12-31'}
+          # F24 from 2024-12-31 verifies on 2025-01-01 and is outside the frozen 2024-only development boundary.
+          # Stop initializations at 2024-12-30 so every archived valid_time remains in 2024; this is plumbing only.
+          - {month: '12', start: '2024-12-01', end: '2024-12-30'}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -143,13 +145,16 @@ jobs:
                   key=(r['run_time'],r['point'])
                   assert key not in seen, key
                   seen.add(key); rows.append(r)
-          assert len(rows)==366*4*5, len(rows)
+          # 2024 has 366 initialization days, but the Dec 31 F24 forecasts verify in 2025 and are intentionally excluded.
+          # Thus the immutable 2024-only archive contains 365 init days x 4 cycles x 5 frozen points = 7,300 rows.
+          assert len(rows)==365*4*5, len(rows)
           rows.sort(key=lambda r:(r['run_time'],r['point']))
           out={
             'status':'RESEARCH_ONLY_2024_DEVELOPMENT',
             'candidate_family':'upstream_thermal_subsidence_v1',
             'forecast_lead_hours':24,
-            'start':'2024-01-01','end':'2024-12-31',
+            'initialization_start':'2024-01-01','initialization_end':'2024-12-30',
+            'valid_time_start':'2024-01-02','valid_time_end':'2024-12-31',
             'points':['santa_ynez_valley','cuyama_interior','bakersfield_synoptic','santa_barbara_lee','western_channel'],
             'row_count':len(rows),
             'failure_count':0,
