@@ -4,6 +4,15 @@ on:
   push:
     branches: ["main"]
   pull_request:
+    branches: ["main"]
+    paths-ignore:
+      - 'research/**'
+      - 'tools/build-si4-calibration.js'
+      - 'tools/probe-si4-archives.js'
+      - 'tools/probe-swex-catalog.js'
+      - 'tools/extract-hrrr-upper-herbie.py'
+      - 'tools/score-si4-nws-benchmark.js'
+      - '.github/workflows/si4-research.yml'
 
 permissions:
   contents: read

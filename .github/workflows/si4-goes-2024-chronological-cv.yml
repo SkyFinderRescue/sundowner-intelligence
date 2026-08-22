@@ -1,0 +1,107 @@
+name: SI-4 GOES 2024 Chronological CV
+
+on:
+  push:
+    branches: [si4-goes-chronological-cv]
+    paths:
+      - 'tools/select-si4-goes-2024-cases.js'
+      - 'tools/extract-goes-marine-features.py'
+      - 'tools/screen-goes-marine-2024-cases.py'
+      - 'tools/evaluate-goes-marine-2024-chronological-cv.py'
+      - 'research/GOES_MARINE_MASKS_V2.json'
+      - '.github/workflows/si4-goes-2024-chronological-cv.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  chronological-cv-2024:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    env:
+      GH_TOKEN: ${{ github.token }}
+      UPPER_CACHE: /tmp/si4/hrrr-upper-fixed-lead-all-season.json
+      MANIFEST: /tmp/goes-cv/goes-marine-2024-cv-manifest.json
+      FEATURES: /tmp/goes-cv/goes-marine-2024-cv-features.json
+      OUT: research/goes-marine-2024-chronological-cv.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install numerical GOES dependencies
+        run: python -m pip install --disable-pip-version-check numpy netCDF4 pyproj
+      - name: Syntax checks
+        run: |
+          node --check tools/select-si4-goes-2024-cases.js
+          python -m py_compile tools/extract-goes-marine-features.py tools/screen-goes-marine-2024-cases.py tools/evaluate-goes-marine-2024-chronological-cv.py
+      - name: Download authoritative frozen fixed-24h upper-air cache
+        run: |
+          mkdir -p /tmp/si4 /tmp/goes-cv
+          gh run download 31925677059 --repo "$GITHUB_REPOSITORY" -n si4-all-season-frozen-holdout -D /tmp/si4
+          test -s "$UPPER_CACHE"
+      - name: Select larger deterministic 2024-only chronological case set
+        env:
+          TRAIN_START: '2024-01-01'
+          TRAIN_END: '2024-12-31'
+          TEST_START: '2024-01-01'
+          TEST_END: '2024-12-31'
+          PER_CLASS: '40'
+          OUT: ${{ env.MANIFEST }}
+        run: node tools/select-si4-goes-2024-cases.js
+      - name: Verify larger development-only case contract
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/goes-cv/goes-marine-2024-cv-manifest.json'))
+          assert x['rules']['development_year']==2024 and x['rules']['holdout_2025_loaded'] is False
+          assert x['selected_counts']['events']>=30 and x['selected_counts']['hard_negatives']>=30, x['selected_counts']
+          for g in ('events','hard_negatives'):
+            for r in x['selected'][g]:
+              assert r['valid_time'].startswith('2024-')
+              assert r['solar_window']['0']['night_eligible'] and r['solar_window']['1']['night_eligible']
+          print({'candidate_counts':x['candidate_counts'],'selected_counts':x['selected_counts']})
+          PY
+      - name: Extract issuance-safe GOES features for larger 2024 set
+        run: python tools/screen-goes-marine-2024-cases.py --cases "$MANIFEST" --masks research/GOES_MARINE_MASKS_V2.json --per-class 40 --out "$FEATURES"
+      - name: Repair local-run provenance to exact manifest and run id
+        run: |
+          python - <<'PY'
+          import hashlib,json,os
+          mp='/tmp/goes-cv/goes-marine-2024-cv-manifest.json';fp='/tmp/goes-cv/goes-marine-2024-cv-features.json'
+          x=json.load(open(fp));raw=open(mp,'rb').read()
+          x['source']['case_manifest_run']=int(os.environ['GITHUB_RUN_ID'])
+          x['source']['case_manifest_artifact_sha256']=hashlib.sha256(raw).hexdigest()
+          x['source']['case_manifest_origin']='generated_in_same_workflow_before_feature_extraction'
+          json.dump(x,open(fp,'w'),indent=2);open(fp,'a').write('\n')
+          print(x['source'])
+          PY
+      - name: Run predeclared chronological GOES candidate CV
+        run: python tools/evaluate-goes-marine-2024-chronological-cv.py --features "$FEATURES" --manifest "$MANIFEST" --out "$OUT"
+      - name: Verify CV integrity and report gate result
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('research/goes-marine-2024-chronological-cv.json'))
+          assert x['status']=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION'
+          assert x['rules']['development_year']==2024 and x['rules']['holdout_2025_loaded'] is False
+          assert x['rules']['future_imagery_used'] is False and x['rules']['fire_outcome_used'] is False
+          assert x['rules']['missing_features_imputed'] is False and x['rules']['production_change_authorized'] is False
+          assert x['counts']['valid_folds']>=2 and x['counts']['pooled_test_rows']>=20
+          print(json.dumps({'counts':x['counts'],'baseline':x['baseline'],'eligible':x['eligible_for_one_time_2025_freeze'],'preferred':x['preferred_2024_cv_candidate'],'candidates':x['candidates']},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-goes-2024-chronological-cv
+          path: |
+            /tmp/goes-cv/goes-marine-2024-cv-manifest.json
+            /tmp/goes-cv/goes-marine-2024-cv-features.json
+            research/goes-marine-2024-chronological-cv.json
+          if-no-files-found: warn
+          retention-days: 30

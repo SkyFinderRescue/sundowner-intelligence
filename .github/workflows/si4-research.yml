@@ -1,0 +1,190 @@
+name: SI-4 Research Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'research/**'
+      - 'data/swex-2022-negative-windows.json'
+      - 'tools/build-si4-calibration.js'
+      - 'tools/probe-si4-archives.js'
+      - 'tools/probe-swex-catalog.js'
+      - 'tools/validate-swex-source-identities.js'
+      - 'tools/build-swex-qc-features.py'
+      - 'tools/build-swex-composite-features.py'
+      - 'tools/build-swex-profiler-features.py'
+      - 'tools/match-swex-event-windows.py'
+      - 'tools/extract-hrrr-upper-herbie.py'
+      - 'tools/score-si4-nws-benchmark.js'
+      - '.github/workflows/si4-research.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  science-unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Syntax checks
+        run: |
+          node --check research/si4-science.js
+          node --check research/test-si4-science.js
+          node --check tools/build-si4-calibration.js
+          node --check tools/probe-si4-archives.js
+          node --check tools/probe-swex-catalog.js
+          node --check tools/validate-swex-source-identities.js
+          node --check tools/score-si4-nws-benchmark.js
+          python -m py_compile tools/extract-hrrr-upper-herbie.py tools/build-swex-qc-features.py tools/build-swex-composite-features.py tools/build-swex-profiler-features.py tools/match-swex-event-windows.py
+      - name: SI-4 physics tests
+        run: node research/test-si4-science.js
+      - name: SWEX QC extractor contract
+        run: |
+          python -m pip install --quiet xarray numpy scipy
+          mkdir -p /tmp/swex
+          python - <<'PY'
+          import xarray as xr, numpy as np
+          p=np.array([1000.,925.,850.,700.,600.,500.])
+          ds=xr.Dataset({'pressure':('level',p),'temperature':('level',np.array([290,286,281,270,263,255.])), 'u_wind':('level',np.array([1,2,3,4,5,6.])), 'v_wind':('level',np.array([-1,-2,-3,-4,-5,-6.])), 'altitude':('level',np.array([100,750,1450,3000,4200,5600.])), 'launch_time':np.datetime64('2022-05-12T18:00:00')})
+          ds.to_netcdf('/tmp/swex/test.nc')
+          PY
+          python tools/build-swex-qc-features.py --input /tmp/swex --site ISS2 --out /tmp/swex.json
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/swex.json')); r=x['rows'][0]; assert len(x['rows'])==1 and not x['failures']; assert r['levels_hpa']['700']['u_ms']==4.0; assert r['launch_time']=='2022-05-12T18:00:00Z'; assert x['rules']['fire_outcome_used'] is False
+          PY
+      - name: SWEX profiler extractor contract
+        run: |
+          mkdir -p /tmp/swex-profiler
+          python - <<'PY'
+          import xarray as xr, numpy as np
+          time=np.array(['2022-05-12T18:00:00','2022-05-12T18:30:00'],dtype='datetime64[s]')
+          height=np.array([300.,500.,1000.,1500.,2000.,2500.,3000.])
+          u=np.array([[0.,0.,0.,0.,0.,0.,0.],[0.,0.,0.,0.,0.,0.,0.]])
+          v=np.array([[-8.,-7.,-5.,-2.,1.,3.,5.],[-7.,-6.,-4.,-1.,2.,4.,6.]])
+          w=np.array([[0.1,0.2,0.4,0.7,0.5,0.2,0.1],[0.1,0.3,0.5,0.8,0.6,0.2,0.1]])
+          ds=xr.Dataset({'u_wind':(('time','height'),u),'v_wind':(('time','height'),v),'vertical_velocity':(('time','height'),w)},coords={'time':time,'height':height})
+          ds['height'].attrs['units']='m'
+          ds.to_netcdf('/tmp/swex-profiler/prof.nc')
+          PY
+          python tools/build-swex-profiler-features.py --input /tmp/swex-profiler --site ISS2 --target-direction-deg 0 --out /tmp/swex-profiler.json
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/swex-profiler.json')); assert not x['failures'] and len(x['rows'])==2; r=x['rows'][0]; assert r['dataset_provenance']['eol_id']=='600.034'; assert r['valid_time']=='2022-05-12T18:00:00Z'; assert r['levels_m_agl']['1000']['wind_speed_ms']==5.0; assert r['features']['critical_level_height_m'] is not None; assert r['features']['max_abs_vertical_velocity_ms']==0.7; assert x['rules']['future_observation_leakage'] is False and x['rules']['fire_outcome_used'] is False
+          PY
+      - name: SWEX EOL sounding composite and window-matching contract
+        run: |
+          mkdir -p /tmp/swex-composite
+          cat > /tmp/swex-composite/iop.cls <<'EOF'
+          SWEX synthetic EOL sounding composite contract fixture
+          Launch Time: 2022-05-12 18:00:00 UTC
+          Pres Temp Alt U V
+          1000 16.85 100 1 -1
+          925 12.85 750 2 -2
+          850 7.85 1450 3 -3
+          700 -3.15 3000 4 -4
+          600 -10.15 4200 5 -5
+          500 -18.15 5600 6 -6
+          EOF
+          cat > /tmp/swex-composite/eop.cls <<'EOF'
+          SWEX synthetic independently verified negative fixture
+          Launch Time: 2022-05-04 18:00:00 UTC
+          Pres Temp Alt U V
+          1000 16.85 100 1 -1
+          925 12.85 750 2 -2
+          850 7.85 1450 3 -3
+          700 -3.15 3000 4 -4
+          600 -10.15 4200 5 -5
+          500 -18.15 5600 6 -6
+          EOF
+          python tools/build-swex-composite-features.py --input /tmp/swex-composite --dataset-key swex_sounding_composite_5hpa --out /tmp/swex-composite.json
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/swex-composite.json')); assert len(x['rows'])==2 and not x['failures']; assert all(r['levels_hpa']['700']['u_ms']==4.0 for r in x['rows']); assert all(r['launch_time_provenance']['method']=='header_explicit_utc' for r in x['rows']); assert x['rules']['ambiguous_launch_times']=='null/no timezone inference'
+          PY
+          cat > /tmp/swex-events.json <<'EOF'
+          {"events":[{"event_id":"fixture-iop","start_utc":"2022-05-12T17:00:00Z","end_utc":"2022-05-12T19:00:00Z","regime":"eastern","tier":"fixture"}]}
+          EOF
+          cat > /tmp/swex-negatives.json <<'EOF'
+          {"windows":[{"window_id":"fixture-eop","start_utc":"2022-05-04T17:00:00Z","end_utc":"2022-05-04T19:00:00Z","verified_negative":true,"regime":null}]}
+          EOF
+          python tools/match-swex-event-windows.py --features /tmp/swex-composite.json --events /tmp/swex-events.json --negatives /tmp/swex-negatives.json --out /tmp/swex-matched.json
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/swex-matched.json')); assert x['counts']['documented_iop']==1; assert x['counts']['documented_negative']==1; assert x['counts']['unknown_time']==0; by={r['swex_validation_membership']['class']:r for r in x['rows']}; assert by['documented_iop']['swex_validation_membership']['event_id']=='fixture-iop'; assert by['documented_negative']['swex_validation_membership']['negative_window_id']=='fixture-eop'; assert by['documented_negative']['swex_validation_membership']['verified_negative'] is True
+          PY
+      - name: NWS benchmark scorer contract test
+        run: |
+          cat > /tmp/matched.json <<'JSON'
+          {"rows":[{"valid_time":"2025-04-01T00:00Z","zone":"Gaviota","regime":"western","observed_event":1,"observed_gust_mph":45,"si_probability":0.8,"si_gust_mph":44,"nws_event_pred":1,"nws_gust_mph":40},{"valid_time":"2025-04-02T00:00Z","zone":"Gaviota","regime":"western","observed_event":0,"observed_gust_mph":18,"si_probability":0.1,"si_gust_mph":20,"nws_event_pred":1,"nws_gust_mph":36}]}
+          JSON
+          INPUT=/tmp/matched.json OUT=/tmp/benchmark.json node tools/score-si4-nws-benchmark.js
+          node -e "const x=require('/tmp/benchmark.json');if(x.matched_rows!==2||x.rules.nws_probability_not_invented!==true)process.exit(2)"
+
+  archive-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: science-unit-tests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Verify research archives and current shadow feeds
+        run: node tools/probe-si4-archives.js
+      - name: Resolve public SWEX catalog resources
+        run: node tools/probe-swex-catalog.js
+      - name: Fail closed on SWEX dataset identity drift
+        run: node tools/validate-swex-source-identities.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-archive-probe
+          path: |
+            research/si4-archive-probe.json
+            research/swex-catalog-inventory.json
+            research/swex-source-identity-validation.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  hrrr-upper-herbie-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: archive-health
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install indexed HRRR subset reader
+        run: python -m pip install --quiet 'herbie-data>=2025.7' 'cfgrib>=0.9.15' 'xarray>=2025.1' pandas numpy scikit-learn
+      - name: Extract one day of leakage-safe HRRR F24 pressure profiles
+        run: python tools/extract-hrrr-upper-herbie.py --start 2024-04-01 --end 2024-04-01 --fxx 24 --out research/hrrr-upper-herbie-smoke.json
+      - name: Verify profile completeness
+        run: python -c "import json;x=json.load(open('research/hrrr-upper-herbie-smoke.json'));assert x['status']=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION' and x['failure_count']==0 and len(x['rows'])==32 and all(len(r['profile'])==5 for r in x['rows'])"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: hrrr-upper-herbie-smoke, path: research/hrrr-upper-herbie-smoke.json, if-no-files-found: warn, retention-days: 30}
+
+  baseline-fixed-lead-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: archive-health
+    env: {TRAIN_START: '2024-04-01', TRAIN_END: '2024-04-30', TEST_START: '2025-04-01', TEST_END: '2025-04-30'}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Confirm frozen SI-3 fixed-lead data path remains healthy
+        run: node tools/build-calibration.js > /tmp/si3-baseline-smoke.json
+      - name: Confirm SI-4 candidate source separation
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');const s=fs.readFileSync('tools/build-si4-calibration.js','utf8');if(!s.includes('RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION'))throw Error('research-only guard missing');if(!s.includes('UPPER_CACHE'))throw Error('direct upper-air cache integration missing');if(!s.includes('forecast_lead_hours:24'))throw Error('fixed-lead metadata missing');if(/fire_associated/.test(s))throw Error('fire outcome leaked into SI-4 calibrator');
+          NODE

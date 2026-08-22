@@ -1,0 +1,61 @@
+{
+  "status": "RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION",
+  "frozen_at_utc": "2026-08-17T04:49:00Z",
+  "source_cv_run_id": 31995138187,
+  "source_cv_artifact": "si4-western-hard-negative-cv",
+  "source_cv_artifact_sha256": "7228794ab448be6a0569b004169674f668e353a6c0bc0ce1fa976a32f20dbc48",
+  "training_period": {"start": "2024-01-01", "end": "2024-12-31"},
+  "holdout_period": {"start": "2025-01-01", "end": "2025-12-31"},
+  "forecast_lead_hours": 24,
+  "regime": "western",
+  "zones": ["Gaviota", "Refugio"],
+  "base_features": [
+    "baseline_logit",
+    "pressure_support",
+    "pressure_strengthening_3h",
+    "mountain_wave_index",
+    "critical_level_below_5km",
+    "upper_dryness",
+    "surface_dryness",
+    "season_sin",
+    "season_cos"
+  ],
+  "frozen_extra_features": [
+    "surface_cross_barrier_gust_mph",
+    "critical_below_3km",
+    "wave_mean_cross_barrier_mph"
+  ],
+  "feature_definitions": {
+    "surface_cross_barrier_gust_mph": "forecast 10-m gust multiplied by nonnegative cosine alignment to the fixed zone target direction (Gaviota 345 deg, Refugio 355 deg)",
+    "critical_below_3km": "1 only when the pre-existing SI-4 mountain-wave diagnostic identifies a mean-state critical level below 3 km; otherwise 0",
+    "wave_mean_cross_barrier_mph": "pre-existing SI-4 mean cross-barrier wind diagnostic from the archived F24 upper-air profile"
+  },
+  "development_cv": {
+    "western_rows": 2911,
+    "events": 571,
+    "hard_negatives": 248,
+    "weighted_current_brier": 0.15775037646142015,
+    "weighted_candidate_brier": 0.13676526703012631,
+    "weighted_current_hard_negative_brier": 0.3895596386037159,
+    "weighted_candidate_hard_negative_brier": 0.3522559486717103,
+    "weighted_current_auc": 0.851199638170589,
+    "weighted_candidate_auc": 0.8685016316325506,
+    "decision": "FREEZE_CANDIDATE_FOR_ONE_TIME_2025_HOLDOUT"
+  },
+  "one_time_2025_gate": {
+    "western_brier_noninferior": "candidate_brier <= current_brier",
+    "hard_negative_brier_improves_5pct": "candidate_hard_negative_brier <= current_hard_negative_brier * 0.95",
+    "auc_not_worse_by_more_than_0_01": "candidate_auc >= current_auc - 0.01",
+    "event_pod_not_worse_by_more_than_0_02": "candidate_pod_at_2024_matched_threshold >= current_pod_at_2024_matched_threshold - 0.02",
+    "hard_negative_fpr_not_worse": "candidate_hard_negative_fpr_at_2024_matched_threshold <= current_hard_negative_fpr_at_2024_matched_threshold",
+    "all_required": true
+  },
+  "rules": {
+    "holdout_2025_seen_when_rules_frozen": false,
+    "future_observations_are_labels_only": true,
+    "fire_association_used": false,
+    "missing_values_fabricated": false,
+    "post_holdout_threshold_tuning_allowed": false,
+    "production_change_authorized": false
+  }
+}
