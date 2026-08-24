@@ -9,7 +9,7 @@ const path=require("path");
 
 const START="2024-01-01", END="2024-12-31";
 const BASE=path.join(__dirname,"evaluate-si4-upstream-thermal-2024-cv.js");
-const TMP="/tmp/evaluate-si4-lee-jet-vertical-phase-2024-cv.generated.js";
+const TMP=path.join(__dirname,".evaluate-si4-lee-jet-vertical-phase-2024-cv.generated.js");
 const OUT=process.env.OUT||"research/si4-lee-jet-vertical-phase-2024-cv.json";
 
 let src=fs.readFileSync(BASE,"utf8");
@@ -58,5 +58,6 @@ src=src.replaceAll("upstream:uf.raw","vertical_phase:uf.raw");
 fs.writeFileSync(TMP,src);
 const env={...process.env,OUT};
 const r=cp.spawnSync(process.execPath,[TMP],{stdio:"inherit",env});
+try{fs.unlinkSync(TMP);}catch{}
 if(r.error)throw r.error;
 process.exit(r.status??1);
