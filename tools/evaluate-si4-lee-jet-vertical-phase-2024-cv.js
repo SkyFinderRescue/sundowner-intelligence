@@ -22,7 +22,7 @@ const end=src.indexOf("function standardize(",begin);
 if(begin<0||end<0||end<=begin) throw Error("validated feature-function seam not found");
 
 const replacement=String.raw`function upstreamFeatures(m,time,base){
- const get=n=>m.get(\`${'${time}'}|${'${n}'}\`),syv=get("santa_ynez_valley"),cuy=get("cuyama_interior"),lee=get("santa_barbara_lee"),chn=get("western_channel");
+ const get=n=>m.get(time+"|"+n),syv=get("santa_ynez_valley"),cuy=get("cuyama_interior"),lee=get("santa_barbara_lee"),chn=get("western_channel");
  if(![syv,cuy,lee,chn].every(Array.isArray))return null;
  const q=(p,h)=>plevel(p,h), vals={
   l850:q(lee,850),l700:q(lee,700),c850:q(chn,850),c700:q(chn,700),
