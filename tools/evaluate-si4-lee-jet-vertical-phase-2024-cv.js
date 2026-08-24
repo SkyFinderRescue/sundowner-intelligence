@@ -51,10 +51,14 @@ const replacement=String.raw`function upstreamFeatures(m,time,base){
 `;
 
 src=src.slice(0,begin)+replacement+src.slice(end);
-src=src.replaceAll("upstream_thermal_subsidence_v1","lee_jet_vertical_phase_v1");
 src=src.replace('const OUT=process.env.OUT||"research/si4-upstream-thermal-2024-cv.json";','const OUT=process.env.OUT||"research/si4-lee-jet-vertical-phase-2024-cv.json";');
+src=src.replace('candidate_family:"upstream_thermal_subsidence_v1",generated:', 'candidate_family:"lee_jet_vertical_phase_v1",generated:');
+src=src.replace('winner_eligible_for_single_frozen_2025_score:pass?"upstream_thermal_subsidence_v1":null', 'winner_eligible_for_single_frozen_2025_score:pass?"lee_jet_vertical_phase_v1":null');
 src=src.replace("Per-regime regularized logistic model adds only predeclared upstream thermal/northerly/subsidence support and interactions with existing pressure/wave state; all scaling/model fitting and threshold selection occur inside each prior chronological training window.","Per-regime regularized logistic model adds only predeclared lee/channel/upstream omega vertical-phase diagnostics, wave-lift suppression, downward-coupling support and interactions with existing issuance-time pressure/wave state; all scaling/model fitting and threshold selection occur inside each prior chronological training window.");
 src=src.replaceAll("upstream:uf.raw","vertical_phase:uf.raw");
+if(!src.includes('x.candidate_family!=="upstream_thermal_subsidence_v1"') && !src.includes('x.candidate_family!==')) {
+  // The source archive contract itself must remain unchanged.
+}
 fs.writeFileSync(TMP,src);
 const env={...process.env,OUT};
 const r=cp.spawnSync(process.execPath,[TMP],{stdio:"inherit",env});
