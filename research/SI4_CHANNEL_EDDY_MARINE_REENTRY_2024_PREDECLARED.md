@@ -2,6 +2,8 @@
 
 Status: **PREDECLARED — 2024 DEVELOPMENT ONLY — RESEARCH ONLY**
 
+Candidate family: `channel_eddy_marine_reentry_v1`
+
 Production guard: SI-3.1 on `main` remains the verified production baseline. PR #6 remains draft/unmerged. This experiment cannot authorize a production change by itself.
 
 ## Independent physical hypothesis
