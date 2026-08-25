@@ -50,10 +50,10 @@ jobs:
         run: |
           set -euo pipefail
           python -m py_compile tools/extract-si4-channel-eddy-herbie.py
-          grep -q 'channel_eddy_marine_reentry_v1' research/SI4_CHANNEL_EDDY_MARINE_REENTRY_2024_PREDECLARED.md
-          grep -q '2025 observations and missed-event rows: **forbidden during development**' research/SI4_CHANNEL_EDDY_MARINE_REENTRY_2024_PREDECLARED.md
-          grep -q 'holdout_2025_loaded' tools/extract-si4-channel-eddy-herbie.py
-          ! grep -q '2025-' tools/extract-si4-channel-eddy-herbie.py
+          grep -Fq 'channel_eddy_marine_reentry_v1' research/SI4_CHANNEL_EDDY_MARINE_REENTRY_2024_PREDECLARED.md
+          grep -Fq '2025 observations and missed-event rows: **forbidden during development**' research/SI4_CHANNEL_EDDY_MARINE_REENTRY_2024_PREDECLARED.md
+          grep -Fq 'holdout_2025_loaded' tools/extract-si4-channel-eddy-herbie.py
+          ! grep -Fq '2025-' tools/extract-si4-channel-eddy-herbie.py
       - name: Extract frozen month at F24 with bounded infrastructure retry
         shell: bash
         run: |
