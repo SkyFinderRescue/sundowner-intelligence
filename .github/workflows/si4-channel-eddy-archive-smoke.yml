@@ -1,0 +1,89 @@
+name: SI-4 Channel Eddy Archive Smoke
+
+on:
+  push:
+    branches: [si4-research]
+    paths:
+      - 'tools/extract-si4-channel-eddy-herbie.py'
+      - 'research/SI4_CHANNEL_EDDY_MARINE_REENTRY_2024_PREDECLARED.md'
+      - '.github/workflows/si4-channel-eddy-archive-smoke.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/extract-si4-channel-eddy-herbie.py'
+      - 'research/SI4_CHANNEL_EDDY_MARINE_REENTRY_2024_PREDECLARED.md'
+      - '.github/workflows/si4-channel-eddy-archive-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: si4-channel-eddy-archive-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install frozen indexed HRRR extractor dependencies
+        run: python -m pip install --quiet 'herbie-data>=2025.7' 'cfgrib>=0.9.15' 'xarray>=2025.1' pandas numpy scikit-learn
+      - name: Verify development lock and syntax
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/extract-si4-channel-eddy-herbie.py
+          grep -q 'channel_eddy_marine_reentry_v1' tools/extract-si4-channel-eddy-herbie.py
+          grep -q 'holdout_2025_loaded' tools/extract-si4-channel-eddy-herbie.py
+          grep -q 'western_channel.*34.300.*-120.350' research/SI4_CHANNEL_EDDY_MARINE_REENTRY_2024_PREDECLARED.md
+          ! grep -q '2025-' tools/extract-si4-channel-eddy-herbie.py
+      - name: Extract one frozen F24 development day with bounded infrastructure retry
+        shell: bash
+        run: |
+          set -euo pipefail
+          ok=0
+          for attempt in 1 2 3; do
+            if python tools/extract-si4-channel-eddy-herbie.py --start 2024-04-01 --end 2024-04-01 --fxx 24 --out research/si4-channel-eddy-herbie-smoke.json; then
+              ok=1
+              break
+            fi
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt*30)); fi
+          done
+          test "$ok" -eq 1
+      - name: Verify fail-closed smoke contract
+        run: |
+          python - <<'PY'
+          import json, math
+          x=json.load(open('research/si4-channel-eddy-herbie-smoke.json'))
+          assert x['status']=='RESEARCH_ONLY_2024_DEVELOPMENT'
+          assert x['candidate_family']=='channel_eddy_marine_reentry_v1'
+          assert x['forecast_lead_hours']==24
+          assert x['failure_count']==0, x.get('failures')
+          assert x['rules']['holdout_2025_loaded'] is False
+          assert x['rules']['production_change_authorized'] is False
+          assert x['rules']['future_observations_label_only'] is True
+          assert x['rules']['fire_association_outcome_only'] is True
+          assert list(x['points'])==['western_channel','central_channel','eastern_channel','santa_barbara_coast','goleta_coast']
+          assert len(x['rows'])==20, len(x['rows'])
+          seen=set()
+          for row in x['rows']:
+              assert row['run_time'].startswith('2024-') and row['valid_time'].startswith('2024-')
+              key=(row['run_time'],row['point']); assert key not in seen; seen.add(key)
+              for k in ('temperature2mC','dewpoint2mC','dewpointDepressionC','u10Mps','v10Mps','wind10SpeedMph','wind10DirectionDeg'):
+                  assert math.isfinite(float(row[k])), (key,k,row[k])
+              for k in ('pblHeightM','mslpHpa'):
+                  if row.get(k) is not None:
+                      assert math.isfinite(float(row[k])), (key,k,row[k])
+          print({'status':'PASS','rows':len(x['rows']),'optional_failures':x['optional_failure_count']})
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-channel-eddy-archive-smoke
+          path: research/si4-channel-eddy-herbie-smoke.json
+          if-no-files-found: error
+          retention-days: 30
