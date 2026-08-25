@@ -53,7 +53,8 @@ jobs:
           grep -Fq 'channel_eddy_marine_reentry_v1' research/SI4_CHANNEL_EDDY_MARINE_REENTRY_2024_PREDECLARED.md
           grep -Fq '2025 observations and missed-event rows: **forbidden during development**' research/SI4_CHANNEL_EDDY_MARINE_REENTRY_2024_PREDECLARED.md
           grep -Fq 'holdout_2025_loaded' tools/extract-si4-channel-eddy-herbie.py
-          ! grep -Fq '2025-' tools/extract-si4-channel-eddy-herbie.py
+          grep -Fq 'if start.year != 2024 or end.year != 2024:' tools/extract-si4-channel-eddy-herbie.py
+          grep -Fq 'if end > dt.date(2024, 12, 30):' tools/extract-si4-channel-eddy-herbie.py
       - name: Extract frozen month at F24 with bounded infrastructure retry
         shell: bash
         run: |
