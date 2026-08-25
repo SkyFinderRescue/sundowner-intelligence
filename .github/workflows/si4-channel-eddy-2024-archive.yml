@@ -50,11 +50,20 @@ jobs:
         run: |
           set -euo pipefail
           python -m py_compile tools/extract-si4-channel-eddy-herbie.py
-          grep -Fq 'channel_eddy_marine_reentry_v1' research/SI4_CHANNEL_EDDY_MARINE_REENTRY_2024_PREDECLARED.md
-          grep -Fq '2025 observations and missed-event rows: **forbidden during development**' research/SI4_CHANNEL_EDDY_MARINE_REENTRY_2024_PREDECLARED.md
-          grep -Fq 'holdout_2025_loaded' tools/extract-si4-channel-eddy-herbie.py
-          grep -Fq 'if start.year != 2024 or end.year != 2024:' tools/extract-si4-channel-eddy-herbie.py
-          grep -Fq 'if end > dt.date(2024, 12, 30):' tools/extract-si4-channel-eddy-herbie.py
+          python - <<'PY'
+          from pathlib import Path
+          plan=Path('research/SI4_CHANNEL_EDDY_MARINE_REENTRY_2024_PREDECLARED.md').read_text()
+          src=Path('tools/extract-si4-channel-eddy-herbie.py').read_text()
+          checks={
+              'candidate_family': 'channel_eddy_marine_reentry_v1' in plan,
+              '2025_development_forbidden': '2025 observations and missed-event rows' in plan and 'forbidden during development' in plan,
+              'holdout_guard': 'holdout_2025_loaded' in src,
+              'year_lock': 'start.year != 2024 or end.year != 2024' in src,
+              'f24_valid_time_lock': 'end > dt.date(2024, 12, 30)' in src,
+          }
+          print(checks)
+          assert all(checks.values()), checks
+          PY
       - name: Extract frozen month at F24 with bounded infrastructure retry
         shell: bash
         run: |
