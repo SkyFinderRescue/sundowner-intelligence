@@ -14,7 +14,7 @@ The physical basis is independent of the frozen 2025 holdout. Carvalho et al. (2
 
 - Development period: **2024-01-01 through 2024-12-31 only**.
 - Forecast lead: **fixed F24**.
-- Predictor source: archived NOAA HRRR fields available at forecast issuance only.
+- Predictor source: archived NOAA HRRR surface fields available at forecast issuance only.
 - Verifying HADS/RAWS observations: **label-only** and never used to choose archive availability, valid times, geographic points, or predictor transforms.
 - Fire association: outcome-only and excluded from predictors/target definition.
 - 2025 observations and missed-event rows: **forbidden during development**.
@@ -22,25 +22,30 @@ The physical basis is independent of the frozen 2025 holdout. Carvalho et al. (2
 
 ## Frozen geography before scoring
 
-Use a compact fixed set of Channel/coastal points selected from geography and the published mechanism, not outcomes:
+The following points are frozen from geography and the published mechanism before any observation-based scoring. They may not be moved after results are seen:
 
-1. western Channel / Point Conception-side marine inflow point;
-2. central Santa Barbara Channel offshore point;
-3. eastern Channel / Montecito offshore point;
-4. Santa Barbara coastal plain point;
-5. western coastal plain / Goleta point.
+| id | role | latitude | longitude |
+|---|---|---:|---:|
+| `western_channel` | Point Conception-side marine inflow / western Channel | 34.300 | -120.350 |
+| `central_channel` | central Santa Barbara Channel offshore | 34.300 | -119.850 |
+| `eastern_channel` | eastern Channel / Montecito offshore | 34.300 | -119.450 |
+| `santa_barbara_coast` | Santa Barbara coastal plain | 34.410 | -119.700 |
+| `goleta_coast` | western coastal plain / Goleta | 34.430 | -119.850 |
 
-Exact latitude/longitude coordinates must be persisted in the extraction manifest **before any observation-based scoring** and must not be moved after results are seen.
+These coordinates are the experiment manifest coordinates. Nearest-gridpoint sampling is allowed; the extracted native gridpoint latitude/longitude and distance from the requested point must be retained when the extraction library exposes them.
 
-## Frozen predictor family
+## Frozen predictor family and archive selectors
 
-At F24, extract only issuance-time near-surface fields needed to diagnose the channel-flow geometry and marine re-entry susceptibility:
+At F24, extract only issuance-time near-surface fields needed to diagnose the channel-flow geometry and marine re-entry susceptibility. The native HRRR surface-product selectors are frozen before scoring:
 
-- 10-m U and V wind components;
-- 2-m temperature;
-- 2-m dewpoint or RH when directly archived;
-- mean sea-level pressure when directly archived;
-- planetary-boundary-layer height if available from the same surface archive.
+- 10-m U wind: `:UGRD:10 m above ground:`
+- 10-m V wind: `:VGRD:10 m above ground:`
+- 2-m temperature: `:TMP:2 m above ground:`
+- 2-m dewpoint: `:DPT:2 m above ground:`
+- planetary-boundary-layer height: `:HPBL:surface:` when present; otherwise `null`
+- mean-sea-level pressure: `:MSLMA:mean sea level:` when present; otherwise `null`
+
+Required extraction fields are U10, V10, T2m and Td2m. PBLH and MSLP are optional and must remain `null` when unavailable; archive absence may not be replaced with a fabricated value or a future observation.
 
 Derived predictors are deterministic transforms of those fields only:
 
@@ -50,7 +55,8 @@ Derived predictors are deterministic transforms of those fields only:
 - coastal-versus-offshore wind-vector contrast;
 - offshore-to-coastal temperature and dewpoint-depression contrast;
 - signed low-level convergence/turning proxy along the frozen west-central-east transect;
-- optional PBL-height contrast only when PBLH is natively present; otherwise `null`.
+- optional PBL-height contrast only when PBLH is natively present; otherwise `null`;
+- optional MSLP contrast only when MSLP is natively present; otherwise `null`.
 
 No candidate may treat this diagnostic as proof that a physical eddy exists. It is a **susceptibility proxy** for a marine re-entry configuration.
 
