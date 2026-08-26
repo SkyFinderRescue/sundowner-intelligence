@@ -157,11 +157,16 @@ A candidate can be considered for SI-4 production only when all of the following
 - [x] Add terrain-response correction primitive.
 - [x] Add all-season chronological candidate calibration builder.
 - [x] Add research-only CI/smoke-validation workflow.
-- [ ] Complete full SWEX QC observation ingestion and feature extraction.
-- [ ] Complete all-season 2024/2025 candidate run and frozen holdout scoring.
-- [ ] Build HRRR cycle-history ingestion and score confidence gains.
-- [ ] Build RRFS retrospective/live shadow sampler and benchmark.
-- [ ] Build direct GOES-West marine-layer feature extraction and validation.
-- [ ] Fit cross-validated direction/stability-conditioned terrain response.
-- [ ] Build archived NDFD matched benchmark.
-- [ ] Run final ablation study and decide which features, if any, earn promotion.
+- [ ] Complete full SWEX QC observation ingestion and feature extraction. **Blocked only on the already-accepted NCAR/EOL final-QC profiler delivery for dataset 600.034; do not duplicate the order.**
+- [x] Complete all-season 2024 training / frozen 2025 fixed-24h holdout scoring. **Overall probabilistic skill improved, but operational event recall remains below the promotion gate.**
+- [x] Build and evaluate HRRR cycle-history confidence candidate. **Predeclared 2024 gate failed; diagnostic retained, candidate rejected.**
+- [x] Build RRFS retrospective shadow sampler and benchmark. **RRFS remains shadow-only; it did not independently establish stable replacement superiority.**
+- [x] Build direct GOES-West marine-layer feature extraction and validation. **Predeclared 2024 candidate gate failed; archive/plumbing and diagnostics retained.**
+- [x] Fit/evaluate cross-validated direction/stability-conditioned terrain response. **No new refinement cleared the frozen development gates; retain existing SI-4 terrain correction.**
+- [x] Build archived NDFD matched benchmark. **Frozen matched sample completed; no blanket NWS-superiority claim authorized.**
+- [x] Run final frozen feature-block ablation. **Complete; current SI-4 does not earn production promotion.**
+- [x] Evaluate additional independent 2024-only physics hypotheses (upstream thermal/subsidence, ABL reservoir, channel-eddy/marine re-entry, lee-jet vertical phase, coastal-jet phase, Richardson/wave-breaking susceptibility). **All failed at least one predeclared development gate before 2025 exposure and remain rejected.**
+
+## Current decision
+
+**NO PROMOTION.** The remaining legitimate science dependency is independent final-QC SWEX evidence (or a materially different primary-source physical hypothesis formulated and gated without using the frozen 2025 misses). Production `main` and PR #6 must remain unchanged/unmerged until an independently passing candidate clears every promotion gate and the production verification/browser-QA sequence is subsequently completed.
