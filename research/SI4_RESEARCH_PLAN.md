@@ -165,7 +165,7 @@ A candidate can be considered for SI-4 production only when all of the following
 - [x] Fit/evaluate cross-validated direction/stability-conditioned terrain response. **No new refinement cleared the frozen development gates; retain existing SI-4 terrain correction.**
 - [x] Build archived NDFD matched benchmark. **Frozen matched sample completed; no blanket NWS-superiority claim authorized.**
 - [x] Run final frozen feature-block ablation. **Complete; current SI-4 does not earn production promotion.**
-- [x] Evaluate additional independent 2024-only physics hypotheses (upstream thermal/subsidence, ABL reservoir, channel-eddy/marine re-entry, lee-jet vertical phase, coastal-jet phase, Richardson/wave-breaking susceptibility, coastal adiabatic lift-off). **All failed at least one predeclared development gate before 2025 exposure and remain rejected. The coastal adiabatic lift-off selector chose zero adjustment in every chronological fold, producing no incremental recall or probabilistic skill.**
+- [x] Evaluate additional independent 2024-only physics hypotheses (upstream thermal/subsidence, ABL reservoir, channel-eddy/marine re-entry, lee-jet vertical phase, coastal-jet phase, Richardson/wave-breaking susceptibility, coastal adiabatic lift-off, mesoscale pressure-transition timing). **All failed at least one predeclared development gate before 2025 exposure and remain rejected. The coastal adiabatic lift-off selector and mesoscale pressure-transition selector both chose zero adjustment in every chronological fold, producing no incremental recall or probabilistic skill.**
 
 ## Current decision
 
