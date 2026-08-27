@@ -1,201 +1,62 @@
 {
   "version": "SI-operational-reconstruction-1.0",
-  "generated": "2026-08-20T19:00:00-07:00",
+  "generated": "2026-08-26T19:00:00-07:00",
   "method": "Operational reconstruction from trusted NWS observed statements and fire-weather products. Missing upstream, pressure-series, zone-specific thermodynamic, or upper-air values remain null; no values are inferred solely to complete the schema. Fire association is an outcome field only.",
-  "events_total": 3,
-  "reconstructed": 3,
+  "events_total": 4,
+  "reconstructed": 4,
   "failed": 0,
   "events": [
     {
-      "event_id": "2026-07-27-sw-sba-western-sundowner",
-      "date": "2026-07-27",
-      "end_date": "2026-07-28",
-      "tier": "B-operational-confirmed",
-      "regime": "western",
-      "fire_associated": false,
-      "fire_name": null,
-      "analysis_window_local": "2026-07-27 late afternoon through 2026-07-28 03:00 PDT",
-      "timing": {
-        "onset_local": "late afternoon/evening",
-        "peak_local": "approximately 20:00 PDT",
-        "end_local": "approximately 03:00 PDT",
-        "duration_hours_estimate": 8
-      },
-      "pressure": {
-        "north_south_gradient": {
-          "peak_mb": -3.7,
-          "peak_time_local": "20:00 PDT",
-          "source": "NWS LOX AFD"
-        },
-        "sba_minus_bfl": null,
-        "sba_minus_smx": null,
-        "trend": "strengthening offshore/northerly support into the evening; exact multi-hour numerical series unavailable"
-      },
-      "upstream": {
-        "cuyama": null,
-        "santa_ynez_valley": null,
-        "southern_kern": null,
-        "data_quality_note": "Trusted archived values were not recovered for this run and are intentionally not estimated."
-      },
-      "model_upper_air_context": {
-        "synoptic_pattern": "597-dam upper high centered over the Texas/Oklahoma Panhandles with a weak trough over California",
-        "surface_pattern": "moderate to strong east-west onshore gradient with a diurnally offshore north-south gradient supporting western Santa Ynez Range downslope flow",
-        "925_hpa": null,
-        "850_hpa": null,
-        "700_hpa": null,
-        "500_hpa": null
-      },
-      "zones": {
-        "Gaviota": {"affected": true,"observed_gust_range_mph": [35,45],"observed_temperature_f": null,"observed_min_rh_percent": null,"notes": "Named by NWS as one of the strongest observed locations."},
-        "Refugio": {"affected": true,"observed_gust_range_mph": [35,45],"observed_temperature_f": null,"observed_min_rh_percent": null,"notes": "Named by NWS as one of the strongest observed locations."},
-        "Goleta": {"affected": false,"observed_gust_range_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null,"notes": "No trusted source in this run documented advisory-level impacts in this zone."},
-        "San Marcos Pass": {"affected": true,"observed_gust_range_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null,"notes": "Included in the adjacent western Santa Ynez Range advisory/forecast impact area; exact observed peak not recovered."},
-        "Mission Canyon": {"affected": false,"observed_gust_range_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
-        "Montecito": {"affected": false,"observed_gust_range_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
-        "Toro Canyon": {"affected": false,"observed_gust_range_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
-        "Carpinteria": {"affected": false,"observed_gust_range_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null}
-      },
-      "regional_thermodynamics": {
-        "minimum_rh_percent_range": [8,20],
-        "overnight_recovery": "poor",
-        "temperature_context": "hotter than normal",
-        "scope_note": "These RH and temperature descriptors are from the NWS fire-weather discussion for the broader affected region, not a substitute for missing zone-specific station observations."
-      },
-      "source_evidence": [
-        "NWS LOX AFD issued 11:20 PM PDT July 27, 2026: observed southwest Santa Barbara County gusts 35-45 mph, strongest near Refugio and Gaviota; north-south gradient near -3.7 mb at 8 PM; Wind Advisory through 3 AM.",
-        "NWS LOX Fire Weather Planning Forecast issued 9:32 AM PDT July 27, 2026: gusty Sundowner winds, RH 8-20 percent, poor overnight recovery, elevated fire weather through the night."
-      ],
-      "reconstruction_status": "complete_with_explicit_nulls",
-      "next_data_improvement": "Backfill station-by-station hourly observations and archived HRRR/upper-air fields when a trusted historical observation endpoint is available."
+      "event_id":"2026-07-27-sw-sba-western-sundowner","date":"2026-07-27","end_date":"2026-07-28","tier":"B-operational-confirmed","regime":"western","fire_associated":false,"fire_name":null,
+      "analysis_window_local":"2026-07-27 late afternoon through 2026-07-28 03:00 PDT",
+      "timing":{"onset_local":"late afternoon/evening","peak_local":"approximately 20:00 PDT","end_local":"approximately 03:00 PDT","duration_hours_estimate":8},
+      "pressure":{"north_south_gradient":{"peak_mb":-3.7,"peak_time_local":"20:00 PDT","source":"NWS LOX AFD"},"sba_minus_bfl":null,"sba_minus_smx":null,"trend":"strengthening offshore/northerly support into the evening; exact multi-hour numerical series unavailable"},
+      "upstream":{"cuyama":null,"santa_ynez_valley":null,"southern_kern":null,"data_quality_note":"Trusted archived values were not recovered for this run and are intentionally not estimated."},
+      "model_upper_air_context":{"synoptic_pattern":"597-dam upper high centered over the Texas/Oklahoma Panhandles with a weak trough over California","surface_pattern":"moderate to strong east-west onshore gradient with a diurnally offshore north-south gradient supporting western Santa Ynez Range downslope flow","925_hpa":null,"850_hpa":null,"700_hpa":null,"500_hpa":null},
+      "zones":{"Gaviota":{"affected":true,"observed_gust_range_mph":[35,45],"observed_temperature_f":null,"observed_min_rh_percent":null,"notes":"Named by NWS as one of the strongest observed locations."},"Refugio":{"affected":true,"observed_gust_range_mph":[35,45],"observed_temperature_f":null,"observed_min_rh_percent":null,"notes":"Named by NWS as one of the strongest observed locations."},"Goleta":{"affected":false,"observed_gust_range_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"San Marcos Pass":{"affected":true,"observed_gust_range_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"Mission Canyon":{"affected":false,"observed_gust_range_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"Montecito":{"affected":false,"observed_gust_range_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"Toro Canyon":{"affected":false,"observed_gust_range_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"Carpinteria":{"affected":false,"observed_gust_range_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null}},
+      "regional_thermodynamics":{"minimum_rh_percent_range":[8,20],"overnight_recovery":"poor","temperature_context":"hotter than normal","scope_note":"Regional fire-weather context, not a substitute for zone-specific station observations."},
+      "source_evidence":["NWS LOX AFD issued 11:20 PM PDT July 27, 2026: observed southwest Santa Barbara County gusts 35-45 mph, strongest near Refugio and Gaviota; north-south gradient near -3.7 mb at 8 PM.","NWS LOX Fire Weather Planning Forecast issued 9:32 AM PDT July 27, 2026: gusty Sundowner winds, RH 8-20 percent, poor overnight recovery."],
+      "reconstruction_status":"complete_with_explicit_nulls"
     },
     {
-      "event_id": "2026-07-28-western-sba-sundowner",
-      "date": "2026-07-28",
-      "end_date": "2026-07-29",
-      "tier": "B-operational-confirmed",
-      "regime": "western",
-      "fire_associated": false,
-      "fire_name": null,
-      "analysis_window_local": "2026-07-28 late afternoon through early 2026-07-29 PDT",
-      "timing": {
-        "onset_local": "late afternoon/evening",
-        "confirmed_active_local": "20:40 PDT",
-        "peak_local": "around the 20:40 PDT observation window",
-        "end_local": "overnight into early 2026-07-29",
-        "duration_hours_estimate": "approximately 6-12; exact station threshold timing unavailable"
-      },
-      "pressure": {
-        "north_south_gradient": {"peak_mb": null,"peak_time_local": null,"source": null},
-        "sba_minus_bfl": null,
-        "sba_minus_smx": null,
-        "trend": "Repeat evening western-Santa-Barbara Sundowner ramp-up documented by NWS; exact archived pressure-gradient time series was not recovered."
-      },
-      "upstream": {
-        "cuyama": null,
-        "santa_ynez_valley": null,
-        "southern_kern": null,
-        "data_quality_note": "No sufficiently specific trusted archived upstream station observations were recovered; values intentionally remain null."
-      },
-      "model_upper_air_context": {
-        "synoptic_pattern": "weak trough over California with heights near 590 dam, ahead of rapid strengthening of a very strong ridge later in the week",
-        "surface_pattern": "sub-advisory western Santa Barbara Sundowner during the evening with otherwise generally light onshore flow",
-        "925_hpa": null,
-        "850_hpa": null,
-        "700_hpa": null,
-        "500_hpa": null
-      },
-      "zones": {
-        "Gaviota": {"affected": true,"observed_peak_gust_mph": 40,"observed_temperature_f": null,"observed_min_rh_percent": null,"notes": "Within the western Santa Barbara south-coast Sundowner corridor; NWS reported gusts near 40 mph across the western south coast."},
-        "Refugio": {"affected": true,"observed_peak_gust_mph": 40,"observed_temperature_f": null,"observed_min_rh_percent": null,"notes": "Within the western Santa Barbara south-coast Sundowner corridor; exact station maximum was not isolated in archived text."},
-        "Goleta": {"affected": true,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null,"notes": "Western south-coast scope supports inclusion as affected, but no exact archived station gust was recovered."},
-        "San Marcos Pass": {"affected": true,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null,"notes": "Highest peaks were noted as capable of briefly reaching advisory levels; exact observed peak not recovered."},
-        "Mission Canyon": {"affected": false,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
-        "Montecito": {"affected": false,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
-        "Toro Canyon": {"affected": false,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
-        "Carpinteria": {"affected": false,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null}
-      },
-      "regional_thermodynamics": {
-        "minimum_rh_percent_range": null,
-        "overnight_recovery": null,
-        "temperature_context": "NWS reported interior highs near 100 F, valleys upper 80s to 90s, and cooler coastal temperatures; exact event-zone temperature/RH observations unavailable.",
-        "scope_note": "Regional temperature context is not used as a substitute for missing zone-specific station observations."
-      },
-      "marine_context": {
-        "western_santa_barbara_channel": "NW 10-20 kt with local gusts to 25 kt during the evening in the NWS coastal waters forecast",
-        "source": "NWS LOX CWF issued 7:49 AM PDT July 28, 2026"
-      },
-      "source_evidence": [
-        "NWS LOX AFD issued 8:40 PM PDT July 28, 2026: Sundowner winds had ramped up over the western Santa Barbara south coast, with gusts near 40 mph currently; local highest-peak gusts could briefly reach advisory levels.",
-        "NWS LOX AFD short-term discussion: sub-advisory Sundowner winds expected that evening across southwest Santa Barbara County.",
-        "NWS LOX Coastal Waters Forecast issued 7:49 AM PDT July 28, 2026: western Santa Barbara Channel NW winds 10-20 kt with local gusts to 25 kt during the event evening."
-      ],
-      "reconstruction_status": "complete_with_explicit_nulls",
-      "next_data_improvement": "Backfill exact hourly pressure gradients, Cuyama/Santa Ynez/southern Kern observations, zone station temperature/RH, and archived HRRR/upper-air fields when a trusted archive endpoint is available."
+      "event_id":"2026-07-28-western-sba-sundowner","date":"2026-07-28","end_date":"2026-07-29","tier":"B-operational-confirmed","regime":"western","fire_associated":false,"fire_name":null,
+      "analysis_window_local":"2026-07-28 late afternoon through early 2026-07-29 PDT",
+      "timing":{"onset_local":"late afternoon/evening","confirmed_active_local":"20:40 PDT","peak_local":"around the 20:40 PDT observation window","end_local":"overnight into early 2026-07-29","duration_hours_estimate":"approximately 6-12; exact station threshold timing unavailable"},
+      "pressure":{"north_south_gradient":{"peak_mb":null,"peak_time_local":null,"source":null},"sba_minus_bfl":null,"sba_minus_smx":null,"trend":"Repeat evening western-Santa-Barbara Sundowner ramp-up documented by NWS; exact archived pressure-gradient time series was not recovered."},
+      "upstream":{"cuyama":null,"santa_ynez_valley":null,"southern_kern":null,"data_quality_note":"No sufficiently specific trusted archived upstream station observations were recovered; values intentionally remain null."},
+      "model_upper_air_context":{"synoptic_pattern":"weak trough over California with heights near 590 dam, ahead of rapid strengthening of a very strong ridge later in the week","surface_pattern":"sub-advisory western Santa Barbara Sundowner during the evening with otherwise generally light onshore flow","925_hpa":null,"850_hpa":null,"700_hpa":null,"500_hpa":null},
+      "zones":{"Gaviota":{"affected":true,"observed_peak_gust_mph":40,"observed_temperature_f":null,"observed_min_rh_percent":null},"Refugio":{"affected":true,"observed_peak_gust_mph":40,"observed_temperature_f":null,"observed_min_rh_percent":null},"Goleta":{"affected":true,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"San Marcos Pass":{"affected":true,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"Mission Canyon":{"affected":false,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"Montecito":{"affected":false,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"Toro Canyon":{"affected":false,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"Carpinteria":{"affected":false,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null}},
+      "regional_thermodynamics":{"minimum_rh_percent_range":null,"overnight_recovery":null,"temperature_context":"NWS reported interior highs near 100 F, valleys upper 80s to 90s, and cooler coastal temperatures; exact event-zone observations unavailable."},
+      "marine_context":{"western_santa_barbara_channel":"NW 10-20 kt with local gusts to 25 kt during the evening in the NWS coastal waters forecast","source":"NWS LOX CWF issued 7:49 AM PDT July 28, 2026"},
+      "source_evidence":["NWS LOX AFD issued 8:40 PM PDT July 28, 2026: Sundowner winds had ramped up over the western Santa Barbara south coast, with gusts near 40 mph currently.","NWS LOX Coastal Waters Forecast issued 7:49 AM PDT July 28, 2026: western Santa Barbara Channel NW winds 10-20 kt with local gusts to 25 kt during the event evening."],
+      "reconstruction_status":"complete_with_explicit_nulls"
     },
     {
-      "event_id": "2026-08-18-19-sba-western-sundowner",
-      "date": "2026-08-18",
-      "end_date": "2026-08-19",
-      "tier": "B-operational-confirmed",
-      "regime": "western",
-      "fire_associated": false,
-      "fire_name": null,
-      "analysis_window_local": "2026-08-18 late afternoon/evening through the morning of 2026-08-19 PDT",
-      "timing": {
-        "onset_local": "late afternoon/evening 2026-08-18",
-        "confirmed_active_local": "07:59 PDT 2026-08-19 lingering phase",
-        "peak_local": null,
-        "end_local": "morning 2026-08-19; exact threshold end unavailable",
-        "duration_hours_estimate": null
-      },
-      "pressure": {
-        "north_south_gradient": {"peak_mb": null,"peak_time_local": null,"source": null},
-        "sba_minus_bfl": null,
-        "sba_minus_smx": null,
-        "trend": null,
-        "data_quality_note": "No trusted observed pressure-gradient series was recovered for this event window; fields remain null."
-      },
-      "upstream": {
-        "cuyama": null,
-        "santa_ynez_valley": null,
-        "southern_kern": null,
-        "data_quality_note": "No sufficiently specific trusted observed upstream station series was recovered; values intentionally remain null."
-      },
-      "model_upper_air_context": {
-        "synoptic_pattern": "NWS LOX described 500-mb heights near 596 dam on Aug 19 with a strong upper high and weaker-than-normal onshore flow.",
-        "surface_pattern": "NWS fire-weather guidance explicitly identified moderate Sundowner winds affecting southwest Santa Barbara County during late afternoon/evening hours through Wednesday.",
-        "observed_regional_sounding_context": "NWS reported an 800-1000 ft marine layer regionally on the morning of Aug 19.",
-        "925_hpa": null,
-        "850_hpa": null,
-        "700_hpa": null,
-        "500_hpa": null
-      },
-      "zones": {
-        "Gaviota": {"affected": null,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null,"notes": "Gaviota was forecast as the most likely location for isolated advisory-level gusts on Aug 19, but no exact observed station value was recovered, so affected status is left null."},
-        "Refugio": {"affected": null,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
-        "Goleta": {"affected": null,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
-        "San Marcos Pass": {"affected": null,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
-        "Mission Canyon": {"affected": null,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
-        "Montecito": {"affected": null,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
-        "Toro Canyon": {"affected": null,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
-        "Carpinteria": {"affected": null,"observed_peak_gust_mph": null,"observed_temperature_f": null,"observed_min_rh_percent": null},
-        "southern_santa_barbara_county": {"affected": true,"observed_peak_gust_mph": 35,"observed_temperature_f": null,"observed_min_rh_percent": null,"notes": "NWS surface-observation summary reported lingering northerly winds gusting to 35 mph across southern Santa Barbara County at 7:59 AM PDT Aug 19."}
-      },
-      "observed_thermodynamics": {
-        "temperature_f": null,
-        "relative_humidity_percent": null,
-        "data_quality_note": "No event-zone observed temperature/RH series was recovered from a trusted archive; forecast values are not substituted for observations."
-      },
-      "forecast_context_only": {
-        "fire_weather": "NWS Aug 18 fire-weather guidance called for moderate Sundowner winds in southwest Santa Barbara County, with broader valleys/mountains forecast at 95-105 F and 15-30 percent minimum RH. These are forecast context only and are not stored as event observations."
-      },
-      "source_evidence": [
-        "NWS LOX AFD issued 10:18 AM PDT Aug 19, 2026: surface observations showed lingering northerly winds gusting to 35 mph across southern Santa Barbara County; NWS also expected locally gusty Sundowners again that evening.",
-        "NWS LOX Fire Weather Planning Forecast issued 3:35 PM PDT Aug 18, 2026: moderate Sundowner winds were expected to affect southwest Santa Barbara County during late afternoon and evening hours through Wednesday.",
-        "CAL FIRE 2026 incident archive checked Aug 20: no Santa Barbara County wildfire beginning Aug 18-19 was listed; fire association is therefore retained as a separate non-fire outcome, not as an event criterion."
-      ],
-      "reconstruction_status": "complete_with_explicit_nulls",
-      "next_data_improvement": "Backfill station-level hourly winds, temperature/RH, observed SBA-SMX and SBA-BFL gradients, Cuyama/Santa Ynez/southern Kern observations, and archived HRRR/upper-air fields if a trusted historical observation endpoint becomes available."
+      "event_id":"2026-08-18-19-sba-western-sundowner","date":"2026-08-18","end_date":"2026-08-19","tier":"B-operational-confirmed","regime":"western","fire_associated":false,"fire_name":null,
+      "analysis_window_local":"2026-08-18 late afternoon/evening through the morning of 2026-08-19 PDT",
+      "timing":{"onset_local":"late afternoon/evening 2026-08-18","confirmed_active_local":"07:59 PDT 2026-08-19 lingering phase","peak_local":null,"end_local":"morning 2026-08-19; exact threshold end unavailable","duration_hours_estimate":null},
+      "pressure":{"north_south_gradient":{"peak_mb":null,"peak_time_local":null,"source":null},"sba_minus_bfl":null,"sba_minus_smx":null,"trend":null,"data_quality_note":"No trusted observed pressure-gradient series was recovered for this event window; fields remain null."},
+      "upstream":{"cuyama":null,"santa_ynez_valley":null,"southern_kern":null,"data_quality_note":"No sufficiently specific trusted observed upstream station series was recovered; values intentionally remain null."},
+      "model_upper_air_context":{"synoptic_pattern":"NWS LOX described 500-mb heights near 596 dam on Aug 19 with a strong upper high and weaker-than-normal onshore flow.","surface_pattern":"NWS fire-weather guidance explicitly identified moderate Sundowner winds affecting southwest Santa Barbara County during late afternoon/evening hours through Wednesday.","observed_regional_sounding_context":"NWS reported an 800-1000 ft marine layer regionally on the morning of Aug 19.","925_hpa":null,"850_hpa":null,"700_hpa":null,"500_hpa":null},
+      "zones":{"Gaviota":{"affected":null,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"Refugio":{"affected":null,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"Goleta":{"affected":null,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"San Marcos Pass":{"affected":null,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"Mission Canyon":{"affected":null,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"Montecito":{"affected":null,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"Toro Canyon":{"affected":null,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"Carpinteria":{"affected":null,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"southern_santa_barbara_county":{"affected":true,"observed_peak_gust_mph":35,"observed_temperature_f":null,"observed_min_rh_percent":null}},
+      "observed_thermodynamics":{"temperature_f":null,"relative_humidity_percent":null,"data_quality_note":"No event-zone observed temperature/RH series was recovered from a trusted archive; forecast values are not substituted for observations."},
+      "forecast_context_only":{"fire_weather":"NWS Aug 18 fire-weather guidance called for moderate Sundowner winds in southwest Santa Barbara County, with broader valleys/mountains forecast at 95-105 F and 15-30 percent minimum RH. These are forecast context only."},
+      "source_evidence":["NWS LOX AFD issued 10:18 AM PDT Aug 19, 2026: surface observations showed lingering northerly winds gusting to 35 mph across southern Santa Barbara County.","NWS LOX Fire Weather Planning Forecast issued 3:35 PM PDT Aug 18, 2026: moderate Sundowner winds were expected to affect southwest Santa Barbara County.","CAL FIRE 2026 incident archive checked Aug 20: no Santa Barbara County wildfire beginning Aug 18-19 was listed."],
+      "reconstruction_status":"complete_with_explicit_nulls"
+    },
+    {
+      "event_id":"2026-08-25-26-sba-western-sundowner","date":"2026-08-25","end_date":"2026-08-26","tier":"B-operational-confirmed","regime":"western","fire_associated":false,"fire_name":null,
+      "analysis_window_local":"2026-08-25 late afternoon/evening through the morning of 2026-08-26 PDT",
+      "timing":{"onset_local":"late afternoon/evening 2026-08-25","confirmed_active_local":"night of 2026-08-25 based on NWS post-event comparison","peak_local":null,"end_local":"morning 2026-08-26; exact threshold end unavailable","duration_hours_estimate":null},
+      "pressure":{"north_south_gradient":{"peak_mb":null,"peak_time_local":null,"source":null},"sba_minus_bfl":null,"sba_minus_smx":null,"trend":null,"data_quality_note":"No trusted observed pressure-gradient series was recovered; fields remain null."},
+      "upstream":{"cuyama":null,"santa_ynez_valley":null,"southern_kern":null,"data_quality_note":"No trusted completed-event upstream observation series was recovered; fields remain null."},
+      "model_upper_air_context":{"synoptic_pattern":null,"surface_pattern":"NWS fire-weather guidance expected weak to moderate Sundowner winds across southern Santa Barbara County during the event window.","925_hpa":null,"850_hpa":null,"700_hpa":null,"500_hpa":null},
+      "zones":{"Gaviota":{"affected":null,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"Refugio":{"affected":null,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"Goleta":{"affected":null,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"San Marcos Pass":{"affected":true,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null,"notes":"Within NWS Wind Advisory area during the active Sundowner window; exact observed station gust not recovered."},"Mission Canyon":{"affected":null,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"Montecito":{"affected":null,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"Toro Canyon":{"affected":null,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"Carpinteria":{"affected":null,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null},"southwestern_santa_barbara_county":{"affected":true,"observed_peak_gust_mph":null,"observed_temperature_f":null,"observed_min_rh_percent":null,"notes":"NWS Aug 26 AFD confirms the previous night's Sundowner episode was stronger than the coming night's episode; exact observed station values are unavailable."}},
+      "observed_thermodynamics":{"temperature_f":null,"relative_humidity_percent":null,"data_quality_note":"No trusted observed event-zone temperature/RH series was recovered; forecast values are not substituted."},
+      "forecast_context_only":{"wind_advisory":"NWS Wind Advisory issued 8:37 PM PDT Aug 25 for Santa Barbara County Southwestern Coast and Santa Ynez Mountains Western Range: north winds 20-30 mph with gusts up to 45 mph through 6 AM Aug 26.","fire_weather":"NWS guidance expected Sundowner-exposed temperatures 90-100 F and RH 10-25 percent. These are forecast context only."},
+      "source_evidence":["NWS LOX AFD issued 1:38 PM PDT Aug 26, 2026: Sundowner winds will affect southern Santa Barbara County each night; winds tonight should be weaker than last night, confirming a completed Aug 25-26 episode.","NWS LOX NPW issued 8:37 PM PDT Aug 25, 2026: Wind Advisory for Santa Barbara County Southwestern Coast and Santa Ynez Mountains Western Range through 6 AM with north winds 20-30 mph and gusts up to 45 mph; these are advisory values, not stored as observations.","CAL FIRE current incidents checked Aug 26: no Santa Barbara County wildfire began Aug 25-26; Drum Fire began Aug 19 and is not associated."],
+      "reconstruction_status":"complete_with_explicit_nulls",
+      "next_data_improvement":"Backfill exact station-level wind, temperature/RH, SBA-SMX and SBA-BFL gradients, Cuyama/Santa Ynez/southern Kern observations, and archived upper-air fields if trusted archives become available."
     }
   ]
 }
