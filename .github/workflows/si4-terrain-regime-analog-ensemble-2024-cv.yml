@@ -1,0 +1,71 @@
+name: SI-4 Terrain Regime Analog Ensemble 2024 CV
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'research/SI4_TERRAIN_REGIME_ANALOG_ENSEMBLE_2024_PREDECLARED.md'
+      - 'tools/evaluate-si4-terrain-regime-analog-ensemble-2024-cv.js'
+      - '.github/workflows/si4-terrain-regime-analog-ensemble-2024-cv.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: si4-terrain-regime-analog-ensemble-2024-cv-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analog-ensemble-2024-cv:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check
+        run: node --check tools/evaluate-si4-terrain-regime-analog-ensemble-2024-cv.js
+      - name: Verify frozen predeclaration exists
+        run: |
+          test -s research/SI4_TERRAIN_REGIME_ANALOG_ENSEMBLE_2024_PREDECLARED.md
+          grep -q 'terrain_regime_analog_ensemble_v1' research/SI4_TERRAIN_REGIME_ANALOG_ENSEMBLE_2024_PREDECLARED.md
+          grep -q 'strictly earlier than that issuance time' research/SI4_TERRAIN_REGIME_ANALOG_ENSEMBLE_2024_PREDECLARED.md
+      - name: Download authoritative frozen F24 archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/si4-frozen
+          gh run download 31925677059 --repo SkyFinderRescue/sundowner-intelligence --name si4-all-season-frozen-holdout --dir /tmp/si4-frozen
+          test -s /tmp/si4-frozen/hrrr-upper-fixed-lead-all-season.json
+      - name: Enforce 2024-only and anti-leakage source contract
+        run: |
+          grep -q 'const START="2024-01-01", END="2024-12-31"' tools/evaluate-si4-terrain-regime-analog-ensemble-2024-cv.js
+          grep -q 'holdout_2025_loaded:false' tools/evaluate-si4-terrain-regime-analog-ensemble-2024-cv.js
+          grep -q 'a.ts>=target.issueTs' tools/evaluate-si4-terrain-regime-analog-ensemble-2024-cv.js
+          grep -q 'issueTs:ts-24\*3600000' tools/evaluate-si4-terrain-regime-analog-ensemble-2024-cv.js
+      - name: Run frozen 2024 chronological Analog Ensemble experiment
+        env:
+          UPPER_CACHE: /tmp/si4-frozen/hrrr-upper-fixed-lead-all-season.json
+          OUT: research/si4-terrain-regime-analog-ensemble-2024-cv.json
+        run: node tools/evaluate-si4-terrain-regime-analog-ensemble-2024-cv.js
+      - name: Verify development-only decision artifact
+        run: |
+          node - <<'NODE'
+          const x=require('./research/si4-terrain-regime-analog-ensemble-2024-cv.json');
+          if(x.status!=='RESEARCH_ONLY_2024_DEVELOPMENT') process.exit(2);
+          if(x.candidate_family!=='terrain_regime_analog_ensemble_v1') process.exit(3);
+          if(x.rules.holdout_2025_loaded!==false||x.rules.future_observations_label_only!==true) process.exit(4);
+          if(x.rules.analog_outcomes_verify_strictly_before_current_issuance!==true||x.rules.forecast_lead_hours!==24) process.exit(5);
+          if(x.rules.production_change_authorized!==false||x.rules.predeclared_hyperparameters!==true||x.rules.predeclared_gates!==true) process.exit(6);
+          console.log({rows:x.counts.rows,events:x.counts.events,passes_all:x.passes_all,winner:x.winner_eligible_for_single_frozen_2025_score});
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-terrain-regime-analog-ensemble-2024-cv
+          path: research/si4-terrain-regime-analog-ensemble-2024-cv.json
+          if-no-files-found: warn
+          retention-days: 30
