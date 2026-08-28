@@ -1,0 +1,74 @@
+name: SI-4 NBM F24 Range Smoke
+
+on:
+  push:
+    branches: [si4-nbm-probabilistic]
+    paths:
+      - 'research/SI4_NBM_PROBABILISTIC_2024_PREDECLARED.md'
+      - 'tools/extract-si4-nbm-f24-range.py'
+      - '.github/workflows/si4-nbm-f24-range-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: si4-nbm-f24-range-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Enforce research-only freeze
+        run: |
+          grep -q '2024 DEVELOPMENT ONLY' research/SI4_NBM_PROBABILISTIC_2024_PREDECLARED.md
+          grep -q 'NO 2025 EXPOSURE AUTHORIZED' research/SI4_NBM_PROBABILISTIC_2024_PREDECLARED.md
+          grep -q 'holdout_2025_loaded.*False' tools/extract-si4-nbm-f24-range.py
+          grep -q 'observations_loaded.*False' tools/extract-si4-nbm-f24-range.py
+          grep -q 'outcomes_loaded.*False' tools/extract-si4-nbm-f24-range.py
+      - name: Install GRIB decoder
+        run: python -m pip install --quiet 'cfgrib>=0.9.15' 'xarray>=2025.1' numpy
+      - name: Syntax check
+        run: python -m py_compile tools/extract-si4-nbm-f24-range.py
+      - name: Extract frozen one-case NBM F24 byte-range sample
+        run: python tools/extract-si4-nbm-f24-range.py --date 20240601 --cycle 00 --out research/si4-nbm-f24-range-smoke.json
+      - name: Verify fail-closed smoke artifact
+        run: |
+          python - <<'PY'
+          import json, math
+          x=json.load(open('research/si4-nbm-f24-range-smoke.json'))
+          assert x['status']=='RESEARCH_ONLY_2024_NBM_F24_RANGE_SMOKE'
+          assert x['candidate']=='nbm_probabilistic_surface_ensemble_v1'
+          assert x['rules']['development_year']==2024
+          assert x['rules']['holdout_2025_loaded'] is False
+          assert x['rules']['observations_loaded'] is False
+          assert x['rules']['outcomes_loaded'] is False
+          assert len(x['rows'])==5
+          assert all(r['forecast_lead_hours']==24 and r['run_time'].startswith('2024-') and r['valid_time'].startswith('2024-') for r in x['rows'])
+          for suite in ('core','qmd'):
+              o=x['objects'][suite]
+              assert o['transfer_fraction']>0 and o['transfer_fraction']<0.50, o
+              assert len(o['provenance'])>0
+              assert all(p['sha256'] and len(p['sha256'])==64 for p in o['provenance'])
+          required_core={'wdir10','gust_det','gust_std','wind_det','wind_std'}
+          required_qmd={'gust_p10','gust_p25','gust_p50','gust_p75','gust_p90','gust_mean','gust_std_qmd','gust_prob_gt17','gust_prob_gt21','gust_prob_gt24','gust_prob_gt28','gust_prob_gt32','wind_p10','wind_p25','wind_p50','wind_p75','wind_p90','wind_mean','wind_std_qmd','wind_prob_gt8','wind_prob_gt11','wind_prob_gt15','wind_prob_gt17'}
+          for r in x['rows']:
+              assert required_core <= set(r['core'])
+              assert required_qmd <= set(r['qmd'])
+              vals=[v['value'] for v in list(r['core'].values())+list(r['qmd'].values())]
+              assert all(v is None or math.isfinite(v) for v in vals)
+          print({'rows':len(x['rows']),'core_transfer_fraction':x['objects']['core']['transfer_fraction'],'qmd_transfer_fraction':x['objects']['qmd']['transfer_fraction']})
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-nbm-f24-range-smoke
+          path: research/si4-nbm-f24-range-smoke.json
+          if-no-files-found: warn
+          retention-days: 30
