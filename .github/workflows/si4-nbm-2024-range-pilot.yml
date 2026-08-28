@@ -1,0 +1,74 @@
+name: SI-4 NBM 2024 Range Pilot
+
+on:
+  push:
+    branches: [si4-nbm-probabilistic]
+    paths:
+      - '.github/workflows/si4-nbm-2024-range-pilot.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: si4-nbm-2024-range-pilot-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  extract:
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        date: ['20240601','20240701','20240801','20240901','20241001','20241101','20241201']
+        cycle: ['00','06','12','18']
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install GRIB decoder
+        run: python -m pip install --quiet 'cfgrib>=0.9.15' 'xarray>=2025.1' numpy
+      - name: Extract exact 2024 F24 case
+        run: |
+          python tools/extract-si4-nbm-f24-range.py \
+            --date '${{ matrix.date }}' \
+            --cycle '${{ matrix.cycle }}' \
+            --out 'research/si4-nbm-${{ matrix.date }}-${{ matrix.cycle }}-f024.json'
+      - name: Verify research-only contract
+        run: |
+          python - <<'PY'
+          import json, glob, math
+          p=glob.glob('research/si4-nbm-*-f024.json')[0]
+          x=json.load(open(p))
+          assert x['status']=='RESEARCH_ONLY_2024_NBM_F24_RANGE_SMOKE'
+          assert x['rules']['holdout_2025_loaded'] is False
+          assert x['rules']['observations_loaded'] is False
+          assert x['rules']['outcomes_loaded'] is False
+          assert len(x['rows'])==5
+          assert all(r['forecast_lead_hours']==24 and r['run_time'].startswith('2024-') and r['valid_time'].startswith('2024-') for r in x['rows'])
+          assert max(x['objects']['core']['max_grid_distance_km'],x['objects']['qmd']['max_grid_distance_km']) < 3.0
+          for suite in ('core','qmd'):
+              assert 0 < x['objects'][suite]['transfer_fraction'] < .50
+              assert all(len(p['sha256'])==64 for p in x['objects'][suite]['provenance'])
+          print({'case':p,'rows':len(x['rows']),'core_fraction':x['objects']['core']['transfer_fraction'],'qmd_fraction':x['objects']['qmd']['transfer_fraction']})
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nbm-${{ matrix.date }}-${{ matrix.cycle }}-f024
+          path: research/si4-nbm-${{ matrix.date }}-${{ matrix.cycle }}-f024.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  summarize:
+    needs: extract
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require all 28 frozen archive cases
+        run: |
+          test '${{ needs.extract.result }}' = 'success'
+          echo 'All 28 calendar-selected 2024 NBM F24 range cases passed.'
