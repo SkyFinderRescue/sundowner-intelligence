@@ -32,7 +32,6 @@ POINTS = {
 }
 USER_AGENT = "Sundowner-Intelligence-SI4-NBM-Range/1.0"
 
-# Frozen descriptor suffixes from the validated 2024 NBM field inventory.
 FIELDS = {
     "core": {
         "wdir10": "WDIR:10 m above ground:24 hour fcst:",
@@ -115,7 +114,9 @@ def parse_idx(text: str, content_length: int):
 def select_messages(index_rows, suite: str):
     out = []
     for name, token in FIELDS[suite].items():
-        matches = [r for r in index_rows if r["descriptor"].startswith(f"d=") and token in r["descriptor"]]
+        # Exact suffix matching is intentional: deterministic core rows are prefixes
+        # of their ensemble-statistic neighbors, so substring matching is ambiguous.
+        matches = [r for r in index_rows if r["descriptor"].startswith("d=") and r["descriptor"].endswith(token)]
         if len(matches) != 1:
             raise RuntimeError(f"expected exactly one {suite} message for {name} token={token!r}; found {len(matches)}")
         out.append({**matches[0], "field": name})
@@ -206,25 +207,9 @@ def extract_suite(date: str, cycle: str, suite: str, temp_dir: Path):
         da = first_data_array(p)
         for zone, (lat, lon) in POINTS.items():
             value, glat, glon, distance = sample_nearest(da, lat, lon)
-            sampled[zone][msg["field"]] = {
-                "value": value,
-                "units": unit_hint(da),
-                "grid_lat": glat,
-                "grid_lon": glon,
-                "grid_distance_km": distance,
-            }
+            sampled[zone][msg["field"]] = {"value": value, "units": unit_hint(da), "grid_lat": glat, "grid_lon": glon, "grid_distance_km": distance}
             max_distance = max(max_distance, distance)
-        provenance.append({
-            "suite": suite,
-            "field": msg["field"],
-            "message": msg["message"],
-            "descriptor": msg["descriptor"],
-            "start_byte": msg["start"],
-            "end_byte": msg["end"],
-            "bytes": len(body),
-            "sha256": hashlib.sha256(body).hexdigest(),
-            "content_range": headers.get("content-range"),
-        })
+        provenance.append({"suite": suite, "field": msg["field"], "message": msg["message"], "descriptor": msg["descriptor"], "start_byte": msg["start"], "end_byte": msg["end"], "bytes": len(body), "sha256": hashlib.sha256(body).hexdigest(), "content_range": headers.get("content-range")})
     return {"key": key, "content_length": length, "transferred_bytes": transferred, "transfer_fraction": transferred / length, "max_grid_distance_km": max_distance, "sampled": sampled, "provenance": provenance}
 
 
@@ -244,22 +229,8 @@ def main():
         qmd = extract_suite(args.date, args.cycle, "qmd", td)
     rows = []
     for zone in POINTS:
-        rows.append({
-            "run_time": run.isoformat().replace("+00:00", "Z"),
-            "valid_time": valid.isoformat().replace("+00:00", "Z"),
-            "forecast_lead_hours": FXX,
-            "zone": zone,
-            "core": core["sampled"][zone],
-            "qmd": qmd["sampled"][zone],
-        })
-    result = {
-        "status": "RESEARCH_ONLY_2024_NBM_F24_RANGE_SMOKE",
-        "candidate": "nbm_probabilistic_surface_ensemble_v1",
-        "rules": {"development_year": 2024, "holdout_2025_loaded": False, "observations_loaded": False, "outcomes_loaded": False, "forecast_hour": 24, "production_change_authorized": False},
-        "source": {"provider": "NOAA National Blend of Models via NOAA Open Data AWS", "base": BASE},
-        "rows": rows,
-        "objects": {"core": {k: v for k, v in core.items() if k != "sampled"}, "qmd": {k: v for k, v in qmd.items() if k != "sampled"}},
-    }
+        rows.append({"run_time": run.isoformat().replace("+00:00", "Z"), "valid_time": valid.isoformat().replace("+00:00", "Z"), "forecast_lead_hours": FXX, "zone": zone, "core": core["sampled"][zone], "qmd": qmd["sampled"][zone]})
+    result = {"status": "RESEARCH_ONLY_2024_NBM_F24_RANGE_SMOKE", "candidate": "nbm_probabilistic_surface_ensemble_v1", "rules": {"development_year": 2024, "holdout_2025_loaded": False, "observations_loaded": False, "outcomes_loaded": False, "forecast_hour": 24, "production_change_authorized": False}, "source": {"provider": "NOAA National Blend of Models via NOAA Open Data AWS", "base": BASE}, "rows": rows, "objects": {"core": {k: v for k, v in core.items() if k != "sampled"}, "qmd": {k: v for k, v in qmd.items() if k != "sampled"}}}
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, indent=2))
