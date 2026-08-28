@@ -1,0 +1,56 @@
+name: SI-4 NBM 2024 Archive Probe
+
+on:
+  push:
+    branches: [si4-nbm-probabilistic]
+    paths:
+      - 'research/SI4_NBM_PROBABILISTIC_REVIEW_AND_PROBE.md'
+      - 'tools/probe-si4-nbm-2024.js'
+      - '.github/workflows/si4-nbm-2024-archive-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: si4-nbm-2024-archive-probe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  archive-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check
+        run: node --check tools/probe-si4-nbm-2024.js
+      - name: Enforce research-only predeclaration
+        run: |
+          grep -q 'RESEARCH ONLY / 2024 DEVELOPMENT ONLY' research/SI4_NBM_PROBABILISTIC_REVIEW_AND_PROBE.md
+          grep -q '2025 remains untouched' research/SI4_NBM_PROBABILISTIC_REVIEW_AND_PROBE.md
+          grep -q "holdout_2025_loaded:false" tools/probe-si4-nbm-2024.js
+          grep -q "observations_loaded:false" tools/probe-si4-nbm-2024.js
+      - name: Probe official NBM 2024 F024 archive objects
+        env:
+          OUT: research/si4-nbm-2024-archive-probe.json
+        run: node tools/probe-si4-nbm-2024.js
+      - name: Verify no-science availability artifact
+        run: |
+          node - <<'NODE'
+          const x=require('./research/si4-nbm-2024-archive-probe.json');
+          if(x.status!=='RESEARCH_ONLY_2024_ARCHIVE_AVAILABILITY') process.exit(2);
+          if(x.rules.development_year!==2024||x.rules.holdout_2025_loaded!==false) process.exit(3);
+          if(x.rules.observations_loaded!==false||x.rules.outcomes_loaded!==false) process.exit(4);
+          if(x.rules.forecast_hour!==24||x.rules.production_change_authorized!==false) process.exit(5);
+          console.log(x.summary);
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-nbm-2024-archive-probe
+          path: research/si4-nbm-2024-archive-probe.json
+          if-no-files-found: warn
+          retention-days: 30
