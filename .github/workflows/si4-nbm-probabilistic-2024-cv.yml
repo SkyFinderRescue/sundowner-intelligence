@@ -66,3 +66,5 @@ jobs:
           path: research/si4-nbm-probabilistic-2024-cv.json
           if-no-files-found: warn
           retention-days: 30
+
+# Frozen 2024-only science trigger; no production or 2025 path.
