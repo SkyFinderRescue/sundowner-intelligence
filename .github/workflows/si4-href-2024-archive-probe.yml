@@ -36,7 +36,9 @@ jobs:
           if (p.observations_or_outcomes_used !== false) throw new Error('outcomes must not be used');
           if (JSON.stringify(p.queried_years) !== JSON.stringify([2024])) throw new Error('only 2024 may be queried');
           if (p.future_observations_used !== false || p.fire_association_used !== false) throw new Error('leakage contract failed');
-          console.log(`Phase 0 status: ${p.phase0_status}`);
+          if (p.phase0_status === 'BLOCKED_ARCHIVE_OR_INFRASTRUCTURE') throw new Error('HREF archive/source remains unresolved; do not report a green feasibility probe');
+          if ((p.reachable_root_count || 0) < 1) throw new Error('no official NSSL root was reachable');
+          console.log(`Phase 0 status: ${p.phase0_status}; TLS fallback used: ${Boolean(p.tls_fallback_used)}`);
           NODE
       - uses: actions/upload-artifact@v4
         if: always()
