@@ -15,7 +15,13 @@ Primary NOAA references:
 - https://vlab.noaa.gov/web/mdl/lamp-archived-bulletins-year
 - https://vlab.noaa.gov/web/mdl/lamp
 
-NOAA states that archived hourly station LAMP bulletins are available back through August 2006, including 2024, so a chronological 2024-only fixed-lead experiment is reproducible. LAMP v2.5 (operational during most of 2024) supplies 10-m wind speed, direction and gust guidance through the needed fixed-24h horizon; v2.6 became operational 2024-09-30. Version provenance therefore must be retained exactly and version boundaries must be tested for regime safety rather than normalized away.
+NOAA states that archived hourly station LAMP bulletins are available back through August 2006, including 2024, so a chronological 2024-only fixed-lead experiment is reproducible. The exact NOAA annual 2024 archive link exposed by the MDL archive index is:
+
+`https://lamp.mdl.nws.noaa.gov/lamp/Data/archives/lmp_lavtxt.2024.tar`
+
+The archive index describes the annual object as a tar containing the hourly compressed all-station bulletins. Preserve the annual archive URL plus extracted member name, cycle timestamp, station identifier, and SHA-256 of every extracted member used in scoring. Do not silently replace an unavailable member with a nearby cycle.
+
+LAMP v2.5 (operational during most of 2024) supplies 10-m wind speed, direction and gust guidance through the needed fixed-24h horizon; v2.6 became operational 2024-09-30. NOAA's v2.6 product card states that standard hourly guidance covers 1-25 h, while TMP/DPT/WDR/WSP/WGS and selected elements extend to 38 h. Version provenance therefore must be retained exactly and version boundaries must be tested for regime safety rather than normalized away.
 
 ## Candidate
 
@@ -32,6 +38,7 @@ This candidate is not a fabricated NWS Sundowner probability. It may use archive
 5. Simple comparators: frozen SI-3.1, current frozen SI-4 research baseline, LAMP deterministic wind/gust/direction alone, HRRR alone, and the predeclared simple logistic comparator.
 6. Chronology: nested/forward chronological selection only. Any hyperparameter, transform, threshold or feature selection must be fit exclusively on prior 2024 training folds.
 7. Version boundary: report pre-2024-09-30 and post-2024-09-30 results separately because LAMP v2.6 changed operationally on that date. A candidate cannot pass by exploiting a product-version discontinuity.
+8. Archive pilot before scoring: inspect a small predeclared set of 2024 cycle members solely for archive/member naming, parser correctness, station coverage, exact F24 availability, and version provenance. Do not read verifying observations while choosing or repairing archive cases.
 
 ## Frozen promotion gates
 
@@ -55,4 +62,4 @@ If any 2024 gate fails, reject `issuance_time_lamp_assim_v1` and do not expose i
 
 ## Current decision
 
-**Evidence-backed path identified; experiment not yet executed. NO PROMOTION.** Keep `main` on SI-3.1 and PR #6 draft/unmerged. This review is isolated from `si4-research` while the current-head all-season workflow is active.
+**Evidence-backed path identified; archive provenance pinned; experiment not yet executed. NO PROMOTION.** Keep `main` on SI-3.1 and PR #6 draft/unmerged. This review remains isolated from `si4-research` until the archive pilot is reproducible and the active research head can be advanced without invalidating in-flight workflows.
