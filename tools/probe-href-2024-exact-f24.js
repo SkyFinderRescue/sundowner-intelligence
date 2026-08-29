@@ -68,11 +68,31 @@ function extract(base, body) {
   let m;
   const hrefRe = /(?:xlink:href|href)=["']([^"']+)["']/gi;
   while ((m = hrefRe.exec(body))) {
-    const u = abs(base, m[1]);
+    const raw = m[1];
+    const u = abs(base, raw);
     if (u && u.includes('/thredds/catalog/FRDD/HREF/')) refs.push(u);
+
+    // NSSL's HTML THREDDS catalog exposes many concrete GRIB2 objects as
+    // catalog.html?dataset=FRDD/HREF/... rather than XML urlPath= attributes.
+    // Treat the dataset query parameter as archive plumbing/provenance only.
+    try {
+      const parsed = new URL(raw, base);
+      const dataset = parsed.searchParams.get('dataset');
+      if (dataset && dataset.includes('FRDD/HREF/')) datasets.push(dataset);
+    } catch {}
   }
   const pathRe = /urlPath=["']([^"']+)["']/gi;
   while ((m = pathRe.exec(body))) datasets.push(m[1]);
+
+  // Defensive fallback for escaped/minified HTML where dataset links are not
+  // captured cleanly by href parsing. No observations/outcomes are involved.
+  const datasetRe = /[?&]dataset=([^"'&<>\s]+)/gi;
+  while ((m = datasetRe.exec(body))) {
+    try {
+      const decoded = decodeURIComponent(m[1]);
+      if (decoded.includes('FRDD/HREF/')) datasets.push(decoded);
+    } catch {}
+  }
   return {refs:[...new Set(refs)],datasets:[...new Set(datasets)]};
 }
 function isExactF24(path) {
