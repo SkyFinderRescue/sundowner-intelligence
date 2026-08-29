@@ -5,13 +5,12 @@ const https = require('https');
 const { URL } = require('url');
 
 const ROOTS = [
-  'https://data.nssl.noaa.gov/thredds/catalog/FRDD/HREF/catalog.xml',
-  'https://data.nssl.noaa.gov/thredds/catalog/FRDD/HREF.html',
+  'https://data.nssl.noaa.gov/thredds/catalog/customConfig/FRDD/HREF.html',
   'https://data.nssl.noaa.gov/thredds/catalog/customConfig/FRDD.html',
 ];
 
 const MAX_CATALOGS = 250;
-const MAX_DEPTH = 6;
+const MAX_DEPTH = 8;
 const TIMEOUT_MS = 20000;
 const RETRIES = 2;
 
@@ -28,7 +27,7 @@ function requestOnce(url, attempt = 0, allowNsslTlsFallback = false) {
     const tlsFallback = allowNsslTlsFallback && parsed.hostname === 'data.nssl.noaa.gov';
     const req = https.get(url, {
       headers: {
-        'User-Agent': 'sundowner-intelligence-si4-href-archive-probe/1.1',
+        'User-Agent': 'sundowner-intelligence-si4-href-archive-probe/1.2',
         'Accept': 'application/xml,text/xml,text/html,*/*',
       },
       timeout: TIMEOUT_MS,
@@ -66,17 +65,10 @@ function requestOnce(url, attempt = 0, allowNsslTlsFallback = false) {
 
 async function request(url, attempt = 0) {
   let r = await requestOnce(url, attempt, false);
-
-  // data.nssl.noaa.gov has intermittently presented an incomplete TLS chain to
-  // Node/GitHub-hosted runners while browsers and NOAA-indexed access succeed.
-  // A narrowly scoped fallback is allowed only for this official NOAA hostname,
-  // only after strict verification fails specifically with a certificate-chain
-  // error. The fallback is recorded in provenance and never applies elsewhere.
   if (!r.status && isNsslCertChainError(r.raw_error)) {
     r = await requestOnce(url, attempt, true);
     r.strict_tls_error = 'certificate_chain_verification_failed';
   }
-
   if ([429, 500, 502, 503, 504].includes(r.status) && attempt < RETRIES) {
     await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
     return request(url, attempt + 1);
@@ -93,17 +85,20 @@ function absolute(base, href) {
   try { return new URL(href, base).toString(); } catch { return null; }
 }
 
+function isHrefCatalogLink(u) {
+  if (!u || !u.includes('data.nssl.noaa.gov/thredds/catalog/')) return false;
+  const lower = u.toLowerCase();
+  return lower.includes('/frdd/href') && (/\.html(?:\?.*)?$/.test(lower) || /catalog\.xml(?:\?.*)?$/.test(lower));
+}
+
 function extractLinks(base, body) {
   const refs = [];
   const datasets = [];
   const hrefRe = /(?:xlink:href|href)=["']([^"']+)["']/gi;
   let m;
   while ((m = hrefRe.exec(body))) {
-    const href = m[1];
-    if (/catalog(?:\.xml|\.html)?(?:\?.*)?$/i.test(href) || /catalogRef/i.test(body.slice(Math.max(0, m.index - 160), m.index + 40))) {
-      const u = absolute(base, href);
-      if (u && u.includes('data.nssl.noaa.gov/thredds/catalog/')) refs.push(u);
-    }
+    const u = absolute(base, m[1]);
+    if (isHrefCatalogLink(u)) refs.push(u);
   }
   const urlPathRe = /urlPath=["']([^"']+)["']/gi;
   while ((m = urlPathRe.exec(body))) datasets.push(m[1]);
@@ -193,6 +188,7 @@ function memberSignals(text) {
       'This probe is availability/provenance only and intentionally does not load observation labels or score forecast skill.',
       'Transient 5xx, rate-limit, timeout, DNS, or archive gaps are infrastructure evidence only and are not scientific evidence.',
       'If strict TLS fails only because data.nssl.noaa.gov presents an incomplete certificate chain, a host-scoped fallback is permitted and explicitly recorded in provenance.',
+      'The crawler is deliberately restricted to the official NSSL FRDD/HREF catalog subtree.',
       'A separate exact fixed-F24 member/object probe is required before any 2024 chronological scoring is authorized.',
       'No 2025 science object is queried by this script.',
     ],
