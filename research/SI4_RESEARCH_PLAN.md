@@ -86,7 +86,7 @@ Measure HRRR run-to-run consistency rather than treating the newest cycle as abs
 - monotonic strengthening/weakening trend;
 - agreement of mountain-wave/critical-level diagnostics.
 
-Add RRFS/REFS as **shadow guidance only**. Do not replace HRRR until retrospective and live parallel comparisons demonstrate better Santa Barbara Sundowner skill. NOAA's RRFS/REFS pre-implementation/operational transition must be tracked because filenames/availability can change.
+Add RRFS/REFS as **shadow guidance only**. Do not replace HRRR until retrospective and live parallel comparisons demonstrate better Santa Barbara Sundowner skill.
 
 ### SI4-6 — Direct GOES-West marine-layer gate
 
@@ -165,8 +165,10 @@ A candidate can be considered for SI-4 production only when all of the following
 - [x] Fit/evaluate cross-validated direction/stability-conditioned terrain response. **No new refinement cleared the frozen development gates; retain existing SI-4 terrain correction.**
 - [x] Build archived NDFD matched benchmark. **Frozen matched sample completed; no blanket NWS-superiority claim authorized.**
 - [x] Run final frozen feature-block ablation. **Complete; current SI-4 does not earn production promotion.**
-- [x] Evaluate additional independent 2024-only physics hypotheses (upstream thermal/subsidence, ABL reservoir, channel-eddy/marine re-entry, lee-jet vertical phase, coastal-jet phase, Richardson/wave-breaking susceptibility, coastal adiabatic lift-off, mesoscale pressure-transition timing). **All failed at least one predeclared development gate before 2025 exposure and remain rejected. The coastal adiabatic lift-off selector and mesoscale pressure-transition selector both chose zero adjustment in every chronological fold, producing no incremental recall or probabilistic skill.**
+- [x] Evaluate additional independent 2024-only physics hypotheses (upstream thermal/subsidence, ABL reservoir, channel-eddy/marine re-entry, lee-jet vertical phase, coastal-jet phase, Richardson/wave-breaking susceptibility, coastal adiabatic lift-off, mesoscale pressure-transition timing). **All failed at least one predeclared development gate before 2025 exposure and remain rejected.**
+- [x] Perform primary-source/open-source architecture review after coarse-HRRR proxy exhaustion. **Terrain-resolving WRF/LES retained as a longer-term reference; Analog Ensemble and NBM experiments failed at least one frozen 2024 safety/recall gate.**
+- [ ] Evaluate `local_nonlinear_terrain_postprocessor_v1` under its frozen 2024-only nested chronological predeclaration. **This is a materially different nonlinear complex-terrain post-processing architecture supported by independent operational wind/high-wind literature; no 2025 exposure is authorized unless every frozen 2024 gate passes.**
 
 ## Current decision
 
-**NO PROMOTION.** The remaining legitimate science dependency is independent final-QC SWEX evidence (or a materially different primary-source physical hypothesis formulated and gated without using the frozen 2025 misses). Production `main` and PR #6 must remain unchanged/unmerged until an independently passing candidate clears every promotion gate and the production verification/browser-QA sequence is subsequently completed.
+**NO PROMOTION.** The remaining legitimate science dependencies are independent final-QC SWEX evidence and the newly predeclared materially different 2024-only nonlinear complex-terrain post-processing experiment. Production `main` and PR #6 must remain unchanged/unmerged until an independently passing candidate clears every promotion gate and the production verification/browser-QA sequence is subsequently completed.
