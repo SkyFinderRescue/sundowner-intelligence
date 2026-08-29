@@ -15,35 +15,78 @@ const MAX_DEPTH = 6;
 const TIMEOUT_MS = 20000;
 const RETRIES = 2;
 
-function request(url, attempt = 0) {
+function isNsslCertChainError(error) {
+  const msg = String(error?.message || error || '').toLowerCase();
+  return msg.includes('unable to verify the first certificate') ||
+    msg.includes('unable to get local issuer certificate') ||
+    msg.includes('self signed certificate in certificate chain');
+}
+
+function requestOnce(url, attempt = 0, allowNsslTlsFallback = false) {
   return new Promise((resolve) => {
+    const parsed = new URL(url);
+    const tlsFallback = allowNsslTlsFallback && parsed.hostname === 'data.nssl.noaa.gov';
     const req = https.get(url, {
       headers: {
-        'User-Agent': 'sundowner-intelligence-si4-href-archive-probe/1.0',
+        'User-Agent': 'sundowner-intelligence-si4-href-archive-probe/1.1',
         'Accept': 'application/xml,text/xml,text/html,*/*',
       },
       timeout: TIMEOUT_MS,
+      rejectUnauthorized: !tlsFallback,
     }, (res) => {
       let body = '';
       res.setEncoding('utf8');
       res.on('data', (chunk) => { body += chunk; });
       res.on('end', () => {
-        if ([429, 500, 502, 503, 504].includes(res.statusCode) && attempt < RETRIES) {
-          setTimeout(() => resolve(request(url, attempt + 1)), 1000 * (attempt + 1));
-          return;
-        }
-        resolve({ url, status: res.statusCode, body, headers: res.headers, attempt });
+        resolve({
+          url,
+          status: res.statusCode,
+          body,
+          headers: res.headers,
+          attempt,
+          tls_mode: tlsFallback ? 'nssl_cert_chain_fallback' : 'strict',
+        });
       });
     });
     req.on('timeout', () => req.destroy(new Error('timeout')));
     req.on('error', (error) => {
-      if (attempt < RETRIES) {
-        setTimeout(() => resolve(request(url, attempt + 1)), 1000 * (attempt + 1));
-      } else {
-        resolve({ url, status: null, body: '', headers: {}, attempt, error: String(error.message || error) });
-      }
+      resolve({
+        url,
+        status: null,
+        body: '',
+        headers: {},
+        attempt,
+        error: String(error.message || error),
+        raw_error: error,
+        tls_mode: tlsFallback ? 'nssl_cert_chain_fallback' : 'strict',
+      });
     });
   });
+}
+
+async function request(url, attempt = 0) {
+  let r = await requestOnce(url, attempt, false);
+
+  // data.nssl.noaa.gov has intermittently presented an incomplete TLS chain to
+  // Node/GitHub-hosted runners while browsers and NOAA-indexed access succeed.
+  // A narrowly scoped fallback is allowed only for this official NOAA hostname,
+  // only after strict verification fails specifically with a certificate-chain
+  // error. The fallback is recorded in provenance and never applies elsewhere.
+  if (!r.status && isNsslCertChainError(r.raw_error)) {
+    r = await requestOnce(url, attempt, true);
+    r.strict_tls_error = 'certificate_chain_verification_failed';
+  }
+
+  if ([429, 500, 502, 503, 504].includes(r.status) && attempt < RETRIES) {
+    await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+    return request(url, attempt + 1);
+  }
+  if (!r.status && attempt < RETRIES && !isNsslCertChainError(r.raw_error)) {
+    await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+    return request(url, attempt + 1);
+  }
+  delete r.raw_error;
+  return r;
 }
 
 function absolute(base, href) {
@@ -98,6 +141,8 @@ function memberSignals(text) {
       attempt: r.attempt,
       bytes: Buffer.byteLength(r.body || '', 'utf8'),
       content_type: r.headers?.['content-type'] || null,
+      tls_mode: r.tls_mode || 'strict',
+      strict_tls_error: r.strict_tls_error || null,
     });
     if (!r.status || r.status < 200 || r.status >= 300 || !r.body) continue;
 
@@ -140,12 +185,14 @@ function memberSignals(text) {
     reachable_root_count: reachableRoots.length,
     discovered_2024_reference_count: unique2024.length,
     member_signals: memberSignalSet,
+    tls_fallback_used: accesses.some(x => x.tls_mode === 'nssl_cert_chain_fallback'),
     sample_2024_references: unique2024.slice(0, 100),
     sample_dataset_paths: [...new Set(datasetPaths)].slice(0, 100),
     accesses,
     notes: [
       'This probe is availability/provenance only and intentionally does not load observation labels or score forecast skill.',
-      'Transient 5xx, rate-limit, timeout, or DNS failures are infrastructure evidence only and are not scientific evidence.',
+      'Transient 5xx, rate-limit, timeout, DNS, or archive gaps are infrastructure evidence only and are not scientific evidence.',
+      'If strict TLS fails only because data.nssl.noaa.gov presents an incomplete certificate chain, a host-scoped fallback is permitted and explicitly recorded in provenance.',
       'A separate exact fixed-F24 member/object probe is required before any 2024 chronological scoring is authorized.',
       'No 2025 science object is queried by this script.',
     ],
@@ -159,5 +206,6 @@ function memberSignals(text) {
     reachable_root_count: report.reachable_root_count,
     discovered_2024_reference_count: report.discovered_2024_reference_count,
     member_signals: report.member_signals,
+    tls_fallback_used: report.tls_fallback_used,
   }, null, 2));
 })();
