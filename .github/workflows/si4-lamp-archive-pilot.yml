@@ -105,10 +105,7 @@ jobs:
                   break
               name = hdr[:100].split(b'\0', 1)[0].decode('utf-8', 'strict')
               raw_size = hdr[124:136].split(b'\0', 1)[0].strip() or b'0'
-              try:
-                  size = int(raw_size, 8)
-              except ValueError as exc:
-                  raise SystemExit(f'Invalid TAR size at {pos}: {raw_size!r}') from exc
+              size = int(raw_size, 8)
               rec = {
                   'name': name,
                   'size_bytes': size,
@@ -125,6 +122,15 @@ jobs:
           missing = [name for name in TARGETS if name not in by_name]
           if missing:
               raise SystemExit(f'Predeclared standard LAMP members missing: {missing}')
+
+          def slots(line):
+              # LAMP alphanumeric guidance uses a 5-character row label/prefix
+              # followed by fixed 3-character forecast slots. Preserve NG and 99
+              # as values rather than treating them as absent data here.
+              if not line:
+                  return []
+              body = line[5:]
+              return [body[i:i+3].strip() for i in range(0, len(body), 3) if body[i:i+3].strip()]
 
           selected = []
           station_header = re.compile(r'^\s*K[A-Z0-9]{3}\s{2,}')
@@ -144,38 +150,38 @@ jobs:
                           end = j
                           break
                   block = lines[i:end]
-                  hr = next((x for x in block if re.match(r'^\s*HR\s', x)), '')
+                  utc = next((x for x in block if re.match(r'^\s*UTC\s', x)), '')
                   wdr = next((x for x in block if re.match(r'^\s*WDR\s', x)), '')
                   wsp = next((x for x in block if re.match(r'^\s*WSP\s', x)), '')
                   wgs = next((x for x in block if re.match(r'^\s*WGS\s', x)), '')
-                  # NOAA LAMP v2.5/v2.6 standard bulletins explicitly enumerate HR 01..25.
-                  # Detect F24 from the HR row itself; do not infer it from UTC clock labels.
-                  hours = re.findall(r'(?<!\d)(\d{2})(?!\d)', hr[2:]) if hr else []
+                  utc_slots, wdr_slots, wsp_slots, wgs_slots = map(slots, (utc, wdr, wsp, wgs))
+                  # NOAA LAMP v2.5 states WDR/WSP/WGS extend through 38 h, while
+                  # standard hourly bulletins cover 1-25 h. Some archived 2024
+                  # monthly text omits an HR row but carries exactly 25 standard
+                  # hourly slots. Position 24 (index 23) is therefore the exact
+                  # fixed-24h guidance slot; we require it to physically exist in
+                  # all wind rows instead of inferring from a future observation.
+                  standard = min(len(utc_slots), len(wdr_slots), len(wsp_slots), len(wgs_slots)) >= 25
                   blocks.append({
-                      'has_hr': bool(hr),
-                      'hours': hours,
-                      'has_f24': '24' in hours,
-                      'has_f25': '25' in hours,
-                      'has_wdr': bool(wdr),
-                      'has_wsp': bool(wsp),
-                      'has_wgs': bool(wgs),
+                      'utc_slots': len(utc_slots),
+                      'wdr_slots': len(wdr_slots),
+                      'wsp_slots': len(wsp_slots),
+                      'wgs_slots': len(wgs_slots),
+                      'has_f24_slots': standard,
+                      'f24_utc': utc_slots[23] if len(utc_slots) >= 24 else None,
+                      'f24_wdr': wdr_slots[23] if len(wdr_slots) >= 24 else None,
+                      'f24_wsp': wsp_slots[23] if len(wsp_slots) >= 24 else None,
+                      'f24_wgs': wgs_slots[23] if len(wgs_slots) >= 24 else None,
                       'header': lines[i][:160],
                   })
               rec['ksba_block_count'] = len(blocks)
-              rec['ksba_standard_blocks'] = sum(
-                  b['has_hr'] and b['has_f24'] and b['has_wdr'] and b['has_wsp'] and b['has_wgs'] for b in blocks
-              )
-              rec['ksba_nonstandard_or_partial_blocks'] = len(blocks) - rec['ksba_standard_blocks']
+              rec['ksba_standard_25slot_blocks'] = sum(b['has_f24_slots'] for b in blocks)
+              rec['ksba_nonstandard_or_partial_blocks'] = len(blocks) - rec['ksba_standard_25slot_blocks']
               rec['block_diagnostics_sample'] = blocks[:5]
               if not blocks:
                   raise SystemExit(f'{name}: KSBA absent')
-              # Monthly archives can contain an edge/partial bulletin at month boundaries.
-              # The feasibility contract is that the predeclared standard monthly member
-              # contains reproducible KSBA standard bulletin(s) with explicit F24 plus
-              # WDR/WSP/WGS. Full science extraction will reject any individual cycle that
-              # lacks those exact fields rather than silently substituting another cycle.
-              if rec['ksba_standard_blocks'] < 1:
-                  raise SystemExit(f'{name}: no KSBA standard block with explicit HR=24 and WDR/WSP/WGS')
+              if rec['ksba_standard_25slot_blocks'] < 1:
+                  raise SystemExit(f'{name}: no KSBA standard block with 25 UTC/WDR/WSP/WGS slots')
               selected.append(rec)
 
           report = {
@@ -183,6 +189,7 @@ jobs:
               'science_scoring_performed': False,
               'verifying_observations_read': False,
               'year': 2024,
+              'f24_definition': '24th standard hourly guidance slot (index 23); NOAA LAMP v2.5 standard guidance covers 1-25 h and WDR/WSP/WGS extend to 38 h',
               'archive_url': URL,
               'archive_content_length': length,
               'archive_etag': archive_meta.get('etag'),
@@ -198,7 +205,7 @@ jobs:
           (root / 'tar-index.json').write_text(json.dumps(members, indent=2) + '\n')
           print(json.dumps({k:v for k,v in report.items() if k != 'selected'}, indent=2))
           for rec in selected:
-              print(rec['name'], rec['sha256'], 'KSBA=', rec['ksba_block_count'], 'standard=', rec['ksba_standard_blocks'], 'partial=', rec['ksba_nonstandard_or_partial_blocks'])
+              print(rec['name'], rec['sha256'], 'KSBA=', rec['ksba_block_count'], 'standard25=', rec['ksba_standard_25slot_blocks'], 'partial=', rec['ksba_nonstandard_or_partial_blocks'])
               print(' sample=', json.dumps(rec['block_diagnostics_sample'][:2]))
           PY
 
