@@ -23,6 +23,8 @@ jobs:
       - name: Syntax check
         run: node --check tools/probe-href-2024-archive.js
       - name: Probe NSSL HREF archive without outcomes or 2025 science data
+        env:
+          NODE_OPTIONS: --use-openssl-ca
         run: node tools/probe-href-2024-archive.js
       - name: Enforce outcome-blind Phase 0 contract
         run: |
