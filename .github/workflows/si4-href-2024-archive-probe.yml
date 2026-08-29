@@ -36,9 +36,12 @@ jobs:
           if (p.observations_or_outcomes_used !== false) throw new Error('outcomes must not be used');
           if (JSON.stringify(p.queried_years) !== JSON.stringify([2024])) throw new Error('only 2024 may be queried');
           if (p.future_observations_used !== false || p.fire_association_used !== false) throw new Error('leakage contract failed');
-          if (p.phase0_status === 'BLOCKED_ARCHIVE_OR_INFRASTRUCTURE') throw new Error('HREF archive/source remains unresolved; do not report a green feasibility probe');
-          if ((p.reachable_root_count || 0) < 1) throw new Error('no official NSSL root was reachable');
-          console.log(`Phase 0 status: ${p.phase0_status}; TLS fallback used: ${Boolean(p.tls_fallback_used)}`);
+          if (p.phase0_status !== 'SOURCE_DISCOVERED_NEEDS_EXACT_F24_MEMBER_PROBE') {
+            throw new Error(`HREF source discovery incomplete: ${p.phase0_status}`);
+          }
+          if ((p.reachable_root_count || 0) < 1) throw new Error('no official NSSL HREF root was reachable');
+          if ((p.discovered_2024_reference_count || 0) < 1) throw new Error('no 2024 HREF references discovered');
+          console.log(`Phase 0 status: ${p.phase0_status}; refs=${p.discovered_2024_reference_count}; TLS fallback used: ${Boolean(p.tls_fallback_used)}`);
           NODE
       - uses: actions/upload-artifact@v4
         if: always()
