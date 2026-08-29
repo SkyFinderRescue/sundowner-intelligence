@@ -1,0 +1,45 @@
+name: SI-4 HREF 2024 Archive Feasibility Probe
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/probe-href-2024-archive.js'
+      - '.github/workflows/si4-href-2024-archive-probe.yml'
+      - 'research/SI4_INITIAL_CONDITION_ENSEMBLE_DOWNSLOPE_2024_PREDECLARED.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe-href-2024-archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Syntax check
+        run: node --check tools/probe-href-2024-archive.js
+      - name: Probe NSSL HREF archive without outcomes or 2025 science data
+        run: node tools/probe-href-2024-archive.js
+      - name: Enforce outcome-blind Phase 0 contract
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const p = JSON.parse(fs.readFileSync('research/href-2024-archive-probe.json', 'utf8'));
+          if (p.candidate !== 'initial_condition_ensemble_downslope_v1') throw new Error('candidate mismatch');
+          if (p.science_scoring_performed !== false) throw new Error('science scoring must remain disabled');
+          if (p.observations_or_outcomes_used !== false) throw new Error('outcomes must not be used');
+          if (JSON.stringify(p.queried_years) !== JSON.stringify([2024])) throw new Error('only 2024 may be queried');
+          if (p.future_observations_used !== false || p.fire_association_used !== false) throw new Error('leakage contract failed');
+          console.log(`Phase 0 status: ${p.phase0_status}`);
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-href-2024-archive-probe
+          path: research/href-2024-archive-probe.json
+          if-no-files-found: error
+          retention-days: 30
