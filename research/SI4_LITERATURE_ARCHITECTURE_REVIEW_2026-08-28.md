@@ -1,7 +1,7 @@
 # SI-4 Primary-Source Literature / Open-Source Architecture Review
 
 Date: 2026-08-28
-Status: RESEARCH ONLY — no 2025 exposure, no production change
+Status: **RESEARCH ONLY** — no 2025 exposure, no production change
 
 ## Purpose
 
@@ -28,7 +28,7 @@ Decision implication: do **not** treat plain WindNinja as a new SI-4 promotion c
 Evidence / open source:
 - https://doi.org/10.1175/WAF-D-24-0013.1
 - https://github.com/firelab/windninja
-- https://github.com/iSnobal/katana (example HRRR-to-WindNinja automation)
+- https://github.com/iSnobal/katana
 
 ### 3. Analog Ensemble is a genuinely different, proven probabilistic post-processing architecture
 
@@ -40,9 +40,9 @@ Open-source Parallel Analog Ensemble (PAnEn / RAnEn / CAnEn) provides an auditab
 
 Additional primary literature:
 - Delle Monache et al. (2013): https://doi.org/10.1175/MWR-D-12-00281.1
-- Alessandrini et al. (2019), improved Analog Ensemble wind-speed forecasts: https://doi.org/10.1175/MWR-D-19-0006.1
-- Yang et al. (2018), analog technique for storm wind speed: https://doi.org/10.1175/MWR-D-17-0198.1
-- Vannitsem et al. (2021), statistical post-processing review: https://doi.org/10.1175/BAMS-D-19-0308.1
+- Alessandrini et al. (2019): https://doi.org/10.1175/MWR-D-19-0006.1
+- Yang et al. (2018): https://doi.org/10.1175/MWR-D-17-0198.1
+- Vannitsem et al. (2021): https://doi.org/10.1175/BAMS-D-19-0308.1
 
 This is materially different from every rejected SI-4 candidate to date: it changes the forecast architecture from hand-designed additive physics adjustments to **historical forecast-state similarity + empirical conditional outcome distributions**.
 
@@ -52,71 +52,59 @@ The Santa Ana Wildfire Threat Index operational framework combines calibrated mo
 
 Evidence:
 - Rolinski et al. (2016), SAWTI: https://doi.org/10.1175/WAF-D-15-0141.1
-- 2026 California Fire Weather Annual Operating Plan (NWS): https://www.weather.gov/media/wrh/cafw/2026_CA_FIRE_AOP.pdf
+- 2026 California Fire Weather Annual Operating Plan: https://www.weather.gov/media/wrh/cafw/2026_CA_FIRE_AOP.pdf
+
+### 5. Local nonlinear post-processing has independent evidence specifically for unresolved complex-terrain wind and nonconvective high-wind hazards
+
+A second literature pass after the Analog/NBM experiments identified a materially different architecture that is not another scalar HRRR physics proxy and is not nearest-neighbor Analog Ensemble.
+
+Steeneveld et al. (2021), *Weather and Forecasting*, DOI 10.1175/WAF-D-21-0054.1, used an artificial neural network to post-process operational WRF wind forecasts in a 1–2-km-wide unresolved valley. Inputs were forecast-time wind and near-surface stability; the study reported directional accuracy improving from 56% to 79%, including improvement across stability classes. The relevance to SI-4 is architectural: nonlinear local mapping can learn terrain/stability-conditioned surface response that a coarser NWP grid does not resolve.
+
+Brothers et al. (2022/2023), *Weather and Forecasting*, DOI 10.1175/WAF-D-21-0215.1, developed random-forest classifiers for nonconvective high winds in complex terrain in southeast Wyoming. Verification over two winters found operational benefit relative to existing forecast tools, including localized gap-wind and downslope/high-wind settings. Again, this supports the architecture, not transfer of Wyoming thresholds to Santa Barbara.
+
+Schulz & Lerch et al. (2022), *Monthly Weather Review*, DOI 10.1175/MWR-D-21-0150.1, systematically compared statistical and machine-learning ensemble post-processing methods for wind gusts. All tested post-processors calibrated raw ensemble errors; locally adaptive neural approaches using additional meteorological predictors produced the strongest skill and learned physically consistent diurnal/PBL-transition behavior. This is directly relevant to the SI-4 recall problem because the measured misses cluster around transition/coupling behavior while simple additive physics candidates have repeatedly failed.
+
+Additional downslope-wind predictability evidence also argues for probabilistic/nonlinear treatment rather than one deterministic correction. Metz & Durran (2023), *Weather and Forecasting*, DOI 10.1175/WAF-D-22-0135.1, found regime-dependent predictability in a high-resolution ensemble and evaluated downslope windstorms probabilistically with CRPS; earlier ensemble work showed very large intensity spread from small initial-condition differences. A local nonlinear post-processor can therefore be tested as a mapping from the existing issuance-time forecast state to local event/gust distributions without pretending the coarse deterministic state is exact.
+
+Evidence:
+- https://doi.org/10.1175/WAF-D-21-0054.1
+- https://doi.org/10.1175/WAF-D-21-0215.1
+- https://doi.org/10.1175/MWR-D-21-0150.1
+- https://doi.org/10.1175/WAF-D-22-0135.1
+
+Decision implication: a **strictly 2024-only, chronological, local nonlinear post-processing experiment** is scientifically justified. It must use only issuance-time meteorological predictors and static terrain/zone metadata, with observations used only as historical training targets after they are available. It must not use 2025 for feature selection, hyperparameters, thresholds, or early stopping.
 
 ## Architecture decision
 
-Two genuinely different paths survive the review:
+Three genuinely different paths survive the literature review as research concepts:
 
 1. **Terrain-resolving WRF/LES (research reference / longer-term path).** Strongest direct physics support for Sundowner spatial structure, but expensive and not currently backed by a leakage-safe full-2024 fixed-F24 archive at ~150 m. Do not launch an underpowered case-study-only promotion test that would overfit SWEX/famous events.
 
-2. **Terrain/regime-aware Analog Ensemble (immediate 2024-only candidate).** This can be evaluated now using the existing archived issuance-time HRRR predictor state and independent verifying observations without altering the underlying NWP, without inventing probabilities, and without exposing 2025 during development.
+2. **Terrain/regime-aware Analog Ensemble.** Materially different and was appropriately tested under the frozen 2024 chronology, but its predeclared safety gate did not fully pass; it remains rejected and must not be rescued with 2025 tuning.
 
-The second path is therefore authorized for a **single predeclared 2024 chronological-development experiment**. This authorization is not evidence that the candidate will pass.
+3. **Local nonlinear complex-terrain post-processing (`local_nonlinear_terrain_postprocessor_v1`).** Supported by independent complex-terrain operational wind, nonconvective high-wind, and probabilistic wind-gust post-processing literature. This is authorized only as a new 2024-only chronological development experiment under the unchanged SI-4 gates.
 
-## Frozen 2024-only candidate: `terrain_regime_analog_ensemble_v1`
+The third path is **not** evidence of improvement yet. It is authorization to test a materially different architecture without using the frozen 2025 misses.
 
-### Inputs allowed at issuance time
+## Frozen 2024-only candidate: `local_nonlinear_terrain_postprocessor_v1`
 
-Use existing archived fixed-F24 HRRR predictors already admitted to SI-4, with no new future observations:
-- zone/station static terrain identity/orientation;
-- forecast wind speed/direction and cross-barrier components;
-- pressure-gradient fields already available at issuance;
-- ridge-layer stability / profile diagnostics already calculated at issuance;
-- marine-resistance diagnostics only where the issuance-time value genuinely exists;
-- regime/season/hour as forecast-context metadata.
+The detailed predeclaration is persisted separately in `research/SI4_LOCAL_NONLINEAR_TERRAIN_POSTPROCESSOR_2024_PREDECLARED.md` before scoring.
 
-Do not use verifying wind, later-cycle observations, fire occurrence, SWEX outcome labels, or any 2025 information as analog predictors.
-
-### Chronological anti-leakage design
-
-For every 2024 validation issuance, its analog library may contain only records whose verifying valid time is strictly earlier than the candidate issuance time. No random CV and no use of later-2024 observations to forecast earlier-2024 cases.
-
-Use expanding-window chronological folds. If a fold lacks the predeclared minimum analog-library size, return the SI-3/SI-4 baseline unchanged rather than lowering the minimum post hoc.
-
-### Outputs
-
-For each zone/valid time, derive from the selected historical analog outcomes:
-- empirical Sundowner occurrence probability;
-- empirical gust median/mean and quantiles where sample size is adequate;
-- analog sample count/effective sample size;
-- analog-distance diagnostic.
-
-Missing analog evidence remains missing/fallback. No synthetic probabilities outside the empirical/calibrated construction.
-
-### Predictor weights / hyperparameters
-
-Weights, distance metric, neighbor counts and minimum sample count must be selected inside 2024 chronological development only. Candidate selection must optimize a predeclared joint criterion dominated by event POD and Brier while enforcing the existing safety constraints; it may not optimize directly against any 2025 result.
-
-### Frozen development gates before any 2025 exposure
-
-The candidate advances only if the complete 2024 chronological CV satisfies all existing SI-4 gates:
-- event POD >= baseline +0.05 absolute;
-- event FAR no worse;
-- overall Brier no worse;
-- AUC >= baseline -0.005;
-- hard-negative Brier no worse;
-- hard-negative FPR no worse;
-- spatial precision >= baseline -0.01;
-- regime safety passes;
-- gust MAE/RMSE non-inferior and bias non-inferior.
-
-If any gate fails, reject `terrain_regime_analog_ensemble_v1` and do not expose it to 2025. No rescue tuning on 2025 is allowed.
+Key restrictions:
+- predictors must exist at forecast issuance time;
+- no future observations as predictors;
+- historical observations may enter training only after their valid time is strictly earlier than the forecast issuance being scored;
+- no fire association predictor;
+- missing remains missing or uses a predeclared fallback;
+- no 2025 exposure unless every frozen 2024 gate passes;
+- candidate event thresholds are selected within each 2024 chronological training fold only;
+- no post-hoc threshold rescue.
 
 ## Explicitly rejected shortcuts
 
 - Do not create another near-duplicate scalar HRRR pressure-level proxy candidate.
 - Do not promote plain WindNinja based on its average improvement; published high-wind/lee-slope limitations are directly relevant to the target hazard.
+- Do not rescue the rejected Analog Ensemble or NBM candidates with 2025 tuning.
 - Do not train a black-box ML model on 2024+2025 together.
 - Do not use SWEX IOP membership as a predictor or assume non-IOP periods are negatives.
 - Do not claim WRF-LES operational superiority from two SWEX cases.
@@ -127,4 +115,4 @@ NCAR/EOL final-QC profiler dataset 600.034 remains pending. The already accepted
 
 ## Production decision
 
-**NO PROMOTION.** SI-3.1 on `main` remains the verified production baseline and PR #6 remains draft/unmerged. This review only authorizes a materially different 2024-only development experiment.
+**NO PROMOTION.** SI-3.1 on `main` remains the verified production baseline and PR #6 remains draft/unmerged. This review only authorizes materially different 2024-only development experiments; none may reach 2025 unless every frozen development gate passes.
