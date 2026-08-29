@@ -1,0 +1,68 @@
+name: SI-4 NBM Probabilistic 2024 Chronological CV
+
+on:
+  push:
+    branches: [si4-nbm-probabilistic]
+    paths:
+      - 'tools/evaluate-si4-nbm-probabilistic-2024-cv.js'
+      - '.github/workflows/si4-nbm-probabilistic-2024-cv.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  nbm-probabilistic-2024-cv:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check
+        run: node --check tools/evaluate-si4-nbm-probabilistic-2024-cv.js
+      - name: Download frozen SI-4 F24 upper-air evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/si4-frozen
+          gh run download 31925677059 --repo SkyFinderRescue/sundowner-intelligence --name si4-all-season-frozen-holdout --dir /tmp/si4-frozen
+          test -s /tmp/si4-frozen/hrrr-upper-fixed-lead-all-season.json
+      - name: Download completed predeclared 2024 NBM archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/nbm
+          gh run download 33224477607 --repo SkyFinderRescue/sundowner-intelligence --name si4-nbm-2024-expanded-archive --dir /tmp/nbm
+          test -s /tmp/nbm/si4-nbm-2024-expanded-archive.json
+      - name: Enforce 2024-only and frozen-gate guards
+        run: |
+          grep -q 'const START="2024-06-01",END="2024-12-31"' tools/evaluate-si4-nbm-probabilistic-2024-cv.js
+          grep -q 'holdout_2025_loaded:false' tools/evaluate-si4-nbm-probabilistic-2024-cv.js
+          grep -q 'event_pod_gain' tools/evaluate-si4-nbm-probabilistic-2024-cv.js
+          grep -q 'hard_negative_fpr_no_worse' tools/evaluate-si4-nbm-probabilistic-2024-cv.js
+      - name: Run NBM probabilistic 2024 chronological CV
+        env:
+          UPPER_CACHE: /tmp/si4-frozen/hrrr-upper-fixed-lead-all-season.json
+          NBM_ARCHIVE: /tmp/nbm/si4-nbm-2024-expanded-archive.json
+          OUT: research/si4-nbm-probabilistic-2024-cv.json
+        run: node tools/evaluate-si4-nbm-probabilistic-2024-cv.js
+      - name: Verify fail-closed science decision
+        run: |
+          node - <<'NODE'
+          const x=require('./research/si4-nbm-probabilistic-2024-cv.json');
+          if(x.status!=='RESEARCH_ONLY_2024_DEVELOPMENT') process.exit(2);
+          if(x.rules.holdout_2025_loaded!==false||x.rules.production_change_authorized!==false) process.exit(3);
+          if(x.rules.exact_forecast_lead_hours!==24||x.rules.chronological_validation!==true) process.exit(4);
+          if(x.eligible_for_single_score_only_2025!==x.passes_all) process.exit(5);
+          console.log({counts:x.counts,gates:x.gates,passes_all:x.passes_all});
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-nbm-probabilistic-2024-cv
+          path: research/si4-nbm-probabilistic-2024-cv.json
+          if-no-files-found: warn
+          retention-days: 30
