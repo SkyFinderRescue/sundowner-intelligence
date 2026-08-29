@@ -1,0 +1,129 @@
+name: SI-4 LAMP Effective Lead Probe
+
+on:
+  push:
+    branches: [si4-lamp-assim-review]
+    paths:
+      - '.github/workflows/si4-lamp-effective-lead-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: si4-lamp-effective-lead-probe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  effective-lead-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify effective lead without observations
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_NAME}" = "si4-lamp-assim-review"
+          mkdir -p lamp-lead-probe
+          python - <<'PY'
+          import gzip, hashlib, http.client, json, pathlib, re, time
+          from datetime import datetime, timezone, timedelta
+
+          HOST='lamp.mdl.nws.noaa.gov'
+          PATH='/lamp/Data/archives/lmp_lavtxt.2024.tar'
+          TARGET='lmp_lavtxt.202401.0030z.gz'
+          STATION='KSBA'
+          conn=None
+          def reconnect():
+              global conn
+              try:
+                  if conn: conn.close()
+              except Exception: pass
+              conn=http.client.HTTPSConnection(HOST,timeout=30)
+          reconnect()
+          conn.request('HEAD',PATH); r=conn.getresponse(); r.read()
+          if r.status!=200: raise SystemExit(f'HEAD {r.status}')
+          meta={k.lower():v for k,v in r.getheaders()}; length=int(meta['content-length'])
+          transferred=0; requests=0
+          def get_range(a,b):
+              global transferred,requests
+              last=None
+              for n in range(3):
+                  try:
+                      conn.request('GET',PATH,headers={'Range':f'bytes={a}-{b}'})
+                      rr=conn.getresponse(); body=rr.read(); requests+=1; transferred+=len(body)
+                      if rr.status==206 and len(body)==b-a+1: return body
+                      last=RuntimeError(f'{rr.status} len={len(body)}')
+                  except Exception as e: last=e
+                  reconnect(); time.sleep(.5*(n+1))
+              raise last
+          pos=0; rec=None
+          while pos+512<=length:
+              h=get_range(pos,pos+511)
+              if h==b'\0'*512: break
+              name=h[:100].split(b'\0',1)[0].decode()
+              size=int((h[124:136].split(b'\0',1)[0].strip() or b'0'),8)
+              if name==TARGET:
+                  rec=(pos+512,pos+511+size,size); break
+              pos=((pos+512+size+511)//512)*512
+          if not rec: raise SystemExit('target member absent')
+          payload=get_range(rec[0],rec[1]); txt=gzip.decompress(payload).decode('utf-8','replace')
+          lines=txt.splitlines(); station_header=re.compile(r'^\s*K[A-Z0-9]{3}\s{2,}')
+          def slots(line):
+              body=line[5:]; return [body[i:i+3].strip() for i in range(0,len(body),3) if body[i:i+3].strip()]
+          blocks=[]
+          for i,line in enumerate(lines):
+              if not re.match(r'^\s*KSBA\s{2,}',line): continue
+              m=re.search(r'(\d{1,2})/(\d{1,2})/(\d{4})\s+(\d{4})\s+UTC',line)
+              if not m: raise SystemExit('cannot parse issue header: '+line)
+              mo,da,yr,hhmm=map(int,m.groups()); issue=datetime(yr,mo,da,hhmm//100,hhmm%100,tzinfo=timezone.utc)
+              end=len(lines)
+              for j in range(i+1,len(lines)):
+                  if station_header.match(lines[j]): end=j; break
+              block=lines[i:end]
+              utc=slots(next((x for x in block if re.match(r'^\s*UTC\s',x)),''))
+              wdr=slots(next((x for x in block if re.match(r'^\s*WDR\s',x)),''))
+              wsp=slots(next((x for x in block if re.match(r'^\s*WSP\s',x)),''))
+              wgs=slots(next((x for x in block if re.match(r'^\s*WGS\s',x)),''))
+              if min(map(len,(utc,wdr,wsp,wgs)))<25: raise SystemExit('partial standard block')
+              valid=[]; day=issue.date(); prev_hour=None
+              for k,s in enumerate(utc[:25]):
+                  hour=int(s)
+                  if prev_hour is not None and hour<prev_hour: day += timedelta(days=1)
+                  dt=datetime(day.year,day.month,day.day,hour,0,tzinfo=timezone.utc)
+                  if dt<=issue and k==0: dt += timedelta(days=1)
+                  valid.append(dt); prev_hour=hour
+              leads=[(v-issue).total_seconds()/3600 for v in valid]
+              blocks.append({'issue':issue.isoformat(),'utc_slots':utc[:25],'effective_lead_hours':leads,'index23_lead':leads[23],'index24_lead':leads[24]})
+          if not blocks: raise SystemExit('KSBA absent')
+          unique=sorted({x for b in blocks for x in b['effective_lead_hours']})
+          exact24=any(abs(x-24.0)<1e-9 for x in unique)
+          report={
+            'candidate':'issuance_time_lamp_assim_v1',
+            'year':2024,
+            'station':STATION,
+            'member':TARGET,
+            'member_sha256':hashlib.sha256(payload).hexdigest(),
+            'science_scoring_performed':False,
+            'verifying_observations_read':False,
+            'issue_minute':30,
+            'validity_grid':'whole UTC hours from archived UTC row',
+            'unique_effective_leads_hours':unique,
+            'exact_effective_24h_present':exact24,
+            'index23_effective_lead_hours':sorted({b['index23_lead'] for b in blocks}),
+            'index24_effective_lead_hours':sorted({b['index24_lead'] for b in blocks}),
+            'sample':blocks[:3],
+            'bytes_transferred':transferred,
+            'range_requests':requests,
+          }
+          pathlib.Path('lamp-lead-probe/report.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-lamp-effective-lead-probe
+          path: lamp-lead-probe/report.json
+          if-no-files-found: warn
+          retention-days: 30
