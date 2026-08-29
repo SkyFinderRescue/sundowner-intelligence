@@ -1,0 +1,146 @@
+name: SI-4 LAMP 2024 Archive Pilot
+
+on:
+  push:
+    branches:
+      - si4-lamp-assim-review
+    paths:
+      - '.github/workflows/si4-lamp-archive-pilot.yml'
+      - 'research/SI4_LAMP_ASSIM_REVIEW.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: si4-lamp-archive-pilot-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  archive-pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assert isolated 2024-only research lane
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_NAME}" = "si4-lamp-assim-review"
+          grep -q 'issuance_time_lamp_assim_v1' research/SI4_LAMP_ASSIM_REVIEW.md
+          grep -q '2024-only' research/SI4_LAMP_ASSIM_REVIEW.md
+          if grep -Eqi '2025.*(score|holdout|observation)' research/SI4_LAMP_ASSIM_REVIEW.md; then
+            echo 'Review contains 2025 score/holdout/observation language; inspect manually before any science run.' >&2
+            exit 1
+          fi
+
+      - name: Probe exact NOAA annual archive without scoring observations
+        shell: bash
+        env:
+          ARCHIVE_URL: https://lamp.mdl.nws.noaa.gov/lamp/Data/archives/lmp_lavtxt.2024.tar
+        run: |
+          set -euo pipefail
+          mkdir -p lamp-pilot
+          curl --fail --silent --show-error --location --retry 3 --retry-all-errors --connect-timeout 20 --max-time 120 \
+            --dump-header lamp-pilot/head.txt --head "$ARCHIVE_URL" -o /dev/null
+
+          # Fetch only the first 32 MiB of the annual TAR.  Abort if the endpoint ignores
+          # Range and attempts to send the multi-GB full archive.  This is archive/member
+          # plumbing only; no verifying observations or outcomes are read.
+          curl --fail --silent --show-error --location --retry 3 --retry-all-errors --connect-timeout 20 --max-time 180 \
+            --header 'Range: bytes=0-33554431' --max-filesize 40000000 \
+            --dump-header lamp-pilot/range-headers.txt \
+            "$ARCHIVE_URL" -o lamp-pilot/range.bin
+
+          python - <<'PY'
+          import gzip, hashlib, json, pathlib, re
+
+          root = pathlib.Path('lamp-pilot')
+          data = (root / 'range.bin').read_bytes()
+          headers = (root / 'range-headers.txt').read_text(errors='replace')
+          status_lines = [ln.strip() for ln in headers.splitlines() if ln.startswith('HTTP/')]
+          if not status_lines or '206' not in status_lines[-1]:
+              raise SystemExit(f'NOAA archive did not honor byte range: {status_lines!r}')
+
+          members = []
+          pos = 0
+          while pos + 512 <= len(data):
+              hdr = data[pos:pos+512]
+              if hdr == b'\0' * 512:
+                  break
+              name = hdr[:100].split(b'\0', 1)[0].decode('utf-8', 'replace')
+              raw_size = hdr[124:136].split(b'\0', 1)[0].strip() or b'0'
+              try:
+                  size = int(raw_size, 8)
+              except ValueError:
+                  break
+              start = pos + 512
+              end = start + size
+              complete = end <= len(data)
+              rec = {'name': name, 'size_bytes': size, 'tar_header_offset': pos, 'complete_in_range': complete}
+              if complete:
+                  payload = data[start:end]
+                  rec['sha256'] = hashlib.sha256(payload).hexdigest()
+                  if name.endswith('.gz'):
+                      try:
+                          text = gzip.decompress(payload).decode('utf-8', 'replace')
+                          rec['decompressed_bytes'] = len(text.encode())
+                          rec['contains_KSBA'] = bool(re.search(r'(?m)^\s*KSBA\b', text))
+                          rec['contains_WDR'] = bool(re.search(r'(?m)^\s*WDR\b', text))
+                          rec['contains_WSP'] = bool(re.search(r'(?m)^\s*WSP\b', text))
+                          rec['contains_WGS'] = bool(re.search(r'(?m)^\s*WGS\b', text))
+                          # Only structural/cycle lines, never verifying observations/outcomes.
+                          structural = []
+                          for line in text.splitlines():
+                              if re.match(r'^\s*(KSBA\b|DT\s|HR\s|UTC\s|WDR\s|WSP\s|WGS\s)', line):
+                                  structural.append(line[:240])
+                              if len(structural) >= 12:
+                                  break
+                          rec['structural_preview'] = structural
+                      except Exception as exc:
+                          rec['gzip_error'] = type(exc).__name__ + ': ' + str(exc)
+              members.append(rec)
+              if not complete:
+                  break
+              pos = ((end + 511) // 512) * 512
+              if len(members) >= 64:
+                  break
+
+          complete = [m for m in members if m['complete_in_range']]
+          if not complete:
+              raise SystemExit('No complete TAR members found in bounded range')
+          if not any(m.get('contains_KSBA') for m in complete):
+              raise SystemExit('No complete pilot member contains KSBA; archive/parser feasibility not established')
+          if not any(m.get('contains_WDR') and m.get('contains_WSP') and m.get('contains_WGS') for m in complete):
+              raise SystemExit('Required WDR/WSP/WGS fields not all found in a complete pilot member')
+
+          report = {
+              'candidate': 'issuance_time_lamp_assim_v1',
+              'science_scoring_performed': False,
+              'verifying_observations_read': False,
+              'year': 2024,
+              'archive_url': 'https://lamp.mdl.nws.noaa.gov/lamp/Data/archives/lmp_lavtxt.2024.tar',
+              'range_requested': 'bytes=0-33554431',
+              'bytes_received': len(data),
+              'http_status_lines': status_lines,
+              'complete_member_count': len(complete),
+              'members': members,
+          }
+          (root / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
+          print(json.dumps({k:v for k,v in report.items() if k != 'members'}, indent=2))
+          print('First complete members:')
+          for m in complete[:8]:
+              print(m['name'], m['size_bytes'], m['sha256'], 'KSBA=', m.get('contains_KSBA'))
+          PY
+
+      - name: Upload auditable archive-pilot report
+        uses: actions/upload-artifact@v4
+        with:
+          name: si4-lamp-2024-archive-pilot
+          path: |
+            lamp-pilot/head.txt
+            lamp-pilot/range-headers.txt
+            lamp-pilot/report.json
+          if-no-files-found: error
+          retention-days: 30
