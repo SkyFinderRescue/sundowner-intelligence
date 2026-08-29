@@ -6,7 +6,6 @@ on:
       - si4-lamp-assim-review
     paths:
       - '.github/workflows/si4-lamp-archive-pilot.yml'
-      - 'research/SI4_LAMP_ASSIM_REVIEW.md'
   workflow_dispatch:
 
 permissions:
@@ -33,102 +32,153 @@ jobs:
           grep -q 'If any 2024 gate fails' research/SI4_LAMP_ASSIM_REVIEW.md
           grep -q 'NO PROMOTION' research/SI4_LAMP_ASSIM_REVIEW.md
 
-      - name: Probe exact NOAA annual archive without scoring observations
+      - name: Build sparse remote TAR index and verify predeclared 2024 members
         shell: bash
-        env:
-          ARCHIVE_URL: https://lamp.mdl.nws.noaa.gov/lamp/Data/archives/lmp_lavtxt.2024.tar
         run: |
           set -euo pipefail
           mkdir -p lamp-pilot
-          curl --fail --silent --show-error --location --retry 3 --retry-all-errors --connect-timeout 20 --max-time 120 \
-            --dump-header lamp-pilot/head.txt --head "$ARCHIVE_URL" -o /dev/null
-
-          # Fetch only the first 32 MiB of the annual TAR. Abort if the endpoint ignores
-          # Range and attempts to send the multi-GB full archive. This is archive/member
-          # plumbing only; no verifying observations or outcomes are read.
-          curl --fail --silent --show-error --location --retry 3 --retry-all-errors --connect-timeout 20 --max-time 180 \
-            --header 'Range: bytes=0-33554431' --max-filesize 40000000 \
-            --dump-header lamp-pilot/range-headers.txt \
-            "$ARCHIVE_URL" -o lamp-pilot/range.bin
-
           python - <<'PY'
-          import gzip, hashlib, json, pathlib, re
+          import gzip, hashlib, http.client, json, pathlib, re, time
 
+          HOST = 'lamp.mdl.nws.noaa.gov'
+          PATH = '/lamp/Data/archives/lmp_lavtxt.2024.tar'
+          URL = 'https://' + HOST + PATH
+          TARGETS = [
+              'lmp_lavtxt.202401.0030z.gz',
+              'lmp_lavtxt.202404.0030z.gz',
+              'lmp_lavtxt.202407.0030z.gz',
+              'lmp_lavtxt.202409.0030z.gz',
+              'lmp_lavtxt.202410.0030z.gz',
+              'lmp_lavtxt.202412.0030z.gz',
+          ]
           root = pathlib.Path('lamp-pilot')
-          data = (root / 'range.bin').read_bytes()
-          headers = (root / 'range-headers.txt').read_text(errors='replace')
-          status_lines = [ln.strip() for ln in headers.splitlines() if ln.startswith('HTTP/')]
-          if not status_lines or '206' not in status_lines[-1]:
-              raise SystemExit(f'NOAA archive did not honor byte range: {status_lines!r}')
+          conn = None
 
+          def reconnect():
+              global conn
+              try:
+                  if conn:
+                      conn.close()
+              except Exception:
+                  pass
+              conn = http.client.HTTPSConnection(HOST, timeout=30)
+
+          reconnect()
+          conn.request('HEAD', PATH)
+          resp = conn.getresponse()
+          resp.read()
+          if resp.status != 200:
+              raise SystemExit(f'HEAD failed: {resp.status}')
+          archive_meta = {k.lower(): v for k, v in resp.getheaders()}
+          length = int(archive_meta['content-length'])
+          if archive_meta.get('accept-ranges', '').lower() != 'bytes':
+              raise SystemExit('NOAA annual archive does not advertise byte ranges')
+
+          request_count = 0
+          bytes_transferred = 0
+          def get_range(start, end):
+              global request_count, bytes_transferred
+              expected = end - start + 1
+              last = None
+              for attempt in range(3):
+                  try:
+                      conn.request('GET', PATH, headers={'Range': f'bytes={start}-{end}'})
+                      r = conn.getresponse()
+                      body = r.read()
+                      request_count += 1
+                      bytes_transferred += len(body)
+                      if r.status == 206 and len(body) == expected:
+                          return body
+                      last = RuntimeError(f'status={r.status} len={len(body)} expected={expected}')
+                  except Exception as exc:
+                      last = exc
+                  reconnect()
+                  time.sleep(0.5 * (attempt + 1))
+              raise RuntimeError(f'range {start}-{end} failed after retries: {last}')
+
+          # TAR headers are exactly addressable once the prior member size is known.
+          # Reading one 512-byte header per member creates an auditable remote index
+          # without transferring the 3.8-GiB annual archive.
           members = []
+          by_name = {}
           pos = 0
-          while pos + 512 <= len(data):
-              hdr = data[pos:pos+512]
+          while pos + 512 <= length:
+              hdr = get_range(pos, pos + 511)
               if hdr == b'\0' * 512:
                   break
-              name = hdr[:100].split(b'\0', 1)[0].decode('utf-8', 'replace')
+              name = hdr[:100].split(b'\0', 1)[0].decode('utf-8', 'strict')
               raw_size = hdr[124:136].split(b'\0', 1)[0].strip() or b'0'
               try:
                   size = int(raw_size, 8)
-              except ValueError:
-                  break
-              start = pos + 512
-              end = start + size
-              complete = end <= len(data)
-              rec = {'name': name, 'size_bytes': size, 'tar_header_offset': pos, 'complete_in_range': complete}
-              if complete:
-                  payload = data[start:end]
-                  rec['sha256'] = hashlib.sha256(payload).hexdigest()
-                  if name.endswith('.gz'):
-                      try:
-                          text = gzip.decompress(payload).decode('utf-8', 'replace')
-                          rec['decompressed_bytes'] = len(text.encode())
-                          rec['contains_KSBA'] = bool(re.search(r'(?m)^\s*KSBA\b', text))
-                          rec['contains_WDR'] = bool(re.search(r'(?m)^\s*WDR\b', text))
-                          rec['contains_WSP'] = bool(re.search(r'(?m)^\s*WSP\b', text))
-                          rec['contains_WGS'] = bool(re.search(r'(?m)^\s*WGS\b', text))
-                          structural = []
-                          for line in text.splitlines():
-                              if re.match(r'^\s*(KSBA\b|DT\s|HR\s|UTC\s|WDR\s|WSP\s|WGS\s)', line):
-                                  structural.append(line[:240])
-                              if len(structural) >= 12:
-                                  break
-                          rec['structural_preview'] = structural
-                      except Exception as exc:
-                          rec['gzip_error'] = type(exc).__name__ + ': ' + str(exc)
+              except ValueError as exc:
+                  raise SystemExit(f'Invalid TAR size at {pos}: {raw_size!r}') from exc
+              rec = {
+                  'name': name,
+                  'size_bytes': size,
+                  'tar_header_offset': pos,
+                  'payload_start': pos + 512,
+                  'payload_end': pos + 511 + size,
+              }
               members.append(rec)
-              if not complete:
-                  break
-              pos = ((end + 511) // 512) * 512
-              if len(members) >= 64:
-                  break
+              by_name[name] = rec
+              pos = ((pos + 512 + size + 511) // 512) * 512
+              if len(members) > 2000:
+                  raise SystemExit('Unexpected TAR member count >2000')
 
-          complete = [m for m in members if m['complete_in_range']]
-          if not complete:
-              raise SystemExit('No complete TAR members found in bounded range')
-          if not any(m.get('contains_KSBA') for m in complete):
-              raise SystemExit('No complete pilot member contains KSBA; archive/parser feasibility not established')
-          if not any(m.get('contains_WDR') and m.get('contains_WSP') and m.get('contains_WGS') for m in complete):
-              raise SystemExit('Required WDR/WSP/WGS fields not all found in a complete pilot member')
+          missing = [name for name in TARGETS if name not in by_name]
+          if missing:
+              raise SystemExit(f'Predeclared standard LAMP members missing: {missing}')
+
+          selected = []
+          for name in TARGETS:
+              rec = dict(by_name[name])
+              payload = get_range(rec['payload_start'], rec['payload_end'])
+              rec['sha256'] = hashlib.sha256(payload).hexdigest()
+              text = gzip.decompress(payload).decode('utf-8', 'replace')
+              rec['decompressed_bytes'] = len(text.encode())
+              lines = text.splitlines()
+              ksba_idx = [i for i, line in enumerate(lines) if re.match(r'^\s*KSBA\b', line)]
+              blocks = []
+              for i in ksba_idx:
+                  block = lines[i:i+45]
+                  has_wdr = any(re.match(r'^\s*WDR\b', x) for x in block)
+                  has_wsp = any(re.match(r'^\s*WSP\b', x) for x in block)
+                  has_wgs = any(re.match(r'^\s*WGS\b', x) for x in block)
+                  hr = next((x for x in block if re.match(r'^\s*HR\b', x)), '')
+                  has_f24 = bool(re.search(r'(^|\s)24(\s|$)', hr))
+                  blocks.append({'has_wdr': has_wdr, 'has_wsp': has_wsp, 'has_wgs': has_wgs, 'has_f24': has_f24})
+              rec['ksba_block_count'] = len(blocks)
+              rec['ksba_blocks_with_wdr_wsp_wgs'] = sum(b['has_wdr'] and b['has_wsp'] and b['has_wgs'] for b in blocks)
+              rec['ksba_blocks_with_f24'] = sum(b['has_f24'] for b in blocks)
+              if not blocks:
+                  raise SystemExit(f'{name}: KSBA absent')
+              if rec['ksba_blocks_with_wdr_wsp_wgs'] != len(blocks):
+                  raise SystemExit(f'{name}: one or more KSBA blocks lacks WDR/WSP/WGS')
+              if rec['ksba_blocks_with_f24'] != len(blocks):
+                  raise SystemExit(f'{name}: one or more KSBA blocks lacks HR=24')
+              selected.append(rec)
 
           report = {
               'candidate': 'issuance_time_lamp_assim_v1',
               'science_scoring_performed': False,
               'verifying_observations_read': False,
               'year': 2024,
-              'archive_url': 'https://lamp.mdl.nws.noaa.gov/lamp/Data/archives/lmp_lavtxt.2024.tar',
-              'range_requested': 'bytes=0-33554431',
-              'bytes_received': len(data),
-              'http_status_lines': status_lines,
-              'complete_member_count': len(complete),
-              'members': members,
+              'archive_url': URL,
+              'archive_content_length': length,
+              'archive_etag': archive_meta.get('etag'),
+              'archive_last_modified': archive_meta.get('last-modified'),
+              'tar_member_count': len(members),
+              'sparse_index_requests': request_count,
+              'bytes_transferred_total': bytes_transferred,
+              'transfer_fraction': bytes_transferred / length,
+              'predeclared_members': TARGETS,
+              'selected': selected,
           }
           (root / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
-          print(json.dumps({k:v for k,v in report.items() if k != 'members'}, indent=2))
-          print('First complete members:')
-          for m in complete[:8]:
-              print(m['name'], m['size_bytes'], m['sha256'], 'KSBA=', m.get('contains_KSBA'))
+          (root / 'tar-index.json').write_text(json.dumps(members, indent=2) + '\n')
+          print(json.dumps({k:v for k,v in report.items() if k != 'selected'}, indent=2))
+          for rec in selected:
+              print(rec['name'], rec['sha256'], 'KSBA blocks=', rec['ksba_block_count'], 'F24=', rec['ksba_blocks_with_f24'])
           PY
 
       - name: Upload auditable archive-pilot report
@@ -136,8 +186,7 @@ jobs:
         with:
           name: si4-lamp-2024-archive-pilot
           path: |
-            lamp-pilot/head.txt
-            lamp-pilot/range-headers.txt
             lamp-pilot/report.json
+            lamp-pilot/tar-index.json
           if-no-files-found: error
           retention-days: 30
