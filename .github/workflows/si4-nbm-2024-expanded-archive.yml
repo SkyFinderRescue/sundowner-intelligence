@@ -1,0 +1,145 @@
+name: SI-4 NBM 2024 Expanded Archive
+
+on:
+  push:
+    branches: [si4-nbm-probabilistic]
+    paths:
+      - '.github/workflows/si4-nbm-2024-expanded-archive.yml'
+      - 'research/SI4_NBM_2024_EXPANDED_ARCHIVE_PREDECLARED.md'
+      - 'tools/extract-si4-nbm-f24-range.py'
+      - 'tools/combine-si4-nbm-2024-expanded.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUNBUFFERED: '1'
+
+concurrency:
+  group: si4-nbm-2024-expanded-archive-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  extract:
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        month: ['06','07','08','09','10','11','12']
+        cycle: ['00','06','12','18']
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install GRIB decoder
+        run: python -m pip install --quiet 'cfgrib>=0.9.15' 'xarray>=2025.1' numpy
+      - name: Verify frozen predeclaration
+        run: |
+          test -s research/SI4_NBM_2024_EXPANDED_ARCHIVE_PREDECLARED.md
+          grep -q 'Total expected cases: 284' research/SI4_NBM_2024_EXPANDED_ARCHIVE_PREDECLARED.md
+          grep -q 'Expected point rows: 1,420' research/SI4_NBM_2024_EXPANDED_ARCHIVE_PREDECLARED.md
+      - name: Build calendar-only case list
+        env:
+          MONTH: ${{ matrix.month }}
+        run: |
+          python - <<'PY' > /tmp/dates.txt
+          import datetime as dt, os
+          start=dt.date(2024,6,1)
+          end=dt.date(2024,12,30)
+          month=int(os.environ['MONTH'])
+          d=start
+          while d<=end:
+              if d.month==month:
+                  print(d.strftime('%Y%m%d'))
+              d += dt.timedelta(days=3)
+          PY
+          test -s /tmp/dates.txt
+          cat /tmp/dates.txt
+      - name: Extract exact F024 cases
+        env:
+          CYCLE: ${{ matrix.cycle }}
+          MONTH: ${{ matrix.month }}
+        run: |
+          mkdir -p "research/nbm-expanded-${MONTH}-${CYCLE}"
+          while read -r DATE; do
+            OUT="research/nbm-expanded-${MONTH}-${CYCLE}/si4-nbm-${DATE}-${CYCLE}-f024.json"
+            ok=0
+            for attempt in 1 2 3; do
+              if python tools/extract-si4-nbm-f24-range.py --date "$DATE" --cycle "$CYCLE" --out "$OUT"; then
+                ok=1
+                break
+              fi
+              sleep $((attempt*5))
+            done
+            test "$ok" = 1
+          done < /tmp/dates.txt
+      - name: Verify shard fail-closed contract
+        env:
+          MONTH: ${{ matrix.month }}
+          CYCLE: ${{ matrix.cycle }}
+        run: |
+          python - <<'PY'
+          import datetime as dt, glob, json, os
+          month=int(os.environ['MONTH']); cycle=os.environ['CYCLE']
+          start=dt.date(2024,6,1); end=dt.date(2024,12,30); dates=[]; d=start
+          while d<=end:
+              if d.month==month: dates.append(d.strftime('%Y%m%d'))
+              d += dt.timedelta(days=3)
+          files=glob.glob(f'research/nbm-expanded-{month:02d}-{cycle}/*.json')
+          assert len(files)==len(dates),(len(files),len(dates))
+          for p in files:
+              x=json.load(open(p)); r=x['rules']
+              assert x['status']=='RESEARCH_ONLY_2024_NBM_F24_RANGE_SMOKE'
+              assert r['holdout_2025_loaded'] is False and r['observations_loaded'] is False and r['outcomes_loaded'] is False
+              assert len(x['rows'])==5
+              assert all(z['forecast_lead_hours']==24 and z['run_time'].startswith('2024-') and z['valid_time'].startswith('2024-') for z in x['rows'])
+          print({'month':month,'cycle':cycle,'cases':len(files)})
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nbm-expanded-${{ matrix.month }}-${{ matrix.cycle }}
+          path: research/nbm-expanded-${{ matrix.month }}-${{ matrix.cycle }}/*.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  combine:
+    needs: extract
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require every extraction shard
+        run: test '${{ needs.extract.result }}' = 'success'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: nbm-expanded-*
+          path: /tmp/nbm-expanded
+          merge-multiple: true
+      - name: Combine and verify exact expanded archive
+        run: |
+          python tools/combine-si4-nbm-2024-expanded.py \
+            --input-glob '/tmp/nbm-expanded/**/*.json' \
+            --out research/si4-nbm-2024-expanded-archive.json
+          python - <<'PY'
+          import json
+          x=json.load(open('research/si4-nbm-2024-expanded-archive.json'))
+          assert x['status']=='RESEARCH_ONLY_2024_NBM_EXPANDED_ARCHIVE_COMPLETE'
+          assert x['counts']['cases']==284
+          assert x['counts']['rows']==1420
+          assert x['rules']['holdout_2025_loaded'] is False
+          assert x['rules']['observations_loaded'] is False
+          assert x['rules']['outcomes_loaded'] is False
+          assert x['rules']['production_change_authorized'] is False
+          print(x['counts'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: si4-nbm-2024-expanded-archive
+          path: research/si4-nbm-2024-expanded-archive.json
+          retention-days: 30
