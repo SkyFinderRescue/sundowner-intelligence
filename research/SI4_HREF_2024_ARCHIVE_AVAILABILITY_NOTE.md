@@ -7,18 +7,24 @@ Production status: NO PROMOTION; SI-3.1 on `main` remains authoritative.
 
 ## Verified archive issue
 
-During the full 2024 HREF member archive on PR #6 head `dce037ac5712e9dd4b6305e6aa96ed0ab1bb90a9`, all Phase-0 HREF feasibility, field-inventory, exact-F24, member-alignment and point-extraction probes passed. The full-year run failed only because issuance `2024-11-27T00:00:00.000Z` repeatedly returned HTTP 404 for the frozen `hrrr_current` member at the frozen `cuyama_interior` point for all required fields (`u10`, `v10`, surface gust and surface pressure). The same failure persisted across the workflow's bounded extractor retries and three outer monthly attempts.
+During the full 2024 HREF member archive on PR #6, all Phase-0 HREF feasibility, field-inventory, exact-F24, member-alignment and point-extraction probes passed. Subsequent full-year extraction attempts identified three persistently incomplete exact-F24 issuances under the frozen member/point/field contract:
 
-No observations, labels, event outcomes, fire association, 2025 data or forecast errors were inspected to identify or select this issuance. This is archive availability evidence only.
+- `2024-11-27T00:00:00.000Z`
+- `2024-11-27T12:00:00.000Z`
+- `2024-12-01T00:00:00.000Z`
+
+The failures were repeated HTTP 404 responses for required frozen HREF member data after bounded retries. The 2024-11-27 12Z failure persisted across all three outer monthly attempts after more than 2,500 successful November extraction tasks each time. The 2024-12-01 00Z failure persisted across all three December attempts immediately at the first required HRRR-current member/point requests.
+
+No observations, labels, event outcomes, fire association, 2025 data or forecast errors were inspected to identify or select these issuances. This is archive availability evidence only.
 
 ## Frozen availability rule
 
-Consistent with the existing Phase-0 predeclaration and decision, the archive now excludes the entire affected issuance (`2024-11-27 00Z`) from every member and point so retained rows remain a matched 10-member x 5-point ensemble at exact F24.
+Consistent with the existing Phase-0 predeclaration and decision, the archive excludes each affected issuance in full from every member and point so retained rows remain matched 10-member x 5-point ensembles at exact F24.
 
 This changes only archive/plumbing availability handling. It does **not** change:
 
 - HREF member identities;
-- 00Z/12Z issuance schedule except the single availability exclusion;
+- the 00Z/12Z issuance schedule except the three explicit availability exclusions;
 - exact F24 valid-time alignment;
 - five frozen points;
 - authorized fields (`u10`, `v10`, surface gust, surface pressure);
@@ -26,7 +32,7 @@ This changes only archive/plumbing availability handling. It does **not** change
 - labels or evaluation gates;
 - the 2025 firewall.
 
-The affected issuance is not replaced with a label-selected date and is not imputed. Missing stays missing. Full-year retained row expectation is therefore `36,450` rather than `36,500`.
+The affected issuances are not replaced with label-selected dates and are not imputed. Missing stays missing. Full-year retained row expectation is therefore `36,350` rather than `36,500`.
 
 ## Science authorization
 
