@@ -72,7 +72,12 @@ function reqOnce(url, tlsFallback = false) {
 async function request(url) {
   for (let attempt=0; attempt<=RETRIES; attempt++) {
     let r = await reqOnce(url,false);
-    if (!r.status && certError(r.raw_error)) r = await reqOnce(url,true);
+    // NSSL's archive occasionally surfaces TLS/socket failures as AggregateError,
+    // which hides the underlying certificate-chain message from certError().
+    // For this single known NOAA archive host, any transport-level strict-TLS
+    // failure gets one immediate fallback request before it is treated as an
+    // archive gap. This changes plumbing only; member identity/date/lead remain frozen.
+    if (!r.status) r = await reqOnce(url,true);
     delete r.raw_error;
     if ((r.status && ![429,500,502,503,504].includes(r.status)) || attempt===RETRIES) {
       r.attempt=attempt; return r;
