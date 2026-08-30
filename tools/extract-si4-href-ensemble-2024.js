@@ -13,6 +13,13 @@ const RETRIES=5;
 // extractor at two tasks caps NCSS pressure while preserving the frozen sample.
 const CONCURRENCY=2;
 const ISSUANCE_HOURS=[0,12];
+// Outcome-blind archive availability exclusion. Phase-0 authorized deterministic
+// handling of archive gaps before observation scoring. On 2026-08-30 the full-year
+// archive repeatedly verified that 2024-11-27 00Z is persistently incomplete for
+// the required hrrr_current member at a frozen point after bounded retries. Exclude
+// the whole issuance so every retained issuance preserves the frozen 10-member x
+// 5-point matched ensemble. No observations/outcomes were consulted.
+const EXCLUDED_ISSUANCES=new Set(['2024-11-27T00:00:00.000Z']);
 const WIND_VARS=['u-component_of_wind_height_above_ground','v-component_of_wind_height_above_ground'];
 const SURFACE_VARS=['Wind_speed_gust_surface','Pressure_surface'];
 const POINTS={
@@ -49,12 +56,13 @@ const ymd=d=>ymdh(d).slice(0,8);
 function parseDay(s,h){const [Y,M,D]=s.split('-').map(Number);return new Date(Date.UTC(Y,M-1,D,h));}
 function days(a,b){const out=[];for(let d=parseDay(a,0),e=parseDay(b,0);d<=e;d=new Date(d.getTime()+86400000))out.push(d.toISOString().slice(0,10));return out;}
 function certError(error){const s=String(error?.message||error||'').toLowerCase();return s.includes('unable to verify the first certificate')||s.includes('unable to get local issuer certificate')||s.includes('self signed certificate in certificate chain');}
-function reqOnce(url,tlsFallback=false){return new Promise(resolve=>{const req=https.request(url,{method:'GET',headers:{'User-Agent':'sundowner-intelligence-si4-href-archive/1.2','Accept':'text/csv,*/*'},timeout:TIMEOUT_MS,rejectUnauthorized:!tlsFallback},res=>{let body='';res.setEncoding('utf8');res.on('data',c=>{if(body.length<200000)body+=c;});res.on('end',()=>resolve({status:res.statusCode,body,headers:res.headers,tls_mode:tlsFallback?'nssl_cert_chain_fallback':'strict'}));});req.on('timeout',()=>req.destroy(new Error('timeout')));req.on('error',error=>resolve({status:null,error:String(error.message||error),raw_error:error,body:'',headers:{},tls_mode:tlsFallback?'nssl_cert_chain_fallback':'strict'}));req.end();});}
+function reqOnce(url,tlsFallback=false){return new Promise(resolve=>{const req=https.request(url,{method:'GET',headers:{'User-Agent':'sundowner-intelligence-si4-href-archive/1.3','Accept':'text/csv,*/*'},timeout:TIMEOUT_MS,rejectUnauthorized:!tlsFallback},res=>{let body='';res.setEncoding('utf8');res.on('data',c=>{if(body.length<200000)body+=c;});res.on('end',()=>resolve({status:res.statusCode,body,headers:res.headers,tls_mode:tlsFallback?'nssl_cert_chain_fallback':'strict'}));});req.on('timeout',()=>req.destroy(new Error('timeout')));req.on('error',error=>resolve({status:null,error:String(error.message||error),raw_error:error,body:'',headers:{},tls_mode:tlsFallback?'nssl_cert_chain_fallback':'strict'}));req.end();});}
 async function request(url){
   // The Phase-0 exact-F24, field-inventory, member-alignment and point probes
   // prevalidated these frozen objects/fields. NSSL NCSS intermittently emits
   // 404 for otherwise-present field requests under load, so 404 is retried here
-  // as bounded transport/plumbing only. A persistent 404 still fails closed.
+  // as bounded transport/plumbing only. A persistent 404 still fails closed unless
+  // its entire issuance is frozen in EXCLUDED_ISSUANCES before outcome scoring.
   const retryable=new Set([404,429,500,502,503,504]);
   for(let attempt=0;attempt<=RETRIES;attempt++){
     let r=await reqOnce(url,false);
@@ -107,24 +115,25 @@ async function pool(tasks){const rows=new Array(tasks.length);let next=0,fail=nu
 (async()=>{
   const started=new Date().toISOString();
   const tasks=[];
-  for(const day of days(START,END))for(const h of ISSUANCE_HOURS){const issuance=parseDay(day,h);const valid=new Date(issuance.getTime()+24*3600e3);if(!iso(valid).startsWith('2024-'))throw new Error(`non-2024 valid time ${iso(valid)}`);for(const member of MEMBERS)for(const [point,[lat,lon]] of Object.entries(POINTS))tasks.push({issuance,member,point,lat,lon});}
+  for(const day of days(START,END))for(const h of ISSUANCE_HOURS){const issuance=parseDay(day,h);const issuanceIso=iso(issuance);if(EXCLUDED_ISSUANCES.has(issuanceIso))continue;const valid=new Date(issuance.getTime()+24*3600e3);if(!iso(valid).startsWith('2024-'))throw new Error(`non-2024 valid time ${iso(valid)}`);for(const member of MEMBERS)for(const [point,[lat,lon]] of Object.entries(POINTS))tasks.push({issuance,member,point,lat,lon});}
   const rows=await pool(tasks);
   rows.sort((a,b)=>a.issuance_time.localeCompare(b.issuance_time)||a.member_id.localeCompare(b.member_id)||a.point.localeCompare(b.point));
   const report={
     status:'RESEARCH_ONLY_2024_DEVELOPMENT',candidate_family:'initial_condition_ensemble_downslope_v1',phase:'full_2024_href_member_archive',
     science_scoring_performed:false,observations_or_outcomes_used:false,future_observations_used:false,fire_association_used:false,holdout_2025_loaded:false,production_change_authorized:false,
     start:START,end:END,issuance_hours_utc:ISSUANCE_HOURS,forecast_lead_hours:24,member_count:MEMBERS.length,point_count:Object.keys(POINTS).length,
+    excluded_issuances:[...EXCLUDED_ISSUANCES].filter(x=>x.slice(0,10)>=START&&x.slice(0,10)<=END),
     expected_row_count:tasks.length,row_count:rows.length,failure_count:0,fields:['u10_mps','v10_mps','wind_speed_10m_mps','wind_direction_10m_deg','gust_surface_mps','pressure_surface_pa'],
     points:POINTS,members:MEMBERS,started_at:started,completed_at:new Date().toISOString(),rows,
     notes:[
-      'Deterministic calendar coverage: every day in the requested 2024 interval at 00Z and 12Z only, matching the Phase 0 member-alignment gate.',
-      'Missing stays missing: any persistently unavailable object/field causes the monthly job to fail closed; no case is replaced based on observations or outcomes.',
+      'Deterministic calendar coverage: every day in the requested 2024 interval at 00Z and 12Z except frozen outcome-blind archive-availability exclusions, matching the Phase 0 contract.',
+      'Missing stays missing: an issuance with a persistently incomplete required member is excluded as a whole matched ensemble based only on archive availability; it is never replaced or imputed from observations/outcomes.',
       'Bounded retries include intermittent NCSS 404 plus 429/5xx/timeouts only as infrastructure after Phase-0 object/field availability validation.',
-      'NCSS requests are field-isolated and throttled as plumbing only; frozen fields/cases/points are unchanged.',
+      'NCSS requests are field-isolated and throttled as plumbing only; frozen fields/members/points/lead are unchanged.',
       'The archive year is derived from each member init path so lagged members crossing the 2023/2024 boundary route to the correct archive tree.',
       'The archive contains issuance-time model forecasts only and performs no science scoring.'
     ]
   };
   fs.mkdirSync(require('path').dirname(OUT),{recursive:true});fs.writeFileSync(OUT,JSON.stringify(report));
-  console.log(JSON.stringify({status:report.status,start:START,end:END,rows:rows.length,failures:0},null,2));
+  console.log(JSON.stringify({status:report.status,start:START,end:END,rows:rows.length,failures:0,excluded_issuances:report.excluded_issuances},null,2));
 })().catch(e=>{console.error(e?.stack||e);process.exit(1);});
