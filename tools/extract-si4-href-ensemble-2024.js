@@ -8,8 +8,10 @@ const https=require('https');
 
 const BASE_ROOT='https://data.nssl.noaa.gov/thredds/ncss/grid/FRDD/HREF';
 const TIMEOUT_MS=30000;
-const RETRIES=3;
-const CONCURRENCY=10;
+const RETRIES=5;
+// Plumbing-only throttle: three monthly jobs can run in parallel; keeping each
+// extractor at two tasks caps NCSS pressure while preserving the frozen sample.
+const CONCURRENCY=2;
 const ISSUANCE_HOURS=[0,12];
 const WIND_VARS=['u-component_of_wind_height_above_ground','v-component_of_wind_height_above_ground'];
 const SURFACE_VARS=['Wind_speed_gust_surface','Pressure_surface'];
@@ -47,8 +49,24 @@ const ymd=d=>ymdh(d).slice(0,8);
 function parseDay(s,h){const [Y,M,D]=s.split('-').map(Number);return new Date(Date.UTC(Y,M-1,D,h));}
 function days(a,b){const out=[];for(let d=parseDay(a,0),e=parseDay(b,0);d<=e;d=new Date(d.getTime()+86400000))out.push(d.toISOString().slice(0,10));return out;}
 function certError(error){const s=String(error?.message||error||'').toLowerCase();return s.includes('unable to verify the first certificate')||s.includes('unable to get local issuer certificate')||s.includes('self signed certificate in certificate chain');}
-function reqOnce(url,tlsFallback=false){return new Promise(resolve=>{const req=https.request(url,{method:'GET',headers:{'User-Agent':'sundowner-intelligence-si4-href-archive/1.1','Accept':'text/csv,*/*'},timeout:TIMEOUT_MS,rejectUnauthorized:!tlsFallback},res=>{let body='';res.setEncoding('utf8');res.on('data',c=>{if(body.length<200000)body+=c;});res.on('end',()=>resolve({status:res.statusCode,body,headers:res.headers,tls_mode:tlsFallback?'nssl_cert_chain_fallback':'strict'}));});req.on('timeout',()=>req.destroy(new Error('timeout')));req.on('error',error=>resolve({status:null,error:String(error.message||error),raw_error:error,body:'',headers:{},tls_mode:tlsFallback?'nssl_cert_chain_fallback':'strict'}));req.end();});}
-async function request(url){for(let attempt=0;attempt<=RETRIES;attempt++){let r=await reqOnce(url,false);if(!r.status&&certError(r.raw_error))r=await reqOnce(url,true);delete r.raw_error;if(r.status===200){r.attempt=attempt;return r;}if(r.status&&![429,500,502,503,504].includes(r.status)){r.attempt=attempt;return r;}if(attempt===RETRIES){r.attempt=attempt;return r;}await sleep(1000*(attempt+1));}}
+function reqOnce(url,tlsFallback=false){return new Promise(resolve=>{const req=https.request(url,{method:'GET',headers:{'User-Agent':'sundowner-intelligence-si4-href-archive/1.2','Accept':'text/csv,*/*'},timeout:TIMEOUT_MS,rejectUnauthorized:!tlsFallback},res=>{let body='';res.setEncoding('utf8');res.on('data',c=>{if(body.length<200000)body+=c;});res.on('end',()=>resolve({status:res.statusCode,body,headers:res.headers,tls_mode:tlsFallback?'nssl_cert_chain_fallback':'strict'}));});req.on('timeout',()=>req.destroy(new Error('timeout')));req.on('error',error=>resolve({status:null,error:String(error.message||error),raw_error:error,body:'',headers:{},tls_mode:tlsFallback?'nssl_cert_chain_fallback':'strict'}));req.end();});}
+async function request(url){
+  // The Phase-0 exact-F24, field-inventory, member-alignment and point probes
+  // prevalidated these frozen objects/fields. NSSL NCSS intermittently emits
+  // 404 for otherwise-present field requests under load, so 404 is retried here
+  // as bounded transport/plumbing only. A persistent 404 still fails closed.
+  const retryable=new Set([404,429,500,502,503,504]);
+  for(let attempt=0;attempt<=RETRIES;attempt++){
+    let r=await reqOnce(url,false);
+    if(!r.status&&certError(r.raw_error))r=await reqOnce(url,true);
+    delete r.raw_error;
+    if(r.status===200){r.attempt=attempt;return r;}
+    if(r.status&&!retryable.has(r.status)){r.attempt=attempt;return r;}
+    if(attempt===RETRIES){r.attempt=attempt;return r;}
+    const jitter=Math.floor(Math.random()*750);
+    await sleep(1500*Math.pow(2,Math.min(attempt,3))+jitter);
+  }
+}
 function objectFor(issuance,member){const init=new Date(issuance.getTime()+member.init_offset_h*3600e3);const valid=new Date(init.getTime()+member.native_lead_h*3600e3);const lead=String(member.native_lead_h).padStart(3,'0');const path=`${ymd(init)}/${member.stem}_${ymdh(init)}f${lead}.grib2`;return{path,init,valid};}
 function makeUrl(path,lat,lon,vars,vertCoord=null){const p=new URLSearchParams();for(const v of vars)p.append('var',v);p.set('latitude',String(lat));p.set('longitude',String(lon));if(vertCoord!==null)p.set('vertCoord',String(vertCoord));p.set('accept','csv');const year=path.slice(0,4);return `${BASE_ROOT}/${year}/${path}?${p}`;}
 function splitCsv(line){const out=[];let cur='',q=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){q=!q;continue;}if(c===','&&!q){out.push(cur);cur='';}else cur+=c;}out.push(cur);return out;}
@@ -61,10 +79,6 @@ async function extractTask(task){
   const expectedValid=new Date(issuance.getTime()+24*3600e3);
   if(iso(obj.valid)!==iso(expectedValid))throw new Error(`valid-time alignment error ${member.id} ${iso(issuance)}`);
 
-  // Plumbing-only change: query each frozen field independently. NOAA/NSSL NCSS
-  // intermittently returns 404 for combined multi-variable requests even when
-  // the underlying object and individual field are present. Splitting requests
-  // does not alter cases, fields, points, transforms, labels, or science gates.
   const [ur,vr,gr,pr]=await Promise.all([
     fetchSingle(obj.path,lat,lon,WIND_VARS[0],10),
     fetchSingle(obj.path,lat,lon,WIND_VARS[1],10),
@@ -73,7 +87,7 @@ async function extractTask(task){
   ]);
   const parts=[['u10',ur],['v10',vr],['gust',gr],['pressure',pr]];
   const bad=parts.filter(([,x])=>!x.ok);
-  if(bad.length)throw new Error(`archive/extraction failure ${iso(issuance)} ${member.id} ${point}: ${bad.map(([n,x])=>`${n}=${x.response.status}`).join(' ')}`);
+  if(bad.length)throw new Error(`archive/extraction failure ${iso(issuance)} ${member.id} ${point}: ${bad.map(([n,x])=>`${n}=${x.response.status}@${x.response.attempt}`).join(' ')}`);
   const u=ur.value,v=vr.value,gust=gr.value,pressure=pr.value;
   const speed=Math.hypot(u,v);const direction=(Math.atan2(-u,-v)*180/Math.PI+360)%360;
   return{
@@ -104,9 +118,9 @@ async function pool(tasks){const rows=new Array(tasks.length);let next=0,fail=nu
     points:POINTS,members:MEMBERS,started_at:started,completed_at:new Date().toISOString(),rows,
     notes:[
       'Deterministic calendar coverage: every day in the requested 2024 interval at 00Z and 12Z only, matching the Phase 0 member-alignment gate.',
-      'Missing stays missing: any unavailable object/field causes the monthly job to fail closed; no case is replaced based on observations or outcomes.',
-      'Transient 5xx/timeouts are retried only as infrastructure.',
-      'NCSS requests are field-isolated plumbing only; frozen fields/cases/points are unchanged.',
+      'Missing stays missing: any persistently unavailable object/field causes the monthly job to fail closed; no case is replaced based on observations or outcomes.',
+      'Bounded retries include intermittent NCSS 404 plus 429/5xx/timeouts only as infrastructure after Phase-0 object/field availability validation.',
+      'NCSS requests are field-isolated and throttled as plumbing only; frozen fields/cases/points are unchanged.',
       'The archive year is derived from each member init path so lagged members crossing the 2023/2024 boundary route to the correct archive tree.',
       'The archive contains issuance-time model forecasts only and performs no science scoring.'
     ]
