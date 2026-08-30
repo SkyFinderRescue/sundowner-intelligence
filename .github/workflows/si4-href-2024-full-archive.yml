@@ -8,6 +8,7 @@ on:
       - '.github/workflows/si4-href-2024-full-archive.yml'
       - 'research/SI4_INITIAL_CONDITION_ENSEMBLE_DOWNSLOPE_2024_PREDECLARED.md'
       - 'research/SI4_INITIAL_CONDITION_ENSEMBLE_DOWNSLOPE_PHASE0_DECISION.md'
+      - 'research/SI4_HREF_2024_ARCHIVE_AVAILABILITY_NOTE.md'
   workflow_dispatch:
 
 permissions:
