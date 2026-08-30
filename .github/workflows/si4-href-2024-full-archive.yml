@@ -1,8 +1,8 @@
 name: SI-4 HREF 2024 Full Ensemble Archive
 
 on:
-  push:
-    branches: [si4-research]
+  pull_request:
+    branches: [main]
     paths:
       - 'tools/extract-si4-href-ensemble-2024.js'
       - '.github/workflows/si4-href-2024-full-archive.yml'
