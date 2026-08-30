@@ -13,13 +13,16 @@ const RETRIES=5;
 // extractor at two tasks caps NCSS pressure while preserving the frozen sample.
 const CONCURRENCY=2;
 const ISSUANCE_HOURS=[0,12];
-// Outcome-blind archive availability exclusion. Phase-0 authorized deterministic
-// handling of archive gaps before observation scoring. On 2026-08-30 the full-year
-// archive repeatedly verified that 2024-11-27 00Z is persistently incomplete for
-// the required hrrr_current member at a frozen point after bounded retries. Exclude
-// the whole issuance so every retained issuance preserves the frozen 10-member x
-// 5-point matched ensemble. No observations/outcomes were consulted.
-const EXCLUDED_ISSUANCES=new Set(['2024-11-27T00:00:00.000Z']);
+// Outcome-blind archive availability exclusions. Phase-0 authorized deterministic
+// handling of archive gaps before observation scoring. Full-year archive attempts
+// repeatedly verified these issuances are persistently incomplete after bounded
+// retries. Exclude each whole issuance so retained rows remain matched 10-member x
+// 5-point ensembles. No observations/outcomes were consulted.
+const EXCLUDED_ISSUANCES=new Set([
+  '2024-11-27T00:00:00.000Z',
+  '2024-11-27T12:00:00.000Z',
+  '2024-12-01T00:00:00.000Z',
+]);
 const WIND_VARS=['u-component_of_wind_height_above_ground','v-component_of_wind_height_above_ground'];
 const SURFACE_VARS=['Wind_speed_gust_surface','Pressure_surface'];
 const POINTS={
