@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "purpose": "Supplemental operational truth set for newly completed, clearly confirmed Sundowner events identified after the peer-reviewed/historical catalog was generated. Fire association remains a separate outcome field and is never the meteorological event definition.",
-  "generated": "2026-08-26",
+  "generated": "2026-08-29",
   "events": [
     {
       "event_id": "2026-07-27-sw-sba-western-sundowner",
@@ -109,6 +109,34 @@
         {"organization":"CAL FIRE","product":"Current Incidents / 2026 incident archive","issued":"checked 2026-08-26","url":"https://www.fire.ca.gov/incidents","evidence":"No Santa Barbara County wildfire is listed as starting Aug 25-26; the listed Drum Fire began Aug 19. This supports a non-fire outcome only."}
       ],
       "notes":"Newly confirmed completed western Sundowner episode. Exact observed gusts, temperature, RH, pressure gradients, upstream observations, duration and upper-air values remain null rather than inferred."
+    },
+    {
+      "event_id":"2026-08-28-29-sba-western-sundowner",
+      "date":"2026-08-28",
+      "end_date":"2026-08-29",
+      "tier":"B-operational-confirmed",
+      "confirmation_status":"confirmed_observed",
+      "regime":"western",
+      "zones_affected":["southwestern Santa Barbara County","Santa Barbara County Southwestern Coast","Santa Ynez Mountains Western Range"],
+      "onset_local":null,
+      "peak_local":null,
+      "end_local":"by the morning of 2026-08-29; exact threshold end not established",
+      "observed_wind":{"gust_range_mph":[30,40],"location_scope":"southwestern Santa Barbara County","source_character":"NWS LOX post-event observed summary","notes":"NWS AFD issued Aug 29 explicitly states that winds across southwestern Santa Barbara County gusted 30-40 mph last night."},
+      "pressure":{"north_south_gradient_peak_mb":null,"sba_minus_bfl_mb":null,"sba_minus_smx_mb":null,"trend":null,"notes":"No trusted observed pressure-gradient series for the Aug 28-29 completed episode was recovered; values remain null. NWS discussion of stronger pressure gradients applied to the subsequent Aug 29-30 event and is not back-applied."},
+      "thermodynamics":{"observed_temperature_f":null,"observed_relative_humidity_percent":null,"notes":"No trusted zone-specific observed temperature/RH series was recovered for the completed Aug 28-29 event. Forecast thermodynamics are kept separate from observations."},
+      "upstream_context":{"cuyama":null,"santa_ynez_valley":null,"southern_kern":null,"notes":"No sufficiently specific trusted observed upstream time series was recovered; fields remain null."},
+      "upper_air_model_context":{"pattern":null,"source":null,"notes":"No completed-event upper-air profile was recovered from a trusted source; fields remain null rather than inferred."},
+      "duration_hours_estimate":null,
+      "fire_associated":false,
+      "fire_name":null,
+      "fire_outcome_notes":"CAL FIRE's 2026 incident archive showed no Santa Barbara County wildfire beginning Aug 28-29 when checked Aug 29. This is an outcome field only and was not used to define the meteorological event.",
+      "forecast_context_only":{"nws_fire_weather":"NWS LOX fire-weather guidance issued Aug 28 described moderate Sundowner winds across southern Santa Barbara County through Sunday night. For the Aug 28 night, the western coast/western Santa Ynez range forecast called for northwest winds 15-25 mph with gusts to 40 mph and isolated 45 mph hill gusts. These forecast values are not stored as observations."},
+      "sources":[
+        {"organization":"National Weather Service Los Angeles/Oxnard","product":"Area Forecast Discussion FXUS66 KLOX 291941 / 292338","issued":"2026-08-29T12:41:00-07:00","url":"https://forecast.weather.gov/product.php?issuedby=LOX&product=AFD&site=LOX","evidence":"Post-event observation: last night winds across southwestern Santa Barbara County gusted 30 to 40 mph."},
+        {"organization":"National Weather Service Los Angeles/Oxnard","product":"Fire Weather Planning Forecast FNUS56 KLOX 281634","issued":"2026-08-28T09:34:00-07:00","url":"https://marine.weather.gov/product.php?format=TXT&glossary=1&issuedby=LOX&product=FWF&site=AFC&version=3","evidence":"NWS explicitly described a multi-night moderate Sundowner regime across southern Santa Barbara County; Aug 28 night forecast for the southwestern coast/western Santa Ynez range was NW 15-25 mph with gusts to 40 mph, isolated 45 mph in hills. Forecast context only."},
+        {"organization":"CAL FIRE","product":"2026 Fire Season Incident Archive","issued":"checked 2026-08-29","url":"https://www.fire.ca.gov/incidents/2026","evidence":"No Santa Barbara County wildfire beginning Aug 28-29 was listed; this supports a non-fire outcome only."}
+      ],
+      "notes":"Separate repeat nightly episode after daytime weakening, consistent with the operational catalog treatment of distinct evening ramp-ups. Exact station gust location, thermodynamics, gradients, upstream observations, duration, and upper-air values remain unavailable and are not inferred."
     }
   ]
 }
