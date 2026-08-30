@@ -70,7 +70,7 @@ function extract(base, body) {
   while ((m = hrefRe.exec(body))) {
     const raw = m[1];
     const u = abs(base, raw);
-    if (u && u.includes('/thredds/catalog/FRDD/HREF/')) refs.push(u);
+    if (u && u.includes('/thredds/catalog/FRDD/HREF/') && !u.includes('?dataset=')) refs.push(u);
 
     // NSSL's HTML THREDDS catalog exposes many concrete GRIB2 objects as
     // catalog.html?dataset=FRDD/HREF/... rather than XML urlPath= attributes.
@@ -97,9 +97,12 @@ function extract(base, body) {
 }
 function isExactF24(path) {
   const s = path.toLowerCase();
-  return /(^|[^a-z0-9])f0?24([^0-9]|$)/.test(s) ||
-    /(^|[^a-z0-9])024hr([^0-9]|$)/.test(s) ||
-    /(^|[^a-z0-9])fh0?24([^0-9]|$)/.test(s);
+  // NSSL's archived member filenames encode the cycle directly before lead,
+  // e.g. hiresw_conusarw_2024011500f024.grib2. Do not require a delimiter
+  // before the f-token; require only that 024 is not followed by another digit.
+  return /f0?24(?=[^0-9]|$)/.test(s) ||
+    /(?:^|[^a-z0-9])024hr(?=[^0-9]|$)/.test(s) ||
+    /fh0?24(?=[^0-9]|$)/.test(s);
 }
 function classify(path) {
   const s = path.toLowerCase();
