@@ -36,13 +36,19 @@ const MEMBERS = [
 ];
 
 // Phase 0d demonstrated these fields are represented in every HREF model family.
-// This probe tests actual point extraction only; no labels/outcomes are loaded.
-const VARS = [
+// Keep the frozen science fields unchanged, but query height-above-ground and
+// surface variables in separate NCSS requests. THREDDS NCSS applies vertCoord
+// to the entire request, so mixing 10 m and surface variables caused a 400
+// "illegal member name" response even though the fields exist in dataset.xml.
+const WIND_VARS = [
   'u-component_of_wind_height_above_ground',
   'v-component_of_wind_height_above_ground',
+];
+const SURFACE_VARS = [
   'Wind_speed_gust_surface',
   'Pressure_surface',
 ];
+const VARS = [...WIND_VARS, ...SURFACE_VARS];
 
 function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 function certError(error){
@@ -83,25 +89,43 @@ function numericCount(text){
   }
   return n;
 }
-function makeUrl(member, lat, lon){
+function makeUrl(member, lat, lon, vars, vertCoord=null){
   const p=new URLSearchParams();
-  for(const v of VARS) p.append('var',v);
+  for(const v of vars) p.append('var',v);
   p.set('latitude',String(lat));
   p.set('longitude',String(lon));
-  p.set('vertCoord','10');
+  if(vertCoord!==null) p.set('vertCoord',String(vertCoord));
   p.set('accept','csv');
   return `${BASE_NCSS}/${member.path}?${p.toString()}`;
+}
+function summarizeResponse(r,url){
+  const bytes=Buffer.byteLength(r.body||'','utf8');
+  const numerics=numericCount(r.body||'');
+  return {
+    ncss_url:url,
+    http_status:r.status,
+    error:r.error||null,
+    tls_mode:r.tls_mode,
+    attempt:r.attempt,
+    response_bytes:bytes,
+    numeric_token_count:numerics,
+    csv_header:String(r.body||'').split(/\r?\n/)[0]||null,
+  };
 }
 
 (async()=>{
   const reports=[];
   for(const member of MEMBERS){
     for(const [point,[lat,lon]] of Object.entries(POINTS)){
-      const url=makeUrl(member,lat,lon);
-      const r=await request(url);
-      const bytes=Buffer.byteLength(r.body||'','utf8');
-      const numerics=numericCount(r.body||'');
-      const ok=r.status===200 && bytes>0 && numerics>=4;
+      const windUrl=makeUrl(member,lat,lon,WIND_VARS,10);
+      const surfaceUrl=makeUrl(member,lat,lon,SURFACE_VARS,null);
+      const wind=await request(windUrl);
+      const surface=await request(surfaceUrl);
+      const windSummary=summarizeResponse(wind,windUrl);
+      const surfaceSummary=summarizeResponse(surface,surfaceUrl);
+      const ok=wind.status===200 && surface.status===200 &&
+        windSummary.response_bytes>0 && surfaceSummary.response_bytes>0 &&
+        windSummary.numeric_token_count>=2 && surfaceSummary.numeric_token_count>=2;
       reports.push({
         member_id:member.id,
         family:member.family,
@@ -111,15 +135,10 @@ function makeUrl(member, lat, lon){
         point,
         latitude:lat,
         longitude:lon,
-        ncss_url:url,
-        http_status:r.status,
-        error:r.error||null,
-        tls_mode:r.tls_mode,
-        attempt:r.attempt,
-        response_bytes:bytes,
-        numeric_token_count:numerics,
+        wind_request:windSummary,
+        surface_request:surfaceSummary,
+        numeric_token_count:windSummary.numeric_token_count+surfaceSummary.numeric_token_count,
         extraction_ok:ok,
-        csv_header:String(r.body||'').split(/\r?\n/)[0]||null,
       });
     }
   }
@@ -145,11 +164,18 @@ function makeUrl(member, lat, lon){
     successful_extraction_count:passed,
     variables:VARS,
     vertical_coordinate_m:10,
+    ncss_level_request_strategy:{
+      height_above_ground_vars:WIND_VARS,
+      height_above_ground_vertCoord_m:10,
+      surface_vars:SURFACE_VARS,
+      surface_vertCoord:null,
+    },
     points:POINTS,
     reports,
     notes:[
       'This is archive/extraction plumbing only; no event labels, observations, fire outcomes, or 2025 science data are read.',
-      'Member identities and valid-time alignment were frozen by the preceding Phase 0c gate.',
+      'Member identities, fields, points, and valid-time alignment remain exactly frozen by the preceding Phase 0c/0d gates.',
+      'The only change is NCSS request plumbing: 10 m height-above-ground fields and surface fields are requested separately so vertCoord is not incorrectly applied to surface variables.',
       'Transient 5xx/timeouts/certificate-chain behavior is infrastructure evidence only, not model evidence.',
       'A successful Phase 0e authorizes only broader 2024 archive extraction design; it does not authorize science scoring by itself.'
     ]
