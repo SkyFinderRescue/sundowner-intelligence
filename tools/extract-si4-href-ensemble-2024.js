@@ -22,6 +22,7 @@ const EXCLUDED_ISSUANCES=new Set([
   '2024-11-27T00:00:00.000Z',
   '2024-11-27T12:00:00.000Z',
   '2024-12-01T00:00:00.000Z',
+  '2024-12-01T12:00:00.000Z',
 ]);
 const WIND_VARS=['u-component_of_wind_height_above_ground','v-component_of_wind_height_above_ground'];
 const SURFACE_VARS=['Wind_speed_gust_surface','Pressure_surface'];
