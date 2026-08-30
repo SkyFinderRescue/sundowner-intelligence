@@ -48,6 +48,7 @@ jobs:
           node --check tools/extract-si4-href-ensemble-2024.js
           grep -q "initial_condition_ensemble_downslope_v1" tools/extract-si4-href-ensemble-2024.js
           grep -q "ISSUANCE_HOURS=\[0,12\]" tools/extract-si4-href-ensemble-2024.js
+          grep -q "2024-11-27T00:00:00.000Z" tools/extract-si4-href-ensemble-2024.js
       - name: Extract frozen HREF month with bounded infrastructure retry
         shell: bash
         run: |
@@ -78,16 +79,20 @@ jobs:
           if(x.start!==start||x.end!==end||x.forecast_lead_hours!==24) throw Error('date/lead mismatch');
           if(JSON.stringify(x.issuance_hours_utc)!==JSON.stringify([0,12])||x.member_count!==10||x.point_count!==5) throw Error('frozen member/time/point mismatch');
           const days=Math.round((Date.parse(end+'T00:00:00Z')-Date.parse(start+'T00:00:00Z'))/86400000)+1;
-          const expected=days*2*10*5;
+          const frozenExclusion=(start<='2024-11-27'&&end>='2024-11-27')?50:0;
+          const expected=days*2*10*5-frozenExclusion;
           if(x.failure_count!==0||x.row_count!==expected||x.rows.length!==expected) throw Error(`month incomplete ${x.row_count}/${expected}`);
+          const expectedExcluded=frozenExclusion?['2024-11-27T00:00:00.000Z']:[];
+          if(JSON.stringify(x.excluded_issuances)!==JSON.stringify(expectedExcluded)) throw Error('availability exclusion mismatch');
           const seen=new Set();
           for(const r of x.rows){
             if(!String(r.issuance_time).startsWith('2024-')||!String(r.valid_time).startsWith('2024-')||r.issuance_to_valid_lead_h!==24) throw Error('non-2024/lead row');
             if(![0,12].includes(new Date(r.issuance_time).getUTCHours())) throw Error('unexpected issuance hour');
+            if(r.issuance_time==='2024-11-27T00:00:00.000Z') throw Error('excluded issuance leaked into archive');
             const k=[r.issuance_time,r.member_id,r.point].join('|'); if(seen.has(k)) throw Error('duplicate '+k); seen.add(k);
             for(const f of ['u10_mps','v10_mps','wind_speed_10m_mps','wind_direction_10m_deg','gust_surface_mps','pressure_surface_pa']) if(!Number.isFinite(Number(r[f]))) throw Error(`nonfinite ${f} ${k}`);
           }
-          console.log({month,rows:x.row_count,status:'PASS'});
+          console.log({month,rows:x.row_count,excluded:x.excluded_issuances,status:'PASS'});
           NODE
       - uses: actions/upload-artifact@v4
         if: always()
@@ -115,20 +120,23 @@ jobs:
           node - <<'NODE'
           const fs=require('fs'),crypto=require('crypto'),path=require('path');
           const rows=[],seen=new Set(),monthly=[];
+          const frozenExcluded=['2024-11-27T00:00:00.000Z'];
           for(let m=1;m<=12;m++){
             const mm=String(m).padStart(2,'0'),p=path.join('monthly',`si4-href-ensemble-2024-${mm}.json`);
             if(!fs.existsSync(p)) throw Error('missing '+p);
             const raw=fs.readFileSync(p),x=JSON.parse(raw);
             if(x.status!=='RESEARCH_ONLY_2024_DEVELOPMENT'||x.candidate_family!=='initial_condition_ensemble_downslope_v1'||x.failure_count!==0) throw Error('invalid month '+mm);
-            monthly.push({month:mm,file:path.basename(p),sha256:crypto.createHash('sha256').update(raw).digest('hex'),rows:x.row_count,start:x.start,end:x.end});
+            monthly.push({month:mm,file:path.basename(p),sha256:crypto.createHash('sha256').update(raw).digest('hex'),rows:x.row_count,start:x.start,end:x.end,excluded_issuances:x.excluded_issuances||[]});
             for(const r of x.rows){const k=[r.issuance_time,r.member_id,r.point].join('|');if(seen.has(k))throw Error('duplicate '+k);seen.add(k);rows.push(r);}
           }
-          if(rows.length!==365*2*10*5) throw Error(`unexpected full-year rows ${rows.length}`);
+          const expected=365*2*10*5-50;
+          if(rows.length!==expected) throw Error(`unexpected full-year rows ${rows.length}/${expected}`);
+          if(rows.some(r=>frozenExcluded.includes(r.issuance_time))) throw Error('frozen excluded issuance present');
           rows.sort((a,b)=>a.issuance_time.localeCompare(b.issuance_time)||a.member_id.localeCompare(b.member_id)||a.point.localeCompare(b.point));
-          const out={status:'RESEARCH_ONLY_2024_DEVELOPMENT',candidate_family:'initial_condition_ensemble_downslope_v1',phase:'full_2024_href_member_archive',science_scoring_performed:false,observations_or_outcomes_used:false,future_observations_used:false,fire_association_used:false,holdout_2025_loaded:false,production_change_authorized:false,forecast_lead_hours:24,issuance_hours_utc:[0,12],initialization_start:'2024-01-01',initialization_end:'2024-12-30',valid_time_start:'2024-01-02',valid_time_end:'2024-12-31',member_count:10,point_count:5,row_count:rows.length,failure_count:0,provenance:{github_run_id:process.env.RUN_ID,head_sha:process.env.HEAD_SHA,monthly_artifacts:monthly},rows};
+          const out={status:'RESEARCH_ONLY_2024_DEVELOPMENT',candidate_family:'initial_condition_ensemble_downslope_v1',phase:'full_2024_href_member_archive',science_scoring_performed:false,observations_or_outcomes_used:false,future_observations_used:false,fire_association_used:false,holdout_2025_loaded:false,production_change_authorized:false,forecast_lead_hours:24,issuance_hours_utc:[0,12],initialization_start:'2024-01-01',initialization_end:'2024-12-30',valid_time_start:'2024-01-02',valid_time_end:'2024-12-31',member_count:10,point_count:5,row_count:rows.length,failure_count:0,excluded_issuances:frozenExcluded,availability_rule:'exclude an entire issuance only when a required frozen member/point is persistently unavailable after bounded retries, determined without observations/outcomes',provenance:{github_run_id:process.env.RUN_ID,head_sha:process.env.HEAD_SHA,monthly_artifacts:monthly},rows};
           fs.writeFileSync('si4-href-ensemble-2024-full.json',JSON.stringify(out));
           fs.writeFileSync('si4-href-ensemble-2024-manifest.json',JSON.stringify(out.provenance,null,2));
-          console.log({status:'PASS',rows:rows.length,months:monthly.length,head:process.env.HEAD_SHA,run_id:process.env.RUN_ID});
+          console.log({status:'PASS',rows:rows.length,months:monthly.length,excluded:frozenExcluded,head:process.env.HEAD_SHA,run_id:process.env.RUN_ID});
           NODE
       - uses: actions/upload-artifact@v4
         with:
