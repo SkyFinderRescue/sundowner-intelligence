@@ -87,3 +87,5 @@ jobs:
           path: research/si4-href-initial-condition-ensemble-2024-cv-source-qc.json
           if-no-files-found: warn
           retention-days: 30
+
+# plumbing-only retrigger after source-QC linkage verification
