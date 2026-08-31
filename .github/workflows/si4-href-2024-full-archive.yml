@@ -52,6 +52,7 @@ jobs:
           for t in \
             '2024-11-27T00:00:00.000Z' '2024-11-27T12:00:00.000Z' \
             '2024-11-28T00:00:00.000Z' '2024-11-28T12:00:00.000Z' \
+            '2024-11-29T00:00:00.000Z' \
             '2024-12-01T00:00:00.000Z' '2024-12-01T12:00:00.000Z' \
             '2024-12-02T00:00:00.000Z' '2024-12-08T12:00:00.000Z' \
             '2024-12-09T00:00:00.000Z'; do
@@ -87,7 +88,7 @@ jobs:
           if(x.start!==start||x.end!==end||x.forecast_lead_hours!==24) throw Error('date/lead mismatch');
           if(JSON.stringify(x.issuance_hours_utc)!==JSON.stringify([0,12])||x.member_count!==10||x.point_count!==5) throw Error('frozen member/time/point mismatch');
           const days=Math.round((Date.parse(end+'T00:00:00Z')-Date.parse(start+'T00:00:00Z'))/86400000)+1;
-          const frozenExcluded=['2024-11-27T00:00:00.000Z','2024-11-27T12:00:00.000Z','2024-11-28T00:00:00.000Z','2024-11-28T12:00:00.000Z','2024-12-01T00:00:00.000Z','2024-12-01T12:00:00.000Z','2024-12-02T00:00:00.000Z','2024-12-08T12:00:00.000Z','2024-12-09T00:00:00.000Z'];
+          const frozenExcluded=['2024-11-27T00:00:00.000Z','2024-11-27T12:00:00.000Z','2024-11-28T00:00:00.000Z','2024-11-28T12:00:00.000Z','2024-11-29T00:00:00.000Z','2024-12-01T00:00:00.000Z','2024-12-01T12:00:00.000Z','2024-12-02T00:00:00.000Z','2024-12-08T12:00:00.000Z','2024-12-09T00:00:00.000Z'];
           const expectedExcluded=frozenExcluded.filter(t=>t.slice(0,10)>=start&&t.slice(0,10)<=end);
           const expected=days*2*10*5-expectedExcluded.length*50;
           if(x.failure_count!==0||x.row_count!==expected||x.rows.length!==expected) throw Error(`month incomplete ${x.row_count}/${expected}`);
@@ -128,7 +129,7 @@ jobs:
           node - <<'NODE'
           const fs=require('fs'),crypto=require('crypto'),path=require('path');
           const rows=[],seen=new Set(),monthly=[];
-          const frozenExcluded=['2024-11-27T00:00:00.000Z','2024-11-27T12:00:00.000Z','2024-11-28T00:00:00.000Z','2024-11-28T12:00:00.000Z','2024-12-01T00:00:00.000Z','2024-12-01T12:00:00.000Z','2024-12-02T00:00:00.000Z','2024-12-08T12:00:00.000Z','2024-12-09T00:00:00.000Z'];
+          const frozenExcluded=['2024-11-27T00:00:00.000Z','2024-11-27T12:00:00.000Z','2024-11-28T00:00:00.000Z','2024-11-28T12:00:00.000Z','2024-11-29T00:00:00.000Z','2024-12-01T00:00:00.000Z','2024-12-01T12:00:00.000Z','2024-12-02T00:00:00.000Z','2024-12-08T12:00:00.000Z','2024-12-09T00:00:00.000Z'];
           for(let m=1;m<=12;m++){
             const mm=String(m).padStart(2,'0'),p=path.join('monthly',`si4-href-ensemble-2024-${mm}.json`);
             if(!fs.existsSync(p)) throw Error('missing '+p);
