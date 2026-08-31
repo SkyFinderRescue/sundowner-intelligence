@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "purpose": "Supplemental operational truth set for newly completed, clearly confirmed Sundowner events identified after the peer-reviewed/historical catalog was generated. Fire association remains a separate outcome field and is never the meteorological event definition.",
-  "generated": "2026-08-29",
+  "generated": "2026-08-30",
   "events": [
     {
       "event_id": "2026-07-27-sw-sba-western-sundowner",
@@ -127,16 +127,17 @@
       "upstream_context":{"cuyama":null,"santa_ynez_valley":null,"southern_kern":null,"notes":"No sufficiently specific trusted observed upstream time series was recovered; fields remain null."},
       "upper_air_model_context":{"pattern":null,"source":null,"notes":"No completed-event upper-air profile was recovered from a trusted source; fields remain null rather than inferred."},
       "duration_hours_estimate":null,
-      "fire_associated":false,
+      "fire_associated":true,
       "fire_name":null,
-      "fire_outcome_notes":"CAL FIRE's 2026 incident archive showed no Santa Barbara County wildfire beginning Aug 28-29 when checked Aug 29. This is an outcome field only and was not used to define the meteorological event.",
+      "fire_outcome_notes":"A separate vegetation fire was confirmed during the Sundowner event window near Foothill Road and Barger Canyon Road in Santa Barbara at about 7:08-7:20 PM PDT Aug 28. The fire was held to roughly 0.25 acre with forward progress stopped by 7:29 PM. A mulch-loaded truck was found in the burn area and the cause remained under investigation. This field records temporal/spatial co-occurrence only; no source establishes that Sundowner winds caused the ignition or materially drove spread.",
       "forecast_context_only":{"nws_fire_weather":"NWS LOX fire-weather guidance issued Aug 28 described moderate Sundowner winds across southern Santa Barbara County through Sunday night. For the Aug 28 night, the western coast/western Santa Ynez range forecast called for northwest winds 15-25 mph with gusts to 40 mph and isolated 45 mph hill gusts. These forecast values are not stored as observations."},
       "sources":[
         {"organization":"National Weather Service Los Angeles/Oxnard","product":"Area Forecast Discussion FXUS66 KLOX 291941 / 292338","issued":"2026-08-29T12:41:00-07:00","url":"https://forecast.weather.gov/product.php?issuedby=LOX&product=AFD&site=LOX","evidence":"Post-event observation: last night winds across southwestern Santa Barbara County gusted 30 to 40 mph."},
         {"organization":"National Weather Service Los Angeles/Oxnard","product":"Fire Weather Planning Forecast FNUS56 KLOX 281634","issued":"2026-08-28T09:34:00-07:00","url":"https://marine.weather.gov/product.php?format=TXT&glossary=1&issuedby=LOX&product=FWF&site=AFC&version=3","evidence":"NWS explicitly described a multi-night moderate Sundowner regime across southern Santa Barbara County; Aug 28 night forecast for the southwestern coast/western Santa Ynez range was NW 15-25 mph with gusts to 40 mph, isolated 45 mph in hills. Forecast context only."},
-        {"organization":"CAL FIRE","product":"2026 Fire Season Incident Archive","issued":"checked 2026-08-29","url":"https://www.fire.ca.gov/incidents/2026","evidence":"No Santa Barbara County wildfire beginning Aug 28-29 was listed; this supports a non-fire outcome only."}
+        {"organization":"Santa Barbara County Fire Department via Edhat","product":"Santa Barbara Brush Fire on Foothill Road Held to Quarter Acre","issued":"2026-08-30","url":"https://www.edhat.com/news/santa-barbara-brush-fire-on-foothill-road-held-to-quarter-acre/","evidence":"SBCFD responded at 7:08 PM Aug 28 to a vegetation fire in the 3000 block of Foothill Road; forward progress was stopped by 7:29 PM at about one-quarter acre. A mulch-loaded truck was involved in the burn area; cause remained under investigation."},
+        {"organization":"Noozhawk","product":"Vegetation Fire Breaks Out off Santa Barbara's Foothill Road","issued":"2026-08-28T19:30:00-07:00","url":"https://www.noozhawk.com/vegetation-fire-breaks-out-off-santa-barbaras-foothill-road/","evidence":"Contemporaneous local report placed the vegetation fire near Foothill and Barger Canyon roads at roughly one-quarter acre around 7:20 PM, spreading at a moderate rate with one structure threatened."}
       ],
-      "notes":"Separate repeat nightly episode after daytime weakening, consistent with the operational catalog treatment of distinct evening ramp-ups. Exact station gust location, thermodynamics, gradients, upstream observations, duration, and upper-air values remain unavailable and are not inferred."
+      "notes":"Separate repeat nightly episode after daytime weakening, consistent with the operational catalog treatment of distinct evening ramp-ups. Fire outcome corrected on Aug 30 after trusted local incident evidence established a contemporaneous vegetation fire; no causal wind-fire linkage is inferred. Exact station gust location, thermodynamics, gradients, upstream observations, duration, and upper-air values remain unavailable and are not inferred."
     }
   ]
 }
