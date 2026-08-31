@@ -55,7 +55,8 @@ jobs:
           if(x.phase!=='full_2024_href_member_archive_source_qc_repaired') process.exit(2);
           if(x.row_count!==35750||m.repaired_rows!==35750) process.exit(3);
           if(x.source_qc.invalid_row_count!==10||m.invalid_row_count!==10) process.exit(4);
-          const expected=['2024-10-16T12:00:00.000Z','2024-10-23T00:00:00.000Z'];
+          // Source QC reports issuance_time. The corrupt records' valid times are +24 h.
+          const expected=['2024-10-15T12:00:00.000Z','2024-10-22T00:00:00.000Z'];
           if(JSON.stringify(x.source_qc.newly_excluded_issuances)!==JSON.stringify(expected)) process.exit(5);
           if(x.observations_or_outcomes_used!==false||x.holdout_2025_loaded!==false||x.production_change_authorized!==false) process.exit(6);
           if(x.rows.some(r=>expected.includes(r.issuance_time))) process.exit(7);
