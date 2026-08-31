@@ -7,16 +7,21 @@ Production status: NO PROMOTION; SI-3.1 on `main` remains authoritative.
 
 ## Verified archive issue
 
-During the full 2024 HREF member archive on PR #6, all Phase-0 HREF feasibility, field-inventory, exact-F24, member-alignment and point-extraction probes passed. Subsequent full-year extraction attempts identified four persistently incomplete exact-F24 issuances under the frozen member/point/field contract:
+During the full 2024 HREF member archive on PR #6, all Phase-0 HREF feasibility, field-inventory, exact-F24, member-alignment and point-extraction probes passed. Subsequent full-year extraction attempts identified nine persistently incomplete exact-F24 issuances under the frozen member/point/field contract:
 
 - `2024-11-27T00:00:00.000Z`
 - `2024-11-27T12:00:00.000Z`
+- `2024-11-28T00:00:00.000Z`
+- `2024-11-28T12:00:00.000Z`
 - `2024-12-01T00:00:00.000Z`
 - `2024-12-01T12:00:00.000Z`
+- `2024-12-02T00:00:00.000Z`
+- `2024-12-08T12:00:00.000Z`
+- `2024-12-09T00:00:00.000Z`
 
-The failures were repeated HTTP 404 responses for required frozen HREF member data after bounded retries. The 2024-11-27 12Z failure persisted across all three outer monthly attempts after more than 2,500 successful November extraction tasks each time. The 2024-12-01 00Z failure persisted across all three December attempts immediately at the first required HRRR-current member/point requests. On the next frozen rerun after excluding only that verified gap, 2024-12-01 12Z independently failed across all three outer December attempts; the required HRRR-lag6 member returned 404 for every required field through all five inner retries at multiple frozen points.
+The failures were repeated HTTP 404 responses for required frozen HREF member data after bounded retries. The newest failure was `2024-12-09T00:00:00.000Z`: the required `hiresw_arw_lag12` member returned 404 for `u10`, `v10`, surface gust and surface pressure through all five inner retries, and the December monthly job reproduced the failure across all three outer attempts at multiple frozen points. This occurred after hundreds of earlier December extraction tasks had succeeded.
 
-No observations, labels, event outcomes, fire association, 2025 data or forecast errors were inspected to identify or select these issuances. This is archive availability evidence only.
+No observations, labels, event outcomes, fire association, 2025 data or forecast errors were inspected to identify or select any of these issuances. This is archive availability evidence only.
 
 ## Frozen availability rule
 
@@ -25,7 +30,7 @@ Consistent with the existing Phase-0 predeclaration and decision, the archive ex
 This changes only archive/plumbing availability handling. It does **not** change:
 
 - HREF member identities;
-- the 00Z/12Z issuance schedule except the four explicit availability exclusions;
+- the 00Z/12Z issuance schedule except the nine explicit availability exclusions;
 - exact F24 valid-time alignment;
 - five frozen points;
 - authorized fields (`u10`, `v10`, surface gust, surface pressure);
@@ -33,7 +38,7 @@ This changes only archive/plumbing availability handling. It does **not** change
 - labels or evaluation gates;
 - the 2025 firewall.
 
-The affected issuances are not replaced with label-selected dates and are not imputed. Missing stays missing. Full-year retained row expectation is therefore `36,300` rather than `36,500`.
+The affected issuances are not replaced with label-selected dates and are not imputed. Missing stays missing. Full-year retained row expectation is therefore `36,050` rather than `36,500`.
 
 ## Science authorization
 
