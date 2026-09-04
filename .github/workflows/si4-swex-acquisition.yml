@@ -32,10 +32,12 @@ jobs:
         run: node tools/probe-swex-order-controls.js
       - name: Probe CODIAC response with minimal selection and no contact information
         run: node tools/probe-swex-order-response.js
-      - name: Preserve accepted one-file profiler order without resubmitting
+      - name: Record corrected order state without exposing contact information
         run: |
-          echo 'The final-QC dataset 600.034 one-file profiler order was already accepted by NCAR/EOL.'
-          echo 'Do not submit another order from CI. Await delivery and ingest the delivered file once available.'
+          echo 'NCAR/EOL Data Support verified on 2026-09-04 that no existing 600.034 order could be found.'
+          echo 'A resubmission is required and is no longer considered a duplicate.'
+          echo 'Do not hard-code an order email in this public repository or CI.'
+          echo 'Keep acquisition GET-only until a valid contact is supplied securely at submission time.'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
