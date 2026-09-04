@@ -4,7 +4,7 @@ Status: RESEARCH ONLY. NO PRODUCTION CHANGE. NO 2025 EXPOSURE AUTHORIZED.
 
 ## Independent source verification
 
-NSF NCAR/UCAR DASH now publicly indexes SWEX dataset **600.034 — ISS Radar Wind Profiler Products** as:
+NSF NCAR/UCAR DASH publicly indexes SWEX dataset **600.034 — ISS Radar Wind Profiler Products** as:
 
 - resource version: **1.0**
 - progress: **completed**
@@ -29,11 +29,21 @@ The catalog describes 915-MHz profiler winds/moments at Rancho Alegre and Sedgwi
 
 Source catalog: `https://data.ucar.edu/dataset/iss-radar-wind-profiler-products`
 
-## Acquisition decision
+## Corrected acquisition status — 2026-09-04
 
-No duplicate NCAR/EOL order was submitted. Gmail still contains no SWEX/NCAR/EOL/CODIAC delivery message matching dataset 600.034. Public catalog availability is therefore treated as an independently verified availability milestone, not proof that the previously accepted order generated an email delivery.
+The prior assumption that an NCAR/EOL order for 600.034 had already been accepted is **withdrawn**.
 
-Direct archive retrieval still needs to be completed through the official NCAR/EOL resource path without creating a second order. Until the bytes are acquired and checksummed, do not claim the archive itself has been ingested.
+On 2026-09-04, NCAR/EOL Data Support replied that they could not find an order for the project email address, could not find a recent order for dataset 600.034, and found no corresponding error in their logs. Support explicitly requested that the order be submitted again.
+
+Therefore:
+
+1. there is no verified existing order to preserve or wait on;
+2. the public archive bytes have **not** yet been acquired or checksummed;
+3. resubmission is now the correct next acquisition action and is not considered a duplicate;
+4. no email address may be hard-coded into this public repository or CI configuration;
+5. until a valid order contact can be supplied securely at submission time, acquisition remains blocked at the CODIAC form despite the dataset having no legal/access restrictions.
+
+The GET-only acquisition probe remains valid for discovering authoritative endpoints and exact order controls. Its earlier CI message claiming an accepted order must not be treated as current truth.
 
 ## Science-use restrictions
 
