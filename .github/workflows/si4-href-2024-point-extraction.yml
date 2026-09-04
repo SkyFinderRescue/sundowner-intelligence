@@ -1,0 +1,51 @@
+name: SI-4 HREF 2024 Point Extraction Probe
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/probe-href-2024-point-extraction.js'
+      - '.github/workflows/si4-href-2024-point-extraction.yml'
+      - 'research/SI4_INITIAL_CONDITION_ENSEMBLE_DOWNSLOPE_2024_PREDECLARED.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe-href-2024-point-extraction:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Syntax check
+        run: node --check tools/probe-href-2024-point-extraction.js
+      - name: Probe frozen 10-member HREF point extraction without outcomes
+        env:
+          NODE_OPTIONS: --use-openssl-ca
+        run: node tools/probe-href-2024-point-extraction.js
+      - name: Enforce outcome-blind Phase 0e contract
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const p=JSON.parse(fs.readFileSync('research/href-2024-point-extraction-probe.json','utf8'));
+          if(p.candidate!=='initial_condition_ensemble_downslope_v1') throw new Error('candidate mismatch');
+          if(p.science_scoring_performed!==false || p.observations_or_outcomes_used!==false) throw new Error('science/outcome leakage contract failed');
+          if(JSON.stringify(p.queried_years)!==JSON.stringify([2024])) throw new Error('only 2024 may be queried');
+          if(p.future_observations_used!==false || p.fire_association_used!==false) throw new Error('future observation/fire leakage contract failed');
+          if(p.issuance_to_valid_lead_h!==24) throw new Error(`expected F24 alignment, got ${p.issuance_to_valid_lead_h}`);
+          if(p.member_count!==10) throw new Error(`expected frozen 10-member HREF construction, got ${p.member_count}`);
+          if(p.point_count!==5) throw new Error(`expected five frozen physical points, got ${p.point_count}`);
+          if(p.expected_extraction_count!==50 || p.successful_extraction_count!==50) throw new Error(`point extraction incomplete: ${p.successful_extraction_count}/${p.expected_extraction_count}`);
+          if(p.phase0e_status!=='HREF_10_MEMBER_5_POINT_EXTRACTION_REPRODUCIBLE') throw new Error(`Phase 0e not reproducible: ${p.phase0e_status}`);
+          console.log('Frozen HREF 10-member/5-point extraction is reproducible; science scoring remains disabled.');
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-href-2024-point-extraction-probe
+          path: research/href-2024-point-extraction-probe.json
+          if-no-files-found: error
+          retention-days: 30
