@@ -45,6 +45,10 @@ Therefore:
 
 The GET-only acquisition probe remains valid for discovering authoritative endpoints and exact order controls. Its earlier CI message claiming an accepted order must not be treated as current truth.
 
+### Follow-up state — 2026-09-04 evening
+
+After EOL Support's instruction to try again, a fresh reply was sent to the same EOL/Jira support thread explicitly requesting SWEX dataset 600.034 and identifying the final ISS Radar Wind Profiler Products resource by DOI. As of the 2026-09-06 evening check, Gmail contains no subsequent delivery link or support reply. This email is **not treated as proof of a completed CODIAC order** and the archive remains unacquired/unverified. Do not submit an additional CODIAC order while this fresh support request may still be acted on unless EOL confirms that a formal web-form submission is still required.
+
 ## Science-use restrictions
 
 These 2022 observations are independent historical evidence and may be used to:
