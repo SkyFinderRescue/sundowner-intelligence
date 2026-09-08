@@ -47,7 +47,20 @@ The GET-only acquisition probe remains valid for discovering authoritative endpo
 
 ### Follow-up state — 2026-09-04 evening
 
-After EOL Support's instruction to try again, a fresh reply was sent to the same EOL/Jira support thread explicitly requesting SWEX dataset 600.034 and identifying the final ISS Radar Wind Profiler Products resource by DOI. As of the 2026-09-06 evening check, Gmail contains no subsequent delivery link or support reply. This email is **not treated as proof of a completed CODIAC order** and the archive remains unacquired/unverified. Do not submit an additional CODIAC order while this fresh support request may still be acted on unless EOL confirms that a formal web-form submission is still required.
+After EOL Support's instruction to try again, a fresh reply was sent to the same EOL/Jira support thread explicitly requesting SWEX dataset 600.034 and identifying the final ISS Radar Wind Profiler Products resource by DOI. As of the 2026-09-08 check, Gmail contains no subsequent delivery link or support reply. This email is **not treated as proof of a completed CODIAC order** and the archive remains unacquired/unverified. Do not submit an additional CODIAC order while this fresh support request may still be acted on unless EOL confirms that a formal web-form submission is still required.
+
+## DOI provenance discrepancy frozen — 2026-09-08
+
+A 2026 peer-reviewed SWEX ISF data article (Witte et al., *Geoscience Data Journal*, 2026) states that the SWEX profiler products are accessible through DOI `10.26023/ZH7Z-GRWB-AV0F`. Current NSF NCAR/DASH metadata resolves that DOI to a different resource: M2HATS dataset 636.008, with 2023 temporal coverage and M2HATS filenames. Therefore SI-4 must **not** substitute `ZH7Z-GRWB-AV0F` for the independently verified SWEX 600.034 identity.
+
+For SI-4 ingestion provenance, the authoritative identity remains the current NSF NCAR/DASH SWEX record:
+
+- alternate identifier: `600.034`
+- DOI: `10.26023/2659-AF70-3009`
+- SWEX filenames listed above
+- SWEX temporal coverage beginning in 2022
+
+Treat the conflicting DOI in the 2026 article as a citation/provenance discrepancy requiring external clarification, not as permission to switch datasets. File-level checksums, filenames, temporal coverage, site identities, and internal netCDF metadata must be verified after acquisition before any physics validation is allowed.
 
 ## Science-use restrictions
 
