@@ -45,9 +45,11 @@ Therefore:
 
 The GET-only acquisition probe remains valid for discovering authoritative endpoints and exact order controls. Its earlier CI message claiming an accepted order must not be treated as current truth.
 
-### Follow-up state — 2026-09-04 evening
+### Follow-up state — 2026-09-08
 
-After EOL Support's instruction to try again, a fresh reply was sent to the same EOL/Jira support thread explicitly requesting SWEX dataset 600.034 and identifying the final ISS Radar Wind Profiler Products resource by DOI. As of the 2026-09-08 check, Gmail contains no subsequent delivery link or support reply. This email is **not treated as proof of a completed CODIAC order** and the archive remains unacquired/unverified. Do not submit an additional CODIAC order while this fresh support request may still be acted on unless EOL confirms that a formal web-form submission is still required.
+After the support request was retried, NCAR/EOL Data Support replied on 2026-09-08 with the authoritative dataset homepage (`https://data.eol.ucar.edu/dataset/600.034`) and instructed the requester to select the **Place Order** control and submit the order directly. This is explicit confirmation that the September support email is not itself an order and that a fresh web-form submission is required.
+
+Accordingly, the no-duplicate-order guard no longer blocks a new order: EOL has confirmed there is no active order to duplicate. The archive remains **unacquired and unverified** until the order is submitted and the resulting files are downloaded and checksummed. SI-4 must not claim delivery, checksum verification, or profiler ingestion before actual bytes are available.
 
 ## DOI provenance discrepancy frozen — 2026-09-08
 
