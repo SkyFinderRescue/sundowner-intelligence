@@ -14,13 +14,27 @@ Key independent measurements relevant to SI-4 physics/architecture include:
 - Ceilometers at all ISS sites measured cloud-base/backscatter structure relevant to marine-layer depth and erosion.
 - Radiosondes at Rancho Alegre and Sedgwick provide independent vertical thermodynamic/wind profiles for stability and mountain-wave diagnostics.
 
-Primary source: Witte et al. (2026), "NSF NCAR's In Situ Sensing Facility Measurement System During the Sundowner Wind EXperiment (SWEX)", Geoscience Data Journal, DOI 10.1002/gdj3.70074. The paper cites the final 449/915-MHz profiler/RASS archive at DOI 10.26023/2659-AF70-3009 and the WindCube lidar archive at DOI 10.26023/Q28P-EEBS-0Y0E.
+Primary source: Witte et al. (2026), "NSF NCAR's In Situ Sensing Facility Measurement System During the Sundowner Wind Experiment (SWEX)", Geoscience Data Journal, DOI 10.1002/gdj3.70074. The paper cites the final profiler products through the NCAR/EOL DOI family associated with the SWEX radar-profiler archive and the WindCube lidar archive at DOI 10.26023/Q28P-EEBS-0Y0E. Dataset 600.034 remains independently identified in the UCAR/DASH catalog as ISS Radar Wind Profiler Products, v1.0, DOI 10.26023/2659-AF70-3009.
+
+## 2026-09-09 QC interpretation freeze
+
+The Witte et al. (2026) primary source provides processing/QC details that must be honored during the eventual outcome-blind ingestion of 600.034 rather than reverse-engineered from event outcomes:
+
+- the 915-MHz profiler winds were formed from 30-second beam/spectral measurements and reprocessed with the NCAR Improved Moments Algorithm (NIMA), with final wind products averaged over 30 minutes;
+- nominal profiler range sampling was about 60 m, typically covering roughly 0.2–2.4 km AGL at Rancho Alegre and 0.2–2.0 km AGL at Sedgwick;
+- reported operating rates were about 90% at Rancho Alegre and 80% at Sedgwick, while usable wind-product rates were about 75% and 67%, respectively;
+- NIMA applies spectral-image/fuzzy-logic processing to separate atmospheric echoes from clutter/interference and can recover weak/noisy echoes and unwrap velocities beyond Nyquist limits;
+- the final-QC workflow also screened migration-bird contamination using anomalous directional/temporal signatures.
+
+Frozen ingestion consequence: absence of a valid wind gate is not to be converted into a calm or neutral value. Missing remains missing. Dataset-native QC flags/availability masks are preserved before any event matching. Bird-contaminated or otherwise rejected gates are excluded using source QC only, never Sundowner labels or downstream forecast errors. No interpolation across vertically missing gates is permitted for the initial independent-physics validation unless a separate, predeclared source-agnostic sensitivity analysis is approved before outcome inspection.
+
+The paper's availability statistics also mean that an apparent event/non-event difference in valid-gate count, maximum usable height, or profiler depth is treated first as an observing-system/QC covariate and not as physics. Those completeness fields may be reported for audit but cannot themselves become SI-4 occurrence predictors without a separate issuance-safety and leakage review.
 
 ## Research implication
 
 This evidence supports using SWEX as an independent multi-instrument physics-validation set for the already distinct terrain-resolving / observation-assimilating architecture family. It does **not** justify creating another coarse HRRR pressure-level proxy candidate.
 
-The highest-value outcome-blind next step is therefore to acquire/checksum the official final-QC archives without duplicating the accepted order, then define pre-outcome diagnostics for:
+The highest-value outcome-blind next step is therefore to acquire/checksum the official final-QC archives without duplicating an order, then define pre-outcome diagnostics for:
 
 1. lee-jet height, depth, and vertical shear from profilers;
 2. low-level stability / RASS or radiosonde structure;
