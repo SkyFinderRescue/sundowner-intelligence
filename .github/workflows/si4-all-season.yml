@@ -42,7 +42,8 @@ jobs:
           - {month: '2024-09', start: '2024-09-01', end: '2024-09-30'}
           - {month: '2024-10', start: '2024-10-01', end: '2024-10-31'}
           - {month: '2024-11', start: '2024-11-01', end: '2024-11-30'}
-          - {month: '2024-12', start: '2024-12-01', end: '2024-12-31'}
+          # F24 from Dec 31 verifies on Jan 1, 2025 and is outside the frozen development boundary.
+          - {month: '2024-12', start: '2024-12-01', end: '2024-12-30'}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -73,6 +74,7 @@ jobs:
           assert x['failure_count']==0, x['failures'][:10]
           assert x['rows'], 'no rows'
           assert all(len(r.get('profile') or [])==5 for r in x['rows'])
+          assert all(str(r.get('valid_time') or '')[:4] == '2024' for r in x['rows'])
           print({'month':'${{ matrix.month }}','rows':len(x['rows'])})
           PY
       - uses: actions/upload-artifact@v4
@@ -97,7 +99,7 @@ jobs:
           path: /tmp/hrrr-months
       - name: Merge exact complete 2024 fixed-lead cache without outcome scoring
         run: |
-          python tools/merge-hrrr-upper-chunks.py --input '/tmp/hrrr-months/**/*.json' --start 2024-01-01 --end 2024-12-31 --fxx 24 --out /tmp/hrrr-upper-fixed-lead-2024.json
+          python tools/merge-hrrr-upper-chunks.py --input '/tmp/hrrr-months/**/*.json' --start 2024-01-01 --end 2024-12-30 --fxx 24 --out /tmp/hrrr-upper-fixed-lead-2024.json
           python - <<'PY'
           import json
           x=json.load(open('/tmp/hrrr-upper-fixed-lead-2024.json'))
