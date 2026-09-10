@@ -1,4 +1,4 @@
-name: SI-4 All-Season Frozen Holdout
+name: SI-4 2024 Archive Gate
 
 on:
   pull_request:
@@ -7,18 +7,18 @@ on:
       - '.github/workflows/si4-all-season.yml'
       - 'tools/extract-hrrr-upper-herbie.py'
       - 'tools/merge-hrrr-upper-chunks.py'
-      - 'tools/build-si4-calibration.js'
-      - 'tools/summarize-si4-holdout.js'
-      - 'tools/score-si4-event-spatial-frozen-2025.js'
-      - 'tools/run-si4-final-ablation.js'
       - 'research/si4-science.js'
   workflow_dispatch:
 
 permissions:
   contents: read
 
+# Research safety: while SI-4 remains NO PROMOTION, PR activity is allowed to
+# reconstruct and QC 2024 issuance-safe inputs only. 2025 is a frozen holdout
+# and must not be downloaded, scored, inspected, or used for tuning until one
+# independently predeclared 2024 candidate clears every frozen promotion gate.
 concurrency:
-  group: si4-all-season-${{ github.event.pull_request.number || github.ref }}
+  group: si4-2024-archive-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -43,18 +43,6 @@ jobs:
           - {month: '2024-10', start: '2024-10-01', end: '2024-10-31'}
           - {month: '2024-11', start: '2024-11-01', end: '2024-11-30'}
           - {month: '2024-12', start: '2024-12-01', end: '2024-12-31'}
-          - {month: '2025-01', start: '2025-01-01', end: '2025-01-31'}
-          - {month: '2025-02', start: '2025-02-01', end: '2025-02-28'}
-          - {month: '2025-03', start: '2025-03-01', end: '2025-03-31'}
-          - {month: '2025-04', start: '2025-04-01', end: '2025-04-30'}
-          - {month: '2025-05', start: '2025-05-01', end: '2025-05-31'}
-          - {month: '2025-06', start: '2025-06-01', end: '2025-06-30'}
-          - {month: '2025-07', start: '2025-07-01', end: '2025-07-31'}
-          - {month: '2025-08', start: '2025-08-01', end: '2025-08-31'}
-          - {month: '2025-09', start: '2025-09-01', end: '2025-09-30'}
-          - {month: '2025-10', start: '2025-10-01', end: '2025-10-31'}
-          - {month: '2025-11', start: '2025-11-01', end: '2025-11-30'}
-          - {month: '2025-12', start: '2025-12-01', end: '2025-12-31'}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -94,72 +82,35 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-  merge-and-score:
-    name: Merge + frozen 2025 holdout score
+  merge-2024-qc:
+    name: Merge 2024 issuance-safe archive + QC only
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 60
     needs: upper-month
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - uses: actions/setup-node@v4
-        with: {node-version: '22'}
       - uses: actions/download-artifact@v4
         with:
-          pattern: hrrr-upper-*
+          pattern: hrrr-upper-2024-*
           path: /tmp/hrrr-months
-      - name: Merge exact complete 2024-2025 fixed-lead cache
+      - name: Merge exact complete 2024 fixed-lead cache without outcome scoring
         run: |
-          python tools/merge-hrrr-upper-chunks.py --input '/tmp/hrrr-months/**/*.json' --start 2024-01-01 --end 2025-12-31 --fxx 24 --out /tmp/hrrr-upper-fixed-lead-all-season.json
+          python tools/merge-hrrr-upper-chunks.py --input '/tmp/hrrr-months/**/*.json' --start 2024-01-01 --end 2024-12-31 --fxx 24 --out /tmp/hrrr-upper-fixed-lead-2024.json
           python - <<'PY'
           import json
-          x=json.load(open('/tmp/hrrr-upper-fixed-lead-all-season.json'))
-          assert len(x['rows'])==23392, len(x['rows'])
+          x=json.load(open('/tmp/hrrr-upper-fixed-lead-2024.json'))
           assert x['failure_count']==0
           assert x['rules']['future_observation_leakage'] is False
+          assert x['rows'], 'no 2024 rows'
+          years={str(r.get('valid_time') or r.get('date') or '')[:4] for r in x['rows']}
+          assert years <= {'2024'}, years
+          print({'rows':len(x['rows']), 'years':sorted(years)})
           PY
-      - name: Build candidate on 2024 only and score frozen 2025 only
-        env:
-          TRAIN_START: '2024-01-01'
-          TRAIN_END: '2024-12-31'
-          TEST_START: '2025-01-01'
-          TEST_END: '2025-12-31'
-          UPPER_CACHE: /tmp/hrrr-upper-fixed-lead-all-season.json
-          OUT: /tmp/si4-calibration-candidate.json
-        run: node tools/build-si4-calibration.js
-      - name: Produce promotion evidence summary without changing model coefficients
-        env:
-          INPUT: /tmp/si4-calibration-candidate.json
-          OUT: /tmp/si4-holdout-summary.json
-        run: node tools/summarize-si4-holdout.js
-      - name: Score frozen 2025 event timing and spatial correctness without tuning
-        env:
-          TRAIN_START: '2024-01-01'
-          TRAIN_END: '2024-12-31'
-          TEST_START: '2025-01-01'
-          TEST_END: '2025-12-31'
-          UPPER_CACHE: /tmp/hrrr-upper-fixed-lead-all-season.json
-          OUT: /tmp/si4-event-spatial-frozen-2025.json
-        run: node tools/score-si4-event-spatial-frozen-2025.js
-      - name: Run predeclared final feature-block ablation on frozen 2025 score only
-        env:
-          TRAIN_START: '2024-01-01'
-          TRAIN_END: '2024-12-31'
-          TEST_START: '2025-01-01'
-          TEST_END: '2025-12-31'
-          UPPER_CACHE: /tmp/hrrr-upper-fixed-lead-all-season.json
-          OUT: /tmp/si4-final-ablation-frozen-2025.json
-        run: node tools/run-si4-final-ablation.js
       - uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: si4-all-season-frozen-holdout
-          path: |
-            /tmp/hrrr-upper-fixed-lead-all-season.json
-            /tmp/si4-calibration-candidate.json
-            /tmp/si4-holdout-summary.json
-            /tmp/si4-event-spatial-frozen-2025.json
-            /tmp/si4-final-ablation-frozen-2025.json
-          if-no-files-found: warn
+          name: si4-2024-archive-qc
+          path: /tmp/hrrr-upper-fixed-lead-2024.json
+          if-no-files-found: error
           retention-days: 30
