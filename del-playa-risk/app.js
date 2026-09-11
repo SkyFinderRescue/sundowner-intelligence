@@ -40,7 +40,9 @@ function parseNDBC(txt){
     observed:`${o.YY}-${o.MM}-${o.DD} ${o.hh}:${o.mm} UTC`
   };
 }
-function toMs(t){ return new Date(t).getTime(); }
+function toMs(t){
+  return new Date(t).getTime();
+}
 function sumPrecip(pastHours, futureHours){
   const h=state.weather?.hourly; if(!h?.time) return 0;
   const now=Date.now(), lo=now-pastHours*3600000, hi=now+futureHours*3600000;
@@ -58,6 +60,11 @@ function marineStats(hours){
     out.maxSwell=Math.max(out.maxSwell,+h.swell_wave_height?.[i]||0);
     if(wh>=7) out.duration7++;
   });
+  if(state.ndbc && Number.isFinite(state.ndbc.wave) && state.ndbc.wave>out.maxWave){
+    out.maxWave=state.ndbc.wave;
+    out.period=Number.isFinite(state.ndbc.period)?state.ndbc.period:out.period;
+    out.direction=Number.isFinite(state.ndbc.direction)?state.ndbc.direction:out.direction;
+  }
   return out;
 }
 function tideStats(hours){
@@ -110,7 +117,7 @@ function retreatRange(env){
 function consequence(p,r){
   const [lo,hi]=retreatRange(r.env.score);
   const prefix=`If a localized bluff failure initiates directly in front of this parcel, the current scenario supports roughly ${lo}–${hi}${hi>=18?'+':''} ft of single-event retreat potential as a screening range — not a surveyed forecast. `;
-  if(Number.isFinite(p.setback)){
+  if(Number.isFinite(p.setback) && p.setbackCurrent){
     if(hi>=p.setback) return prefix+`That envelope can reach or pass the documented ~${p.setback} ft building setback. Structural loss, emergency vacation or cutback becomes plausible and requires immediate professional/County evaluation.`;
     if(Number.isFinite(p.deck) && hi>=p.deck) return prefix+`The deck/patio setback (~${p.deck} ft) falls inside that envelope even though the main building line is farther landward. Deck/patio or bluff-top land loss is the leading concern.`;
     if(hi>=p.setback*.6) return prefix+`The modeled retreat would materially consume the remaining setback and could move the structure into a County intervention range.`;
@@ -130,7 +137,9 @@ function dirText(d){
 }
 function buildModels(){
   state.model.clear();
-  P.forEach(p=>{ state.model.set(+p.short,{current:riskFor(p,12),h72:riskFor(p,72),week:riskFor(p,168)}); });
+  P.forEach(p=>{
+    state.model.set(+p.short,{current:riskFor(p,12),h72:riskFor(p,72),week:riskFor(p,168)});
+  });
 }
 let map, markers=new Map();
 function initMap(){
@@ -142,8 +151,10 @@ function renderMap(){
   P.forEach(p=>{
     const r=state.model.get(+p.short)?.h72 || {level:'Low',score:0};
     let m=markers.get(+p.short);
-    if(!m){ m=L.circleMarker([p.lat,p.lon],markerStyle(r)).addTo(map).on('click',()=>select(+p.short)); markers.set(+p.short,m); }
-    else m.setStyle(markerStyle(r));
+    if(!m){
+      m=L.circleMarker([p.lat,p.lon],markerStyle(r)).addTo(map).on('click',()=>select(+p.short));
+      markers.set(+p.short,m);
+    } else m.setStyle(markerStyle(r));
     m.bindTooltip(`${p.short} Del Playa · ${r.level} ${Math.round(r.score)}/100`,{direction:'top'});
   });
 }
@@ -179,8 +190,8 @@ function select(a){
   $('consequence').textContent=consequence(p,m.h72);
   $('propertyFactors').innerHTML=
     factorRow('County status',p.status)+
-    factorRow('Documented building setback',Number.isFinite(p.setback)?`~${p.setback} ft`:'Needs current survey')+
-    factorRow('Documented deck/patio setback',Number.isFinite(p.deck)?`~${p.deck} ft`:'Not loaded')+
+    factorRow('Building setback evidence',Number.isFinite(p.setback)?`~${p.setback} ft · ${p.setbackCurrent?'current verified':'historical/proposed only'}`:'Needs current survey')+
+    factorRow('Deck/patio setback evidence',Number.isFinite(p.deck)?`~${p.deck} ft · ${p.deckCurrent?'current verified':'historical/proposed only'}`:'Not loaded')+
     factorRow('Property susceptibility component',`${propertyBase(p).toFixed(0)} / 22`);
   const e=m.h72.env;
   $('forcing').innerHTML=
@@ -223,8 +234,10 @@ async function loadLive(){
   document.body.classList.remove('loading');
 }
 function init(){
-  initMap(); populateSelect(); buildModels(); renderMap(); renderCards(); select(state.selected);
-  $('refresh').onclick=loadLive; loadLive();
+  initMap(); populateSelect();
+  buildModels(); renderMap(); renderCards(); select(state.selected);
+  $('refresh').onclick=loadLive;
+  loadLive();
 }
 window.addEventListener('DOMContentLoaded',init);
 })();
