@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07111d">
+<title>Del Playa Bluff Risk Predictor</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{
+  --bg:#06101a;--panel:#0b1724;--panel2:#101f2e;--line:#22374a;--text:#edf5fb;--muted:#92a9bb;
+  --low:#35c98a;--elev:#e5c74f;--high:#f09b42;--severe:#ef5b4f;--extreme:#c83bff;--accent:#55b6ff;
+}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+body{min-height:100vh}.shell{display:grid;grid-template-columns:330px 1fr;min-height:100vh}
+.rail{background:#07131f;border-right:1px solid var(--line);padding:22px 18px;display:flex;flex-direction:column;gap:16px}
+.brand{display:flex;gap:12px;align-items:center}.mark{width:44px;height:44px;border-radius:13px;background:linear-gradient(145deg,#12314d,#0b2034);display:grid;place-items:center;font-size:25px}
+.brand h1{font-size:20px;margin:0}.brand small{color:var(--muted)}.live{display:flex;gap:8px;align-items:center;font-size:13px;color:#b7c8d6}.dot{width:8px;height:8px;border-radius:50%;background:var(--low);box-shadow:0 0 12px var(--low)}
+select,button{font:inherit}.addr-select,.refresh{width:100%;background:#0e1d2b;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:12px}.refresh{cursor:pointer;text-align:left}
+.railcard{border:1px solid var(--line);background:#0b1825;border-radius:14px;padding:14px}.railcard h3{font-size:13px;margin:0 0 10px;text-transform:uppercase;letter-spacing:.08em;color:#a9bfd0}
+.scale{display:grid;gap:7px}.scale span{display:flex;align-items:center;gap:8px;font-size:13px;color:#c6d5e0}.sw{width:10px;height:10px;border-radius:50%}
+.rail-bottom{margin-top:auto;font-size:11px;color:#758c9e;line-height:1.45}.rail-bottom a{color:#a8d7ff}
+.workspace{padding:24px;min-width:0}.topbar{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:18px}.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#7fa8c5;font-weight:700}.topbar h2{font-size:30px;margin:5px 0 7px}.sub{max-width:900px;color:#9fb2c1;line-height:1.45;font-size:14px}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(360px,.65fr);gap:16px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.panelhead{padding:16px 17px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:center}.panelhead h3{margin:2px 0 0;font-size:19px}
+#map{height:560px;background:#07131f}.mapnote{padding:9px 14px;color:#71899a;font-size:11px;border-top:1px solid var(--line)}
+.detail{padding:17px}.riskhero{border:1px solid var(--line);background:var(--panel2);border-radius:14px;padding:16px;margin-bottom:14px}
+.hero-top{display:flex;justify-content:space-between;gap:12px;align-items:center}.riskword{font-size:27px;font-weight:800}.score{font-size:36px;font-weight:800}.score small{font-size:13px;color:var(--muted)}
+.bar{height:10px;background:#08121d;border-radius:999px;overflow:hidden;margin-top:12px}.bar>i{display:block;height:100%;width:0;border-radius:999px;transition:width .3s}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 0}.metric{border:1px solid var(--line);background:#0b1926;border-radius:11px;padding:11px}.metric .k{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:#7f98aa}.metric .v{font-size:18px;font-weight:750;margin-top:5px}
+.section{margin-top:17px}.section h4{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#9bb1c1;margin:0 0 8px}.eventbox{border-left:4px solid var(--accent);background:#0c1a28;border-radius:8px;padding:11px 12px;line-height:1.45;color:#d7e3eb;font-size:13px}
+.factor{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #162939;font-size:13px}.factor span{color:#91a9ba}.factor b{text-align:right}
+.addresses{margin-top:16px}.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer}.card:hover{border-color:#45647d}.card .a{font-weight:750}.card .r{font-size:13px;font-weight:800;margin-top:7px}.card .mini{font-size:11px;color:#7e95a6;margin-top:4px}
+.health{display:flex;gap:7px;flex-wrap:wrap}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 8px;font-size:11px;color:#9fb4c4}.pill.ok{color:#8ae7b9;border-color:#245f47}.pill.warn{color:#f2cf69;border-color:#64531f}.pill.bad{color:#ff8b83;border-color:#6a2a27}
+.loading{opacity:.6}.footer{margin-top:14px;color:#71899a;font-size:11px;line-height:1.45}
+@media(max-width:980px){.shell{display:block}.rail{border-right:0;border-bottom:1px solid var(--line);padding:14px}.railcard,.rail-bottom{display:none}.workspace{padding:14px}.grid{grid-template-columns:1fr}.topbar{display:block}.topbar h2{font-size:25px}#map{height:380px}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:540px){#map{height:330px}.metrics{grid-template-columns:1fr 1fr}.cards{grid-template-columns:1fr 1fr}.workspace{padding:10px}.panelhead{padding:12px}.detail{padding:12px}.riskword{font-size:23px}.score{font-size:31px}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="rail">
+  <div class="brand"><div class="mark">≈</div><div><h1>Del Playa Bluff Risk</h1><small>Property-level erosion predictor</small></div></div>
+  <div class="live"><span class="dot"></span><span id="liveLabel">Loading live coastal data…</span></div>
+  <div>
+    <div class="eyebrow" style="margin-bottom:7px">Select property</div>
+    <select id="addressSelect" class="addr-select"></select>
+  </div>
+  <button id="refresh" class="refresh">↻ Refresh live data</button>
+  <div class="railcard">
+    <h3>Threat levels</h3>
+    <div class="scale">
+      <span><i class="sw" style="background:var(--low)"></i>Low</span>
+      <span><i class="sw" style="background:var(--elev)"></i>Elevated</span>
+      <span><i class="sw" style="background:var(--high)"></i>High</span>
+      <span><i class="sw" style="background:var(--severe)"></i>Severe</span>
+      <span><i class="sw" style="background:var(--extreme)"></i>Extreme</span>
+    </div>
+  </div>
+  <div class="railcard"><h3>How to use</h3><div style="font-size:12px;color:#9cb0bf;line-height:1.55">1. Let live data load.<br>2. Tap a Del Playa address.<br>3. Read current/72-hour threat, likely consequence, and the forcing behind the score.</div></div>
+  <div class="rail-bottom">Experimental decision-support model — not an engineering determination, evacuation order, or substitute for Santa Barbara County/NWS guidance.<br><br>Questions/Comments: <a href="mailto:sky.bonillo@gmail.com">sky.bonillo@gmail.com</a></div>
+</aside>
+
+<section class="workspace">
+<header class="topbar">
+ <div><div class="eyebrow">Isla Vista · Santa Barbara County</div><h2>Del Playa Bluff Risk Predictor</h2><div class="sub">Address-level threat estimates from documented bluff history and setback information combined with live/forecast rainfall, antecedent wetness, waves, swell period/direction, tides, duration and active weather hazards.</div></div>
+ <div class="health" id="health"></div>
+</header>
+
+<div class="grid">
+<section class="panel">
+ <div class="panelhead"><div><div class="eyebrow">Property overview</div><h3>Bluff-collapse threat by address</h3></div><div id="updated" style="font-size:11px;color:#7f96a7"></div></div>
+ <div id="map"></div>
+ <div class="mapnote">Markers are approximate map positions. The risk record is keyed to the street address; current parcel/bluff geometry must be verified by survey or current orthophoto before operational decisions.</div>
+</section>
+
+<section class="panel">
+ <div class="detail">
+   <div class="eyebrow">Selected property</div><h3 id="focusAddress" style="font-size:24px;margin:4px 0 12px">—</h3>
+   <div class="riskhero">
+     <div class="hero-top"><div><div class="eyebrow">72-hour threat</div><div id="riskWord" class="riskword">Loading…</div></div><div id="riskScore" class="score">—<small>/100</small></div></div>
+     <div class="bar"><i id="riskBar"></i></div>
+   </div>
+   <div class="metrics">
+    <div class="metric"><div class="k">Current threat</div><div id="currentRisk" class="v">—</div></div>
+    <div class="metric"><div class="k">Worst next 7 days</div><div id="weekRisk" class="v">—</div></div>
+    <div class="metric"><div class="k">Scenario retreat</div><div id="retreat" class="v">—</div></div>
+    <div class="metric"><div class="k">Data confidence</div><div id="confidence" class="v">—</div></div>
+   </div>
+   <div class="section"><h4>Likely consequence if failure initiates here</h4><div id="consequence" class="eventbox">Loading model…</div></div>
+   <div class="section"><h4>Property vulnerability</h4><div id="propertyFactors"></div></div>
+   <div class="section"><h4>Environmental forcing</h4><div id="forcing"></div></div>
+   <div class="section"><h4>Historical basis</h4><div id="history" class="eventbox"></div></div>
+ </div>
+</section>
+</div>
+
+<section class="addresses">
+ <div class="panelhead" style="padding-left:0;border:0"><div><div class="eyebrow">County monitoring set</div><h3 style="margin:2px 0">32 monitored Del Playa properties</h3></div></div>
+ <div id="cards" class="cards"></div>
+</section>
+<div class="footer">Model v0.1. The environmental score is dynamic; property susceptibility is presently strongest where recent measured setback/failure data exist. Unknown setbacks are intentionally assigned lower confidence rather than fabricated precision. This application should be refined with current parcel surveys, drone orthomosaics and post-storm observations.</div>
+</section>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="properties.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
