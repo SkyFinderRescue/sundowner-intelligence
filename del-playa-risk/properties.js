@@ -10,7 +10,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "Low",
     "history": "No parcel-specific failure geometry loaded yet.",
-    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure."
+    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6529 Del Playa Drive",
@@ -23,7 +25,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "Low",
     "history": "No parcel-specific failure geometry loaded yet.",
-    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure."
+    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6531 Del Playa Drive",
@@ -36,7 +40,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "Low",
     "history": "No parcel-specific failure geometry loaded yet.",
-    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure."
+    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6549 Del Playa Drive",
@@ -49,7 +55,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "Low",
     "history": "No parcel-specific failure geometry loaded yet.",
-    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure."
+    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6555 Del Playa Drive",
@@ -62,7 +70,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "Low",
     "history": "No parcel-specific failure geometry loaded yet.",
-    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure."
+    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6561 Del Playa Drive",
@@ -75,7 +85,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "Low",
     "history": "No parcel-specific failure geometry loaded yet.",
-    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure."
+    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6587 Del Playa Drive",
@@ -88,7 +100,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "Low",
     "history": "No parcel-specific failure geometry loaded yet.",
-    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure."
+    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6595 Del Playa Drive",
@@ -101,7 +115,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "Low",
     "history": "No parcel-specific failure geometry loaded yet.",
-    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure."
+    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6613 Del Playa Drive",
@@ -114,7 +130,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "Low",
     "history": "No parcel-specific failure geometry loaded yet.",
-    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure."
+    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6619 Del Playa Drive",
@@ -127,7 +145,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "Low",
     "history": "No parcel-specific failure geometry loaded yet.",
-    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure."
+    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6645 Del Playa Drive",
@@ -140,7 +160,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "Low",
     "history": "No parcel-specific failure geometry loaded yet.",
-    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure."
+    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6653 Del Playa Drive",
@@ -153,7 +175,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "High",
     "history": "Major January 2017 bluff/patio collapse; evacuation and structural cutback followed.",
-    "status": "County-monitored; major historical failure site."
+    "status": "County-monitored; major historical failure site.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6663 Del Playa Drive",
@@ -166,7 +190,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "High",
     "history": "January 2017 adjacent bluff collapse undermined balcony/patio.",
-    "status": "County-monitored; historical failure exposure."
+    "status": "County-monitored; historical failure exposure.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6671 Del Playa Drive",
@@ -179,7 +205,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "Low",
     "history": "No parcel-specific failure geometry loaded yet.",
-    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure."
+    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6681 Del Playa Drive",
@@ -192,7 +220,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "Low",
     "history": "No parcel-specific failure geometry loaded yet.",
-    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure."
+    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6685 Del Playa Drive",
@@ -205,7 +235,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "Low",
     "history": "No parcel-specific failure geometry loaded yet.",
-    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure."
+    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6693 Del Playa Drive",
@@ -218,7 +250,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "Low",
     "history": "No parcel-specific failure geometry loaded yet.",
-    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure."
+    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6701 Del Playa Drive",
@@ -231,7 +265,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "Low",
     "history": "No parcel-specific failure geometry loaded yet.",
-    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure."
+    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6703 Del Playa Drive",
@@ -244,7 +280,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "Low",
     "history": "No parcel-specific failure geometry loaded yet.",
-    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure."
+    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6705 Del Playa Drive",
@@ -257,7 +295,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "Low",
     "history": "No parcel-specific failure geometry loaded yet.",
-    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure."
+    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6707 Del Playa Drive",
@@ -270,7 +310,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "Low",
     "history": "No parcel-specific failure geometry loaded yet.",
-    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure."
+    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6709 Del Playa Drive",
@@ -283,7 +325,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "Medium",
     "history": "Documented 2015 bluff loss/cutback history.",
-    "status": "County-monitored."
+    "status": "County-monitored.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6741 Del Playa Drive",
@@ -295,8 +339,10 @@ window.DEL_PLAYA_PROPERTIES = [
     "setback": 20,
     "deck": null,
     "confidence": "High",
-    "history": "Part of February 2024 four-property evacuation cluster; reported within 20 ft of bluff before failure.",
-    "status": "County-monitored; recent failure cluster."
+    "history": "Part of February 2024 four-property evacuation cluster; reported within 20 ft of bluff immediately before the 2024 failure.",
+    "status": "County-monitored; the ~20 ft figure is historical pre-failure geometry, not a current setback.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6743 Del Playa Drive",
@@ -308,8 +354,10 @@ window.DEL_PLAYA_PROPERTIES = [
     "setback": 20,
     "deck": null,
     "confidence": "High",
-    "history": "Part of February 2024 four-property evacuation cluster; reported within 20 ft of bluff before failure.",
-    "status": "County-monitored; recent failure cluster."
+    "history": "Part of February 2024 four-property evacuation cluster; reported within 20 ft of bluff immediately before the 2024 failure.",
+    "status": "County-monitored; the ~20 ft figure is historical pre-failure geometry, not a current setback.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6745 Del Playa Drive",
@@ -321,8 +369,10 @@ window.DEL_PLAYA_PROPERTIES = [
     "setback": 19,
     "deck": 0,
     "confidence": "High",
-    "history": "Deck collapsed during February 2024 storm-driven bluff failure.",
-    "status": "County-monitored; direct 2024 failure site."
+    "history": "Deck collapsed during February 2024 storm-driven bluff failure; pre-failure reporting placed the building roughly 18–19 ft from the bluff.",
+    "status": "County-monitored; 18–19 ft is historical pre-failure geometry and must not be treated as the current setback.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6747 Del Playa Drive",
@@ -333,9 +383,11 @@ window.DEL_PLAYA_PROPERTIES = [
     "base": 32,
     "setback": 19.6,
     "deck": 2,
-    "confidence": "High",
-    "history": "2025 approved 18.2-ft building cutback; resulting dwelling setback about 19.6 ft and deck about 2 ft from bluff.",
-    "status": "County-monitored; post-cutback geometry documented."
+    "confidence": "Medium",
+    "history": "A 2025 approved cutback plan would leave the dwelling about 19.6 ft from the bluff and the deck about 2 ft from the bluff.",
+    "status": "County-monitored; approved post-cutback geometry is loaded, but completion/current bluff position still requires verification.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6757 Del Playa Drive",
@@ -348,7 +400,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "High",
     "history": "Flagged for demolition because of proximity to bluff; emergency action history.",
-    "status": "Current structure status requires verification before operational use."
+    "status": "Current structure status requires verification before operational use.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6761 Del Playa Drive",
@@ -360,8 +414,10 @@ window.DEL_PLAYA_PROPERTIES = [
     "setback": 30,
     "deck": null,
     "confidence": "Medium",
-    "history": "2026 cutback approved to restore approximately 30-ft building setback.",
-    "status": "Verify completion of approved cutback before relying on setback."
+    "history": "A 2026 approved cutback was intended to restore approximately a 30-ft building setback.",
+    "status": "Approved geometry only; verify project completion and current bluff edge before operational use.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6765 Del Playa Drive",
@@ -369,12 +425,14 @@ window.DEL_PLAYA_PROPERTIES = [
     "lat": 34.409411,
     "lon": -119.871648,
     "locationQuality": "Approximate map position; risk is keyed to address, not marker geometry.",
-    "base": 30,
+    "base": 23,
     "setback": null,
     "deck": null,
-    "confidence": "Medium",
-    "history": "Recent erosion-driven vacancy/cutback concern reported publicly.",
-    "status": "County-monitored; current setback needs survey verification."
+    "confidence": "Low",
+    "history": "County-monitored; current parcel-specific setback and recent structural status still need authoritative verification.",
+    "status": "County-monitored; current setback needs survey verification.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6767 Del Playa Drive",
@@ -382,12 +440,14 @@ window.DEL_PLAYA_PROPERTIES = [
     "lat": 34.409402,
     "lon": -119.87177,
     "locationQuality": "Approximate map position; risk is keyed to address, not marker geometry.",
-    "base": 25,
+    "base": 20,
     "setback": null,
     "deck": null,
-    "confidence": "Medium",
-    "history": "Adjacent to 6765 erosion/cutback concern.",
-    "status": "County-monitored; current setback needs survey verification."
+    "confidence": "Low",
+    "history": "County-monitored; current parcel-specific setback and recent structural status still need authoritative verification.",
+    "status": "County-monitored; current setback needs survey verification.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6777 Del Playa Drive",
@@ -400,7 +460,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "deck": null,
     "confidence": "Low",
     "history": "No parcel-specific failure geometry loaded yet.",
-    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure."
+    "status": "County-monitored in February 2025 due to prior failure or potential bluff-failure exposure.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   },
   {
     "address": "6779 Del Playa Drive",
@@ -412,7 +474,9 @@ window.DEL_PLAYA_PROPERTIES = [
     "setback": 19,
     "deck": null,
     "confidence": "Medium",
-    "history": "Reported around 19 ft from bluff in 2024; foundation type may materially alter vulnerability.",
-    "status": "County-monitored; verify current setback/foundation configuration."
+    "history": "Public reporting in 2024 placed the building at roughly 19 ft from the bluff; foundation type may materially alter vulnerability.",
+    "status": "County-monitored; ~19 ft is historical 2024 geometry, not a verified 2026 setback.",
+    "setbackCurrent": false,
+    "deckCurrent": false
   }
 ];
