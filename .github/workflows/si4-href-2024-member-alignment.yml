@@ -1,0 +1,52 @@
+name: SI-4 HREF 2024 Member Alignment Probe
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/probe-href-2024-member-alignment.js'
+      - '.github/workflows/si4-href-2024-member-alignment.yml'
+      - 'research/SI4_INITIAL_CONDITION_ENSEMBLE_DOWNSLOPE_2024_PREDECLARED.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe-href-2024-member-alignment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Syntax check
+        run: node --check tools/probe-href-2024-member-alignment.js
+      - name: Probe official HREF member identity and exact valid-time alignment without outcomes
+        env:
+          NODE_OPTIONS: --use-openssl-ca
+        run: node tools/probe-href-2024-member-alignment.js
+      - name: Enforce outcome-blind Phase 0c contract
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const p = JSON.parse(fs.readFileSync('research/href-2024-member-alignment-probe.json','utf8'));
+          if (p.candidate !== 'initial_condition_ensemble_downslope_v1') throw new Error('candidate mismatch');
+          if (p.science_scoring_performed !== false || p.observations_or_outcomes_used !== false) throw new Error('science/outcome leakage contract failed');
+          if (JSON.stringify(p.queried_years) !== JSON.stringify([2024])) throw new Error('only 2024 may be queried');
+          if (p.future_observations_used !== false || p.fire_association_used !== false) throw new Error('future observation/fire leakage contract failed');
+          if (!Array.isArray(p.member_contract) || p.member_contract.length !== 10) throw new Error('expected frozen 10-member HREF contract');
+          if (p.issuance_count !== 24) throw new Error(`expected 24 predeclared issuance samples, got ${p.issuance_count}`);
+          if (p.expected_object_count !== 240) throw new Error(`expected 240 member objects, got ${p.expected_object_count}`);
+          if (p.valid_time_aligned_object_count !== p.expected_object_count) throw new Error(`valid-time alignment failed: ${p.valid_time_aligned_object_count}/${p.expected_object_count}`);
+          if (p.verified_object_count !== p.expected_object_count) throw new Error(`archive member coverage incomplete: ${p.verified_object_count}/${p.expected_object_count}`);
+          if (p.phase0c_status !== 'OFFICIAL_HREF_10_MEMBER_F24_VALID_ALIGNMENT_REPRODUCIBLE') throw new Error(`Phase 0c not reproducible: ${p.phase0c_status}`);
+          console.log('Official 10-member HREF T+24 valid-time alignment is reproducible on all predeclared 2024 issuance samples; science scoring remains disabled.');
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-href-2024-member-alignment-probe
+          path: research/href-2024-member-alignment-probe.json
+          if-no-files-found: error
+          retention-days: 30

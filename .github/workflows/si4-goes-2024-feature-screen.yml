@@ -1,0 +1,72 @@
+name: SI-4 GOES 2024 Feature Screen
+
+on:
+  push:
+    branches: [si4-research]
+    paths:
+      - 'research/GOES_MARINE_MASKS_V2.json'
+      - 'tools/extract-goes-marine-features.py'
+      - 'tools/screen-goes-marine-2024-cases.py'
+      - '.github/workflows/si4-goes-2024-feature-screen.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  screen-2024:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      CASE_DIR: /tmp/goes-cases
+      OUT: research/goes-marine-2024-feature-screen.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install numerical GOES dependencies
+        run: python -m pip install --disable-pip-version-check numpy netCDF4 pyproj
+      - name: Syntax check screen
+        run: python -m py_compile tools/extract-goes-marine-features.py tools/screen-goes-marine-2024-cases.py
+      - name: Download authoritative 2024 case manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$CASE_DIR"
+          gh run download 31996649436 --repo "$GITHUB_REPOSITORY" -n si4-goes-2024-case-manifest -D "$CASE_DIR"
+          test -s "$CASE_DIR/goes-marine-2024-case-manifest.json"
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/goes-cases/goes-marine-2024-case-manifest.json'))
+          assert x['rules']['development_year']==2024 and x['rules']['holdout_2025_loaded'] is False
+          assert x['selected_counts']['events']>=8 and x['selected_counts']['hard_negatives']>=8
+          print(x['selected_counts'])
+          PY
+      - name: Screen GOES marine features on bounded 2024 cases
+        run: python tools/screen-goes-marine-2024-cases.py --cases "$CASE_DIR/goes-marine-2024-case-manifest.json" --masks research/GOES_MARINE_MASKS_V2.json --per-class 8 --out "$OUT"
+      - name: Verify development-only integrity
+        run: |
+          python - <<'PY'
+          import json,math
+          x=json.load(open('research/goes-marine-2024-feature-screen.json'))
+          assert x['status']=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION'
+          assert x['rules']['development_year']==2024 and x['rules']['holdout_2025_loaded'] is False
+          assert x['rules']['future_imagery_used'] is False and x['rules']['fire_outcome_used'] is False
+          assert x['rules']['feature_thresholds_frozen'] is False and x['rules']['production_change_authorized'] is False
+          assert x['counts']['event_cases']==8 and x['counts']['hard_negative_cases']==8
+          assert len(x['feature_stats'])>=10
+          for r in x['rows']:
+            assert 0 in r['available_offsets_hours'] and 1 in r['available_offsets_hours']
+            for prov in r['satellite_provenance'].values():
+              for p in prov.values(): assert p['age_minutes_at_issue']>=0 and p['age_minutes_at_issue']<=25 and len(p['sha256'])==64
+          print(json.dumps({'counts':x['counts'],'top':x['ranked_by_in_sample_oriented_auc'][:12]},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-goes-2024-feature-screen
+          path: research/goes-marine-2024-feature-screen.json
+          if-no-files-found: warn
+          retention-days: 30

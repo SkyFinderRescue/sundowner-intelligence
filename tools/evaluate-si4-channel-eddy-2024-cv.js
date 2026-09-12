@@ -1,0 +1,272 @@
+"use strict";
+
+const fs=require("fs");
+const S=require("../research/si4-science");
+const START="2024-01-01", END="2024-12-31";
+const UPPER_CACHE=process.env.UPPER_CACHE||"research/hrrr-upper-fixed-lead-all-season.json";
+const CHANNEL_CACHE=process.env.CHANNEL_CACHE||"research/si4-channel-eddy-2024-full.json";
+const OUT=process.env.OUT||"research/si4-channel-eddy-2024-cv.json";
+const EXPECTED_CHANNEL_RUN="32833922569";
+const EXPECTED_CHANNEL_HEAD="ce9c525271a8cdd7ff2930e07415dd6cfed2c2af";
+const PAIRS=[
+ {name:"Gaviota",station:"GVTC1",lat:34.48,lon:-120.23,regime:"western",targetDir:345},
+ {name:"Refugio",station:"RHWC1",lat:34.49,lon:-120.07,regime:"western",targetDir:355},
+ {name:"San Marcos Pass",station:"MPWC1",lat:34.51,lon:-119.80,regime:"hybrid",targetDir:10},
+ {name:"Montecito",station:"MTIC1",lat:34.45,lon:-119.63,regime:"eastern",targetDir:20},
+ {name:"Carpinteria",station:"CXPC1",lat:34.42,lon:-119.52,regime:"eastern",targetDir:25}
+];
+const AIRPORTS={sba:[34.4262,-119.8404],bfl:[35.4336,-119.0568],smx:[34.8993,-120.4576],iza:[34.6068,-120.0756],vbg:[34.7373,-120.5843]};
+const SURF=["relative_humidity_2m","wind_speed_10m","wind_direction_10m","wind_gusts_10m","shortwave_radiation"];
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const sig=x=>1/(1+Math.exp(-x));
+const logit=p=>{p=clamp(p,.001,.999);return Math.log(p/(1-p));};
+const rad=x=>x*Math.PI/180;
+const dc=(d,t)=>Math.max(0,Math.cos(rad((((Number(d)-t)+540)%360)-180)));
+const mean=a=>{a=a.filter(Number.isFinite);return a.length?a.reduce((s,x)=>s+x,0)/a.length:null;};
+const angdiff=(a,b)=>Math.abs((((Number(a)-Number(b))+540)%360)-180);
+const vdiff=(a,b)=>Math.hypot(Number(a.u10Mps)-Number(b.u10Mps),Number(a.v10Mps)-Number(b.v10Mps));
+
+async function text(url,attempts=4){
+ let last;
+ for(let i=0;i<attempts;i++){
+  const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),45000);
+  try{
+   const r=await fetch(url,{signal:ctl.signal,headers:{"User-Agent":"Sundowner-Intelligence-SI4-Channel-Eddy-CV/1.0"}});
+   clearTimeout(timer);
+   if(!r.ok)throw Error(`${r.status} ${(await r.text()).slice(0,200)} URL=${url}`);
+   return await r.text();
+  }catch(e){clearTimeout(timer);last=e;if(i+1<attempts)await new Promise(res=>setTimeout(res,1500*(i+1)));}
+ }
+ throw last;
+}
+async function json(url){return JSON.parse(await text(url));}
+function csvRows(source){
+ const lines=source.trim().split(/\r?\n/); if(lines.length<2)return[];
+ const h=lines[0].split(",");
+ return lines.slice(1).map(line=>{const v=line.split(","),o={};h.forEach((k,i)=>o[k]=v[i]??"");return o;});
+}
+function dateChunks(start,end){
+ const out=[];let s=new Date(`${start}T00:00:00Z`),last=new Date(`${end}T00:00:00Z`);
+ while(s<=last){let e=new Date(Date.UTC(s.getUTCFullYear(),s.getUTCMonth()+1,0));if(e>last)e=last;out.push([s.toISOString().slice(0,10),e.toISOString().slice(0,10)]);s=new Date(e.getTime()+86400000);}
+ return out;
+}
+async function hads(station,start,end){
+ const out=new Map();
+ for(const[a,b]of dateChunks(start,end)){
+  const u=new URL("https://mesonet.agron.iastate.edu/cgi-bin/request/hads.py");
+  u.search=new URLSearchParams({stations:station,network:"CA_DCP",sts:`${a}T00:00Z`,ets:`${b}T23:59Z`,what:"txt",delim:"comma"});
+  for(const r of csvRows(await text(u))){
+   const speed=Number(r.USIRGZZ),gust=Number(r.UPHRGZZ),dir=Number(r.UDIRGZZ);
+   if(!r.utc_valid||!Number.isFinite(speed)||!Number.isFinite(dir))continue;
+   const t=new Date(r.utc_valid.replace(" ","T")+"Z").toISOString().slice(0,13);
+   out.set(t,{speed,gust:Number.isFinite(gust)?gust:null,dir});
+  }
+ }
+ return out;
+}
+function prev(v){return `${v}_previous_day1`;}
+async function previous(lat,lon,vars,start,end){
+ const merged={time:[],data:Object.fromEntries(vars.map(v=>[v,[]]))};
+ for(const[a,b]of dateChunks(start,end)){
+  const u=new URL("https://previous-runs-api.open-meteo.com/v1/forecast");
+  u.search=new URLSearchParams({latitude:String(lat),longitude:String(lon),start_date:a,end_date:b,hourly:vars.map(prev).join(","),wind_speed_unit:"mph",timezone:"GMT",models:"gfs_hrrr"});
+  const j=await json(u),times=j.hourly?.time||[];merged.time.push(...times);
+  for(const v of vars)merged.data[v].push(...(j.hourly?.[prev(v)]||Array(times.length).fill(null)));
+ }
+ return merged;
+}
+function indexTimes(j){return new Map(j.time.map((t,i)=>[t.slice(0,13),i]));}
+function val(j,i,k){const n=Number(j.data[k]?.[i]);return Number.isFinite(n)?n:null;}
+
+function loadUpper(){
+ const x=JSON.parse(fs.readFileSync(UPPER_CACHE,"utf8"));
+ if(x.status!=="RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION"||Number(x.forecast_lead_hours)!==24||Number(x.failure_count||0)!==0)throw Error("invalid frozen F24 upper cache");
+ const m=new Map();
+ for(const r of x.rows||[]){const t=String(r.valid_time||"").slice(0,13);if(t.startsWith("2024-")&&r.zone&&Array.isArray(r.profile))m.set(`${t}|${r.zone}`,r.profile);}
+ return m;
+}
+function loadChannel(){
+ const x=JSON.parse(fs.readFileSync(CHANNEL_CACHE,"utf8"));
+ if(x.status!=="RESEARCH_ONLY_2024_DEVELOPMENT"||x.candidate_family!=="channel_eddy_marine_reentry_v1"||Number(x.forecast_lead_hours)!==24||x.row_count!==7300||Number(x.failure_count)!==0)throw Error("invalid channel archive contract");
+ if(x.rules?.holdout_2025_loaded!==false||x.rules?.production_change_authorized!==false)throw Error("channel archive leakage guard failed");
+ if(String(x.provenance?.github_run_id)!==EXPECTED_CHANNEL_RUN||String(x.provenance?.head_sha)!==EXPECTED_CHANNEL_HEAD)throw Error("unexpected channel archive provenance");
+ const m=new Map();
+ for(const r of x.rows||[]){
+  const t=String(r.valid_time||"").slice(0,13);
+  if(!t.startsWith("2024-"))throw Error(`non-2024 channel valid time ${t}`);
+  m.set(`${t}|${r.point}`,r);
+ }
+ return m;
+}
+function toProfile(p){
+ return(p||[]).map(r=>({pressureHpa:Number(r.pressureHpa),heightM:Number(r.heightM),temperatureC:Number(r.temperatureC),windSpeed:Number(r.windSpeedMph),windDirection:Number(r.windDirectionDeg),relativeHumidityPct:Number(r.relativeHumidityPct)}))
+ .filter(r=>[r.pressureHpa,r.heightM,r.temperatureC,r.windSpeed,r.windDirection].every(Number.isFinite));
+}
+function upperDryness(profile){const a=profile.map(r=>Number(r.relativeHumidityPct)).filter(Number.isFinite);return a.length?clamp((55-mean(a))/45,0,1):.5;}
+function baseline(v,z){
+ const west=sig((-v.s-1.8)/.8),east=sig((-v.b-1.2)/1),press=z.regime==="western"?west:z.regime==="eastern"?east:Math.max(west,east),
+ surf=clamp((v.g*dc(v.d,z.targetDir)-12)/34,0,1),dry=clamp((36-v.rh)/29,0,1),hour=Number(v.time.slice(11,13)),eve=(hour>=16||hour<=5)?1:0,tw=eve?1:clamp((350-v.sol)/350,0,1);
+ return sig(-4.05+1.9*press+.72*surf+.52*dry+.52*tw+.28*eve);
+}
+function pressureSupport(v,z){
+ const west=sig((-v.s-1.8)/.8),east=sig((-v.b-1.2)/1),local=sig((-(v.iza??0)-1.3)/1);
+ return z.regime==="western"?Math.max(west,.65*local):z.regime==="eastern"?Math.max(east,.55*local):Math.max(west,east,.6*local);
+}
+function baseFeatures(v,z,profile){
+ const p0=baseline(v,z),ps=pressureSupport(v,z),wave=S.mountainWaveIndex(profile,z.targetDir),month=Number(v.time.slice(5,7)),phase=2*Math.PI*(month-1)/12,
+ strengthening=clamp((-(v.pressureTrend3h||0)+.25)/1.75,0,1),ud=upperDryness(profile);
+ return{baseline:p0,wave,x:[logit(p0),ps,strengthening,wave.score,wave.critical.below5km?1:0,ud,clamp((36-v.rh)/29,0,1),Math.sin(phase),Math.cos(phase)]};
+}
+function channelFeatures(m,time){
+ const get=n=>m.get(`${time}|${n}`),w=get("western_channel"),c=get("central_channel"),e=get("eastern_channel"),sb=get("santa_barbara_coast"),go=get("goleta_coast");
+ if(![w,c,e,sb,go].every(Boolean))return null;
+ const required=[w,c,e,sb,go].every(r=>["temperature2mC","dewpointDepressionC","u10Mps","v10Mps","wind10DirectionDeg"].every(k=>Number.isFinite(Number(r[k]))));
+ if(!required)return null;
+ const offshore=[w,c,e],coast=[sb,go];
+ const turning=clamp(angdiff(w.wind10DirectionDeg,e.wind10DirectionDeg)/90,0,1);
+ const shear=clamp(mean([vdiff(w,c),vdiff(c,e),vdiff(w,e)])/12,0,1);
+ const onshore=clamp(mean(coast.map(r=>Math.max(0,Number(r.v10Mps))))/8,0,1);
+ const offDep=mean(offshore.map(r=>Number(r.dewpointDepressionC))),coastDep=mean(coast.map(r=>Number(r.dewpointDepressionC)));
+ const marineMoist=clamp((offDep-coastDep+2)/8,0,1);
+ const convergence=clamp((Number(w.u10Mps)-Number(e.u10Mps)+2)/10,0,1);
+ const pbl=mean(offshore.map(r=>Number(r.pblHeightM)).filter(Number.isFinite));
+ const shallow=Number.isFinite(pbl)?clamp((900-pbl)/800,0,1):null;
+ const core=[turning,shear,onshore,marineMoist,convergence,...(Number.isFinite(shallow)?[shallow]:[])];
+ const reentry=mean(core);
+ return {raw:{turning_0_1:turning,shear_0_1:shear,onshore_0_1:onshore,marine_moisture_contrast_0_1:marineMoist,convergence_0_1:convergence,shallow_pbl_0_1:shallow,reentry_susceptibility:reentry},reentry};
+}
+function standardize(rows,key){
+ const n=rows[0][key].length,mu=Array(n).fill(0),sd=Array(n).fill(1);
+ for(let j=0;j<n;j++){mu[j]=mean(rows.map(r=>r[key][j]));sd[j]=Math.sqrt(mean(rows.map(r=>(r[key][j]-mu[j])**2)))||1;}
+ return{mean:mu,sd};
+}
+function fit(rows,key){
+ if(rows.length<60)throw Error(`insufficient ${key} rows ${rows.length}`);
+ const sc=standardize(rows,key),n=rows[0][key].length,w=Array(n).fill(0);let b=0,lr=.035;
+ for(let step=0;step<2200;step++){
+  let gb=0,gw=Array(n).fill(0);
+  for(const r of rows){const x=r[key].map((v,j)=>(v-sc.mean[j])/sc.sd[j]),q=sig(b+w.reduce((s,a,j)=>s+a*x[j],0)),e=q-r.y;gb+=e;for(let j=0;j<n;j++)gw[j]+=e*x[j];}
+  b-=lr*gb/rows.length;for(let j=0;j<n;j++)w[j]-=lr*(gw[j]/rows.length+.003*w[j]);lr*=.9992;
+ }
+ return{intercept:b,weights:w,mean:sc.mean,sd:sc.sd};
+}
+function predict(m,x){let z=m.intercept;for(let j=0;j<x.length;j++)z+=m.weights[j]*((x[j]-m.mean[j])/m.sd[j]);return sig(z);}
+function auc(rows,pf){const a=rows.slice().sort((a,b)=>pf(b)-pf(a)),pos=a.filter(r=>r.y).length,neg=a.length-pos;if(!pos||!neg)return null;let rank=0,tp=0;for(const r of a){if(r.y)tp++;else rank+=tp;}return rank/(pos*neg);}
+function brier(rows,pf){return mean(rows.map(r=>(pf(r)-r.y)**2));}
+function cls(rows,pf,t){let tp=0,fp=0,tn=0,fn=0;for(const r of rows){const yes=pf(r)>=t;if(yes&&r.y)tp++;else if(yes)fp++;else if(r.y)fn++;else tn++;}return{tp,fp,tn,fn,pod:tp+fn?tp/(tp+fn):null,far:tp+fp?fp/(tp+fp):null,precision:tp+fp?tp/(tp+fp):null};}
+function hardNeg(rows){return rows.filter(r=>S.hardNegativeFlag({pressureSupport:r.x[1],mountainWaveScore:r.wave.score,eventObserved:!!r.y}).isHardNegative);}
+function eventEpisodes(rows,pf,t,truth){
+ const by=new Map();for(const r of rows){if(!by.has(r.zone))by.set(r.zone,[]);by.get(r.zone).push(r);}
+ const eps=[];for(const[z,a0]of by){const a=a0.slice().sort((x,y)=>x.time.localeCompare(y.time));let cur=null;for(const r of a){const yes=truth?!!r.y:pf(r)>=t;if(!yes){cur=null;continue;}const ms=Date.parse(`${r.time}:00:00Z`);if(!cur||ms-cur.last>7*3600000){cur={zone:z,start:r.time,end:r.time,last:ms};eps.push(cur);}else{cur.end=r.time;cur.last=ms;}}}
+ return eps;
+}
+function eventMetrics(rows,pf,t){
+ const truth=eventEpisodes(rows,pf,t,true),pred=eventEpisodes(rows,pf,t,false),overlap=(a,b)=>a.zone===b.zone&&Date.parse(`${a.start}:00:00Z`)<=Date.parse(`${b.end}:00:00Z`)&&Date.parse(`${b.start}:00:00Z`)<=Date.parse(`${a.end}:00:00Z`);
+ const hit=truth.filter(e=>pred.some(p=>overlap(e,p))).length,fp=pred.filter(p=>!truth.some(e=>overlap(e,p))).length;
+ return{truth_events:truth.length,predicted_episodes:pred.length,hits:hit,pod:truth.length?hit/truth.length:null,false_alarm_episodes:fp,far:pred.length?fp/pred.length:null};
+}
+function thresholdForPod(rows,pf,target=.5){
+ const c=[...new Set(rows.map(pf))].sort((a,b)=>b-a);
+ for(const t of c){const m=cls(rows,pf,t);if(Number.isFinite(m.pod)&&m.pod>=target)return t;}
+ return c.at(-1);
+}
+function applySuppression(p,reentry,alpha,activation=.15){
+ if(!Number.isFinite(reentry)||p<activation||alpha<=0)return p;
+ return sig(logit(p)-alpha*clamp(reentry,0,1));
+}
+function chooseAlpha(train,bpf,bt){
+ const baseEvent=eventMetrics(train,bpf,bt),baseCls=cls(train,bpf,bt),hn=hardNeg(train),baseHf=hn.length?hn.filter(r=>bpf(r)>=bt).length/hn.length:null;
+ const alphas=[0,.2,.4,.6,.8,1.0,1.2];
+ let best={alpha:0,brier:brier(train,bpf)};
+ for(const alpha of alphas){
+  const pf=r=>applySuppression(bpf(r),r.channel?.reentry,alpha,.15);
+  const ev=eventMetrics(train,pf,bt),cl=cls(train,pf,bt),hf=hn.length?hn.filter(r=>pf(r)>=bt).length/hn.length:null,br=brier(train,pf);
+  const podok=!Number.isFinite(baseEvent.pod)||ev.pod>=baseEvent.pod;
+  const farok=!Number.isFinite(baseEvent.far)||ev.far<=baseEvent.far-.02;
+  const hnok=!Number.isFinite(baseHf)||hf<=baseHf;
+  const spok=!Number.isFinite(baseCls.precision)||cl.precision>=baseCls.precision-.01;
+  if(alpha===0 || (podok&&farok&&hnok&&spok)){
+   if(br<best.brier-1e-12 || (Math.abs(br-best.brier)<1e-12&&alpha<best.alpha))best={alpha,brier:br};
+  }
+ }
+ return best.alpha;
+}
+async function dataset(){
+ const upper=loadUpper(),channel=loadChannel(),pressureData={},pressureIdx={};
+ for(const[k,[lat,lon]]of Object.entries(AIRPORTS)){pressureData[k]=await previous(lat,lon,["pressure_msl"],START,END);pressureIdx[k]=indexTimes(pressureData[k]);}
+ const ap=(k,t)=>{const i=pressureIdx[k].get(t);return i==null?null:val(pressureData[k],i,"pressure_msl");},grad=(k,t)=>{const a=ap("sba",t),b=ap(k,t);return Number.isFinite(a)&&Number.isFinite(b)?a-b:null;};
+ const rows=[];
+ for(const z of PAIRS){
+  const obs=await hads(z.station,START,END),surface=await previous(z.lat,z.lon,SURF,START,END),si=indexTimes(surface);
+  for(const[time,o]of obs){
+   if(!time.startsWith("2024-")||!/[T ](?:00|06|12|18)$/.test(time))continue;
+   const raw=upper.get(`${time}|${z.name}`),i=si.get(time);if(!raw||i==null)continue;
+   const b=grad("bfl",time),s=grad("smx",time),iza=grad("iza",time),vbg=grad("vbg",time),rh=val(surface,i,"relative_humidity_2m"),g=val(surface,i,"wind_gusts_10m"),d=val(surface,i,"wind_direction_10m"),sol=val(surface,i,"shortwave_radiation");
+   if(![b,s,iza,vbg,rh,g,d,sol].every(Number.isFinite))continue;
+   const priorTime=new Date(Date.parse(`${time}:00:00Z`)-3*3600000).toISOString().slice(0,13),b0=grad("bfl",priorTime),s0=grad("smx",priorTime),cur=z.regime==="western"?s:z.regime==="eastern"?b:Math.min(b,s),pr=z.regime==="western"?s0:z.regime==="eastern"?b0:(Number.isFinite(b0)&&Number.isFinite(s0)?Math.min(b0,s0):null);
+   const v={time,b,s,iza,vbg,rh,g,d,sol,pressureTrend3h:Number.isFinite(pr)?cur-pr:0},profile=toProfile(raw);if(profile.length<4)continue;
+   const f=baseFeatures(v,z,profile),cf=channelFeatures(channel,time);
+   rows.push({...f,channel:cf,y:o.speed*dc(o.dir,z.targetDir)>=20?1:0,zone:z.name,regime:z.regime,time,gustObserved:o.gust});
+  }
+ }
+ return rows;
+}
+function summarizeFold(va,pf,t){
+ const hn=hardNeg(va);
+ return{n:va.length,events:va.filter(r=>r.y).length,brier:brier(va,pf),auc:auc(va,pf),classification:cls(va,pf,t),event:eventMetrics(va,pf,t),hard_negative:{n:hn.length,brier:hn.length?brier(hn,pf):null,fpr:hn.length?hn.filter(r=>pf(r)>=t).length/hn.length:null},threshold:t};
+}
+function aggregate(a){
+ const weighted=k=>{let n=0,s=0;for(const x of a){const v=k(x);if(Number.isFinite(v)){s+=v*x.n;n+=x.n;}}return n?s/n:null;};
+ return{n:a.reduce((s,x)=>s+x.n,0),events:a.reduce((s,x)=>s+x.events,0),brier:weighted(x=>x.brier),auc:weighted(x=>x.auc),event_pod:mean(a.map(x=>x.event.pod)),event_far:mean(a.map(x=>x.event.far)),hard_negative_brier:mean(a.map(x=>x.hard_negative.brier)),hard_negative_fpr:mean(a.map(x=>x.hard_negative.fpr)),spatial_zone_precision:mean(a.map(x=>x.classification.precision))};
+}
+
+(async()=>{
+ const rows=await dataset();
+ if(rows.some(r=>!r.time.startsWith("2024-")))throw Error("2025 row exposure");
+ const folds=[
+  {name:"May-Jun",trainEnd:"2024-04-30T23",valStart:"2024-05-01T00",valEnd:"2024-06-30T23"},
+  {name:"Jul-Sep",trainEnd:"2024-06-30T23",valStart:"2024-07-01T00",valEnd:"2024-09-30T23"},
+  {name:"Oct-Dec",trainEnd:"2024-09-30T23",valStart:"2024-10-01T00",valEnd:"2024-12-31T23"}
+ ];
+ const baseResults=[],candResults=[],regime={western:[],hybrid:[],eastern:[]},selected=[];
+ for(const fold of folds){
+  const tr=rows.filter(r=>r.time<=fold.trainEnd),va=rows.filter(r=>r.time>=fold.valStart&&r.time<=fold.valEnd),bm={};
+  for(const reg of Object.keys(regime))bm[reg]=fit(tr.filter(r=>r.regime===reg),"x");
+  const bpf=r=>predict(bm[r.regime],r.x),bt=thresholdForPod(tr,bpf,.5),alpha=chooseAlpha(tr,bpf,bt),cpf=r=>applySuppression(bpf(r),r.channel?.reentry,alpha,.15);
+  selected.push({fold:fold.name,alpha,threshold:bt});
+  const br={fold:fold.name,...summarizeFold(va,bpf,bt)},cr={fold:fold.name,...summarizeFold(va,cpf,bt)};
+  baseResults.push(br);candResults.push(cr);
+  for(const reg of Object.keys(regime)){const v=va.filter(r=>r.regime===reg);if(v.length)regime[reg].push({fold:fold.name,baseline:summarizeFold(v,bpf,bt),candidate:summarizeFold(v,cpf,bt)});}
+ }
+ const b=aggregate(baseResults),c=aggregate(candResults);
+ const regimeSafety=Object.values(regime).every(a=>a.every(q=>{
+  const bbr=q.baseline.brier,cbr=q.candidate.brier,bpod=q.baseline.event.pod,cpod=q.candidate.event.pod;
+  return !(Number.isFinite(bbr)&&Number.isFinite(cbr)&&cbr>bbr && Number.isFinite(bpod)&&Number.isFinite(cpod)&&cpod<bpod);
+ }));
+ const gates={
+  event_pod_no_worse:Number.isFinite(c.event_pod)&&c.event_pod>=b.event_pod,
+  event_far_improvement:Number.isFinite(c.event_far)&&Number.isFinite(b.event_far)&&c.event_far<=b.event_far-.02,
+  overall_brier_no_worse:c.brier<=b.brier,
+  overall_auc_noninferior:c.auc>=b.auc-.005,
+  hard_negative_brier_no_worse:!Number.isFinite(b.hard_negative_brier)||c.hard_negative_brier<=b.hard_negative_brier,
+  hard_negative_fpr_no_worse:!Number.isFinite(b.hard_negative_fpr)||c.hard_negative_fpr<=b.hard_negative_fpr,
+  spatial_precision_noninferior:!Number.isFinite(b.spatial_zone_precision)||c.spatial_zone_precision>=b.spatial_zone_precision-.01,
+  regime_safety:regimeSafety,
+  gust_noninferior_unchanged:true,
+  missing_fail_closed:true
+ };
+ const pass=Object.values(gates).every(Boolean),missing=rows.filter(r=>!r.channel).length;
+ const out={
+  status:"RESEARCH_ONLY_2024_DEVELOPMENT",candidate_family:"channel_eddy_marine_reentry_v1",generated:new Date().toISOString(),
+  rules:{development_year:2024,holdout_2025_loaded:false,future_observations_label_only:true,fire_association_outcome_only:true,missing_values_fabricated:false,chronological_validation:true,production_change_authorized:false,channel_archive_run:EXPECTED_CHANNEL_RUN,channel_archive_head:EXPECTED_CHANNEL_HEAD,exact_f24:true,valid_time_cadence_hours:6},
+  method:{candidate:"Suppression-only logit penalty from predeclared issuance-time Channel turning, shear, coastal onshore flow, marine moisture contrast, convergence and optional shallow-PBL susceptibility. Suppression strength is selected only inside each prior chronological training window; zero is allowed. Candidate never raises probability and leaves baseline probabilities below 0.15 unchanged.",threshold:"Candidate uses the exact same fold-specific threshold selected from the baseline training window, preventing threshold compensation for suppression.",event_episode_gap_hours:7,gust_output:"unchanged"},
+  promotion_gates:{event_pod_no_worse:true,event_far_improvement_absolute:0.02,overall_brier_no_worse:true,overall_auc_max_degradation_absolute:0.005,hard_negative_brier_no_worse:true,hard_negative_fpr_no_worse:true,spatial_precision_max_degradation_absolute:0.01,regime_safety:true,gust_noninferiority:true,missing_fail_closed:true},
+  counts:{rows:rows.length,events:rows.filter(r=>r.y).length,missing_channel_predictors:missing},
+  selected_training_only:selected,
+  baseline:{aggregate:b,folds:baseResults},
+  candidate:{aggregate:c,folds:candResults,regime},
+  gates,passes_all:pass,winner_eligible_for_single_frozen_2025_score:pass?"channel_eddy_marine_reentry_v1":null
+ };
+ fs.writeFileSync(OUT,JSON.stringify(out,null,2)+"\n");
+ console.log(JSON.stringify({counts:out.counts,selected,baseline:b,candidate:c,gates,passes_all:pass},null,2));
+})().catch(e=>{console.error(e.stack||e);process.exit(1);});

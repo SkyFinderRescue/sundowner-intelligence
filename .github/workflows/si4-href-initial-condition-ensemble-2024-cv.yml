@@ -1,0 +1,87 @@
+name: SI-4 HREF Initial-Condition Ensemble 2024 CV
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/evaluate-si4-href-initial-condition-ensemble-2024-cv.js'
+      - 'research/SI4_INITIAL_CONDITION_ENSEMBLE_DOWNSLOPE_2024_PREDECLARED.md'
+      - 'research/SI4_HREF_2024_ARCHIVE_DECISION.md'
+      - '.github/workflows/si4-href-initial-condition-ensemble-2024-cv.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: si4-href-initial-condition-ensemble-2024-cv
+  cancel-in-progress: true
+
+jobs:
+  href-ensemble-2024-cv:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify frozen evaluator and 2025 firewall
+        run: |
+          set -euo pipefail
+          node --check tools/evaluate-si4-href-initial-condition-ensemble-2024-cv.js
+          grep -q 'const START="2024-01-01", END="2024-12-31"' tools/evaluate-si4-href-initial-condition-ensemble-2024-cv.js
+          grep -q 'FROZEN_HREF_RUN="33415242408"' tools/evaluate-si4-href-initial-condition-ensemble-2024-cv.js
+          grep -q 'holdout_2025_loaded:false' tools/evaluate-si4-href-initial-condition-ensemble-2024-cv.js
+          grep -q 'production_change_authorized:false' tools/evaluate-si4-href-initial-condition-ensemble-2024-cv.js
+          ! grep -q '2025-' tools/evaluate-si4-href-initial-condition-ensemble-2024-cv.js
+      - name: Download authoritative frozen baseline upper-air artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/si4-frozen
+          gh run download 31925677059 --repo SkyFinderRescue/sundowner-intelligence --name si4-all-season-frozen-holdout --dir /tmp/si4-frozen
+          test -s /tmp/si4-frozen/hrrr-upper-fixed-lead-all-season.json
+      - name: Download frozen pre-outcome HREF 2024 archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/si4-href
+          gh run download 33415242408 --repo SkyFinderRescue/sundowner-intelligence --name si4-href-ensemble-2024-full --dir /tmp/si4-href
+          test -s /tmp/si4-href/si4-href-ensemble-2024-full.json
+          node - <<'NODE'
+          const x=require('/tmp/si4-href/si4-href-ensemble-2024-full.json');
+          if(x.status!=='RESEARCH_ONLY_2024_DEVELOPMENT'||x.candidate_family!=='initial_condition_ensemble_downslope_v1') process.exit(2);
+          if(x.row_count!==35850||x.failure_count!==0||x.member_count!==10||x.point_count!==5||x.forecast_lead_hours!==24) process.exit(3);
+          if(String(x.provenance?.github_run_id)!=='33415242408') process.exit(4);
+          if(x.science_scoring_performed!==false||x.observations_or_outcomes_used!==false||x.holdout_2025_loaded!==false||x.production_change_authorized!==false) process.exit(5);
+          if((x.rows||[]).some(r=>!String(r.valid_time).startsWith('2024-')||r.issuance_to_valid_lead_h!==24)) process.exit(6);
+          console.log({rows:x.row_count,members:x.member_count,lead:x.forecast_lead_hours,run:x.provenance.github_run_id});
+          NODE
+      - name: Run frozen 2024 chronological CV
+        env:
+          UPPER_CACHE: /tmp/si4-frozen/hrrr-upper-fixed-lead-all-season.json
+          HREF_CACHE: /tmp/si4-href/si4-href-ensemble-2024-full.json
+          OUT: research/si4-href-initial-condition-ensemble-2024-cv.json
+        run: node tools/evaluate-si4-href-initial-condition-ensemble-2024-cv.js
+      - name: Verify fail-closed scientific decision
+        run: |
+          node - <<'NODE'
+          const x=require('./research/si4-href-initial-condition-ensemble-2024-cv.json');
+          if(x.status!=='RESEARCH_ONLY_2024_DEVELOPMENT'||x.candidate_family!=='initial_condition_ensemble_downslope_v1') process.exit(2);
+          if(x.rules.development_year!==2024||x.rules.holdout_2025_loaded!==false||x.rules.production_change_authorized!==false) process.exit(3);
+          if(String(x.rules.href_archive_run)!=='33415242408'||x.rules.href_archive_rows!==35850) process.exit(4);
+          if(typeof x.passes_all!=='boolean'||!x.gates||!x.simple_comparator) process.exit(5);
+          if(x.passes_all===false&&x.winner_eligible_for_single_frozen_2025_score!==null) process.exit(6);
+          console.log({rows:x.coverage.common_rows,events:x.coverage.events,passes_all:x.passes_all,eligible:x.winner_eligible_for_single_frozen_2025_score,gates:x.gates});
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-href-initial-condition-ensemble-2024-cv
+          path: research/si4-href-initial-condition-ensemble-2024-cv.json
+          if-no-files-found: warn
+          retention-days: 30

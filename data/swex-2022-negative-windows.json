@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Independently documented SWEX 2022 enhanced-observation periods with no Sundowner regime assigned in the primary campaign instrumentation paper. These are validation-only negative windows and are not inferred from absence of an IOP label.",
+  "source": "Witte et al. 2026, Geoscience Data Journal, NSF NCAR's In Situ Sensing Facility Measurement System During the Sundowner Wind EXperiment (SWEX), doi:10.1002/gdj3.70074, Table 1",
+  "source_url": "https://doi.org/10.1002/gdj3.70074",
+  "interpretation_rule": "Only EOP rows explicitly shown with no Sundowner regime in Table 1 are marked verified_negative. All other non-IOP campaign times remain unlabeled.",
+  "windows": [
+    {
+      "window_id": "SWEX-EOP1",
+      "date": "2022-04-17",
+      "end_date": "2022-04-18",
+      "start_utc": "2022-04-17T17:00:00Z",
+      "end_utc": "2022-04-18T14:00:00Z",
+      "verified_negative": true,
+      "regime": null,
+      "source_table_regime": null,
+      "notes": "Witte et al. Table 1 labels EOP 1 with no Sundowner regime; 8 ISS2 and 8 ISS3 radiosondes plus RF06/RF07 observations were collected."
+    },
+    {
+      "window_id": "SWEX-EOP2",
+      "date": "2022-04-25",
+      "end_date": "2022-04-26",
+      "start_utc": "2022-04-25T17:00:00Z",
+      "end_utc": "2022-04-26T14:00:00Z",
+      "verified_negative": true,
+      "regime": null,
+      "source_table_regime": null,
+      "notes": "Witte et al. Table 1 labels EOP 2 with no Sundowner regime; 8 ISS2 and 7 ISS3 radiosondes plus RF12/RF13 observations were collected."
+    },
+    {
+      "window_id": "SWEX-EOP3",
+      "date": "2022-05-04",
+      "end_date": "2022-05-05",
+      "start_utc": "2022-05-04T17:00:00Z",
+      "end_utc": "2022-05-05T14:00:00Z",
+      "verified_negative": true,
+      "regime": null,
+      "source_table_regime": null,
+      "notes": "Witte et al. Table 1 labels EOP 3 with no Sundowner regime; 10 ISS2 and 10 ISS3 radiosondes plus RF16/RF17 observations were collected."
+    }
+  ],
+  "rules": {
+    "fire_association_used": false,
+    "future_observation_leakage": false,
+    "outside_windows_is_negative": false,
+    "missing_values_must_remain_null": true,
+    "validation_only": true
+  }
+}

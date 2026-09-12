@@ -1,0 +1,55 @@
+name: SI-4 HREF 2024 Exact-F24 Reproducibility Probe
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/probe-href-2024-exact-f24.js'
+      - '.github/workflows/si4-href-2024-exact-f24.yml'
+      - 'research/SI4_INITIAL_CONDITION_ENSEMBLE_DOWNSLOPE_2024_PREDECLARED.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe-href-2024-exact-f24:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Syntax check
+        run: node --check tools/probe-href-2024-exact-f24.js
+      - name: Probe exact-F24 2024 HREF archive without outcomes
+        env:
+          NODE_OPTIONS: --use-openssl-ca
+        run: node tools/probe-href-2024-exact-f24.js
+      - name: Enforce outcome-blind Phase 0b contract
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const p = JSON.parse(fs.readFileSync('research/href-2024-exact-f24-probe.json','utf8'));
+          if (p.candidate !== 'initial_condition_ensemble_downslope_v1') throw new Error('candidate mismatch');
+          if (p.science_scoring_performed !== false || p.observations_or_outcomes_used !== false) throw new Error('science/outcome leakage contract failed');
+          if (JSON.stringify(p.queried_years) !== JSON.stringify([2024])) throw new Error('only 2024 may be queried');
+          if (p.future_observations_used !== false || p.fire_association_used !== false) throw new Error('future observation/fire leakage contract failed');
+          if (!Array.isArray(p.predeclared_dates) || p.predeclared_dates.length !== 12) throw new Error('expected 12 outcome-blind predeclared dates');
+          if ((p.reachable_date_count || 0) < 1) throw new Error(`no 2024 HREF date root reachable: ${p.phase0b_status}`);
+          if ((p.exact_f24_object_count || 0) < 1) throw new Error(`no exact-F24 HREF object discovered: ${p.phase0b_status}`);
+          if (p.phase0b_status === 'EXACT_F24_PRODUCTS_FOUND_MEMBER_LEVEL_UNRESOLVED') {
+            console.log('Exact-F24 HREF products are reproducible, but member-level state remains unresolved; science scoring stays blocked.');
+          } else if (p.phase0b_status === 'EXACT_F24_SOURCE_DISCOVERED_NEEDS_MEMBER_IDENTITY_FREEZE') {
+            console.log('Exact-F24 source and member signals discovered; member identity/source freeze is next.');
+          } else {
+            console.log(`Phase 0b infrastructure status: ${p.phase0b_status}; no scientific inference permitted.`);
+          }
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-href-2024-exact-f24-probe
+          path: research/href-2024-exact-f24-probe.json
+          if-no-files-found: error
+          retention-days: 30

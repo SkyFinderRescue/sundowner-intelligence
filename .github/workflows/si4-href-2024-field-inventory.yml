@@ -1,0 +1,49 @@
+name: SI-4 HREF 2024 Field Inventory Probe
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/probe-href-2024-field-inventory.js'
+      - '.github/workflows/si4-href-2024-field-inventory.yml'
+      - 'research/SI4_INITIAL_CONDITION_ENSEMBLE_DOWNSLOPE_2024_PREDECLARED.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe-href-2024-field-inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Syntax check
+        run: node --check tools/probe-href-2024-field-inventory.js
+      - name: Inventory representative HREF family fields without outcomes
+        env:
+          NODE_OPTIONS: --use-openssl-ca
+        run: node tools/probe-href-2024-field-inventory.js
+      - name: Enforce outcome-blind Phase 0d contract
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const p=JSON.parse(fs.readFileSync('research/href-2024-field-inventory-probe.json','utf8'));
+          if(p.candidate!=='initial_condition_ensemble_downslope_v1') throw new Error('candidate mismatch');
+          if(p.science_scoring_performed!==false || p.observations_or_outcomes_used!==false) throw new Error('science/outcome leakage contract failed');
+          if(JSON.stringify(p.queried_years)!==JSON.stringify([2024])) throw new Error('only 2024 may be queried');
+          if(p.future_observations_used!==false || p.fire_association_used!==false) throw new Error('future observation/fire leakage contract failed');
+          if(p.representative_family_count!==5) throw new Error(`expected five frozen HREF model families, got ${p.representative_family_count}`);
+          if(p.reachable_ncss_dataset_count!==5) throw new Error(`NCSS metadata incomplete: ${p.reachable_ncss_dataset_count}/5`);
+          if(p.phase0d_status!=='HREF_FAMILY_FIELD_INVENTORY_REPRODUCIBLE') throw new Error(`Phase 0d not reproducible: ${p.phase0d_status}`);
+          console.log('Representative HREF family field metadata is reproducible; science scoring remains disabled.');
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-href-2024-field-inventory-probe
+          path: research/href-2024-field-inventory-probe.json
+          if-no-files-found: error
+          retention-days: 30

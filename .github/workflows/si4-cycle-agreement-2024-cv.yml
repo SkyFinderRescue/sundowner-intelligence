@@ -1,0 +1,134 @@
+name: SI-4 HRRR Cycle Agreement 2024 CV
+
+on:
+  push:
+    branches: [si4-research]
+    paths:
+      - 'tools/evaluate-si4-cycle-agreement-2024.js'
+      - 'tools/summarize-hrrr-cycle-agreement.js'
+      - 'tools/extract-hrrr-upper-herbie.py'
+      - 'tools/merge-hrrr-upper-chunks.py'
+      - '.github/workflows/si4-cycle-agreement-2024-cv.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: si4-cycle-agreement-2024-cv
+  cancel-in-progress: false
+
+jobs:
+  cycle-month:
+    name: HRRR F${{ matrix.lead }} ${{ matrix.month }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        lead: [18, 24, 30, 36]
+        month: ['01','02','03','04','05','06','07','08','09','10','11','12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install indexed HRRR subset reader
+        run: python -m pip install --quiet 'herbie-data>=2025.7' 'cfgrib>=0.9.15' 'xarray>=2025.1' pandas numpy scikit-learn
+      - name: Resolve month bounds
+        id: bounds
+        shell: bash
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import calendar
+          m=int('${{ matrix.month }}')
+          print(f"start=2024-{m:02d}-01")
+          print(f"end=2024-{m:02d}-{calendar.monthrange(2024,m)[1]:02d}")
+          PY
+      - name: Extract complete 2024 monthly profiles with bounded infrastructure retry
+        shell: bash
+        run: |
+          set -u
+          out="/tmp/hrrr-cycle-f${{ matrix.lead }}-2024-${{ matrix.month }}.json"
+          ok=0
+          for attempt in 1 2 3; do
+            if python tools/extract-hrrr-upper-herbie.py --start '${{ steps.bounds.outputs.start }}' --end '${{ steps.bounds.outputs.end }}' --fxx '${{ matrix.lead }}' --out "$out"; then ok=1; break; fi
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt*30)); fi
+          done
+          test "$ok" -eq 1
+          python - <<'PY'
+          import json
+          f='/tmp/hrrr-cycle-f${{ matrix.lead }}-2024-${{ matrix.month }}.json'
+          x=json.load(open(f))
+          assert x['status']=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION'
+          assert x['forecast_lead_hours']==${{ matrix.lead }}
+          assert x['failure_count']==0, x.get('failures',[])[:10]
+          assert x['rows']
+          assert all(str(r['valid_time']).startswith(('2024-','2025-')) for r in x['rows'])
+          print({'lead':${{ matrix.lead }},'month':'${{ matrix.month }}','rows':len(x['rows'])})
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hrrr-cycle-f${{ matrix.lead }}-2024-${{ matrix.month }}
+          path: /tmp/hrrr-cycle-f${{ matrix.lead }}-2024-${{ matrix.month }}.json
+          if-no-files-found: error
+          retention-days: 30
+
+  merge-and-cv:
+    name: Merge + 2024 chronological cycle skill CV
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    needs: cycle-month
+    env:
+      TRAIN_START: '2024-01-01'
+      TRAIN_END: '2024-12-31'
+      TEST_START: '2024-01-01'
+      TEST_END: '2024-12-31'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: hrrr-cycle-*
+          path: /tmp/cycle-months
+      - name: Merge exact 2024 caches by lead
+        shell: bash
+        run: |
+          set -euo pipefail
+          for lead in 18 24 30 36; do
+            mkdir -p "/tmp/f${lead}"
+            find /tmp/cycle-months -type f -name "hrrr-cycle-f${lead}-2024-*.json" -exec cp {} "/tmp/f${lead}/" \;
+            python tools/merge-hrrr-upper-chunks.py --input "/tmp/f${lead}/*.json" --start 2024-01-01 --end 2024-12-31 --fxx "$lead" --out "/tmp/hrrr-cycle-f${lead}-2024.json"
+          done
+      - name: Build coherent same-valid-time cycle agreement artifact
+        env:
+          INPUTS: /tmp/hrrr-cycle-f18-2024.json,/tmp/hrrr-cycle-f24-2024.json,/tmp/hrrr-cycle-f30-2024.json,/tmp/hrrr-cycle-f36-2024.json
+          OUT: /tmp/si4-hrrr-cycle-agreement-2024.json
+        run: node tools/summarize-hrrr-cycle-agreement.js
+      - name: Run 2024-only chronological skill CV
+        env:
+          UPPER_CACHE: /tmp/hrrr-cycle-f24-2024.json
+          CYCLE_INPUT: /tmp/si4-hrrr-cycle-agreement-2024.json
+          OUT: /tmp/si4-hrrr-cycle-agreement-2024-cv.json
+        run: node tools/evaluate-si4-cycle-agreement-2024.js
+      - name: Verify no holdout leakage and report frozen development decision
+        run: |
+          node - <<'NODE'
+          const x=require('/tmp/si4-hrrr-cycle-agreement-2024-cv.json');
+          if(x.status!=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION')process.exit(2);
+          if(x.rules.development_year!==2024||x.rules.holdout_2025_loaded!==false)process.exit(3);
+          if(x.rules.future_observations_label_only!==true||x.rules.fire_association_used!==false)process.exit(4);
+          console.log(JSON.stringify({overall:x.overall,gates:x.gates,eligible_for_one_time_2025_freeze:x.eligible_for_one_time_2025_freeze},null,2));
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-hrrr-cycle-agreement-2024-cv
+          path: |
+            /tmp/si4-hrrr-cycle-agreement-2024.json
+            /tmp/si4-hrrr-cycle-agreement-2024-cv.json
+          if-no-files-found: warn
+          retention-days: 30

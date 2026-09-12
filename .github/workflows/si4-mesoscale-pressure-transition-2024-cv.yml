@@ -1,0 +1,60 @@
+name: SI-4 Mesoscale Pressure Transition 2024 CV
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/evaluate-si4-mesoscale-pressure-transition-2024-cv.js'
+      - '.github/workflows/si4-mesoscale-pressure-transition-2024-cv.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  mesoscale-pressure-transition-2024-cv:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check
+        run: node --check tools/evaluate-si4-mesoscale-pressure-transition-2024-cv.js
+      - name: Download authoritative frozen all-season artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/si4-frozen
+          gh run download 31925677059 --repo SkyFinderRescue/sundowner-intelligence --name si4-all-season-frozen-holdout --dir /tmp/si4-frozen
+          test -s /tmp/si4-frozen/hrrr-upper-fixed-lead-all-season.json
+      - name: Verify 2024-only fail-closed research contract
+        run: |
+          grep -q 'const START="2024-01-01", END="2024-12-31"' tools/evaluate-si4-mesoscale-pressure-transition-2024-cv.js
+          grep -q 'holdout_2025_loaded:false' tools/evaluate-si4-mesoscale-pressure-transition-2024-cv.js
+          grep -q 'production_change_authorized:false' tools/evaluate-si4-mesoscale-pressure-transition-2024-cv.js
+      - name: Run predeclared 2024 chronological CV
+        env:
+          UPPER_CACHE: /tmp/si4-frozen/hrrr-upper-fixed-lead-all-season.json
+          OUT: research/si4-mesoscale-pressure-transition-2024-cv.json
+        run: node tools/evaluate-si4-mesoscale-pressure-transition-2024-cv.js
+      - name: Verify decision contract
+        run: |
+          node - <<'NODE'
+          const x=require('./research/si4-mesoscale-pressure-transition-2024-cv.json');
+          if(x.status!=='RESEARCH_ONLY_2024_DEVELOPMENT') process.exit(2);
+          if(x.candidate_family!=='mesoscale_pressure_transition_v1') process.exit(3);
+          if(x.rules.development_year_only!==2024||x.rules.holdout_2025_loaded!==false||x.rules.future_observations_label_only!==true) process.exit(4);
+          if(x.rules.production_change_authorized!==false||x.rules.forecast_lead_hours!==24) process.exit(5);
+          if(!['PASS_2024_GATES_FREEZE_BEFORE_ONE_2025_SCORE','REJECT_DO_NOT_EXPOSE_TO_2025'].includes(x.decision)) process.exit(6);
+          console.log({rows:x.counts.rows,oof:x.counts.oof_rows,decision:x.decision,gates:x.gates});
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-mesoscale-pressure-transition-2024-cv
+          path: research/si4-mesoscale-pressure-transition-2024-cv.json
+          if-no-files-found: warn
+          retention-days: 30
