@@ -1,0 +1,73 @@
+name: SI-4 HREF 2024 Source-QC Repair
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/repair-si4-href-2024-archive-source-qc.js'
+      - '.github/workflows/si4-href-2024-source-qc-repair.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: si4-href-2024-source-qc-repair
+  cancel-in-progress: true
+
+jobs:
+  source-qc-repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify outcome-blind repair contract
+        run: |
+          set -euo pipefail
+          node --check tools/repair-si4-href-2024-archive-source-qc.js
+          grep -q "EXPECTED_SOURCE_RUN='33415242408'" tools/repair-si4-href-2024-archive-source-qc.js
+          grep -q "observations_or_outcomes_used:false" tools/repair-si4-href-2024-archive-source-qc.js
+          grep -q "holdout_2025_loaded:false" tools/repair-si4-href-2024-archive-source-qc.js
+          ! grep -Eq 'HADS|eventObserved|obsGust|2025-' tools/repair-si4-href-2024-archive-source-qc.js
+      - name: Download frozen pre-outcome HREF archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/href-source
+          gh run download 33415242408 --repo SkyFinderRescue/sundowner-intelligence --name si4-href-ensemble-2024-full --dir /tmp/href-source
+          test -s /tmp/href-source/si4-href-ensemble-2024-full.json
+      - name: Apply source-only numeric sentinel QC
+        env:
+          INPUT: /tmp/href-source/si4-href-ensemble-2024-full.json
+          OUTPUT: si4-href-ensemble-2024-source-qc.json
+          MANIFEST: si4-href-ensemble-2024-source-qc-manifest.json
+        run: node tools/repair-si4-href-2024-archive-source-qc.js
+      - name: Verify repaired matched ensemble
+        run: |
+          node - <<'NODE'
+          const x=require('./si4-href-ensemble-2024-source-qc.json');
+          const m=require('./si4-href-ensemble-2024-source-qc-manifest.json');
+          if(x.phase!=='full_2024_href_member_archive_source_qc_repaired') process.exit(2);
+          if(x.row_count!==35750||m.repaired_rows!==35750) process.exit(3);
+          if(x.source_qc.invalid_row_count!==10||m.invalid_row_count!==10) process.exit(4);
+          // Source QC reports issuance_time. The corrupt records' valid times are +24 h.
+          const expected=['2024-10-15T12:00:00.000Z','2024-10-22T00:00:00.000Z'];
+          if(JSON.stringify(x.source_qc.newly_excluded_issuances)!==JSON.stringify(expected)) process.exit(5);
+          if(x.observations_or_outcomes_used!==false||x.holdout_2025_loaded!==false||x.production_change_authorized!==false) process.exit(6);
+          if(x.rows.some(r=>expected.includes(r.issuance_time))) process.exit(7);
+          if(x.rows.some(r=>Number(r.gust_surface_mps)<0||Number(r.gust_surface_mps)>200)) process.exit(8);
+          console.log({status:'PASS',rows:x.row_count,newly_excluded:expected,invalid_rows:x.source_qc.invalid_row_count});
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: si4-href-ensemble-2024-source-qc
+          path: |
+            si4-href-ensemble-2024-source-qc.json
+            si4-href-ensemble-2024-source-qc-manifest.json
+          if-no-files-found: error
+          retention-days: 30

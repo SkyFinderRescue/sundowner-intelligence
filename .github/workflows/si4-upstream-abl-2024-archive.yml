@@ -1,0 +1,186 @@
+# Research-only 2024 upstream ABL reservoir archive. Frozen hypothesis/points/fields/gates; no 2025 access.
+name: SI-4 Upstream ABL Reservoir 2024 Archive
+
+on:
+  push:
+    branches: [si4-research]
+    paths:
+      - 'tools/extract-si4-upstream-abl-herbie.py'
+      - 'research/SI4_UPSTREAM_ABL_RESERVOIR_2024_PREDECLARED.md'
+      - '.github/workflows/si4-upstream-abl-2024-archive.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: si4-upstream-abl-reservoir-2024-archive
+  cancel-in-progress: true
+
+jobs:
+  archive-month:
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - {month: '01', start: '2024-01-01', end: '2024-01-31'}
+          - {month: '02', start: '2024-02-01', end: '2024-02-29'}
+          - {month: '03', start: '2024-03-01', end: '2024-03-31'}
+          - {month: '04', start: '2024-04-01', end: '2024-04-30'}
+          - {month: '05', start: '2024-05-01', end: '2024-05-31'}
+          - {month: '06', start: '2024-06-01', end: '2024-06-30'}
+          - {month: '07', start: '2024-07-01', end: '2024-07-31'}
+          - {month: '08', start: '2024-08-01', end: '2024-08-31'}
+          - {month: '09', start: '2024-09-01', end: '2024-09-30'}
+          - {month: '10', start: '2024-10-01', end: '2024-10-31'}
+          - {month: '11', start: '2024-11-01', end: '2024-11-30'}
+          # F24 from 2024-12-31 verifies in 2025 and is outside the frozen development boundary.
+          - {month: '12', start: '2024-12-01', end: '2024-12-30'}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install frozen indexed HRRR extractor dependencies
+        run: python -m pip install --quiet 'herbie-data>=2025.7' 'cfgrib>=0.9.15' 'xarray>=2025.1' pandas numpy scikit-learn
+      - name: Verify frozen development lock
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/extract-si4-upstream-abl-herbie.py
+          grep -q 'upstream_abl_reservoir_v1' research/SI4_UPSTREAM_ABL_RESERVOIR_2024_PREDECLARED.md
+          grep -q '2025 FORBIDDEN DURING DEVELOPMENT' research/SI4_UPSTREAM_ABL_RESERVOIR_2024_PREDECLARED.md
+          grep -q 'holdout_2025_loaded' tools/extract-si4-upstream-abl-herbie.py
+          ! grep -q '2025-' tools/extract-si4-upstream-abl-herbie.py
+      - name: Extract frozen month at F24 with bounded infrastructure retry
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="research/si4-upstream-abl-2024-${{ matrix.month }}.json"
+          ok=0
+          for attempt in 1 2 3; do
+            if python tools/extract-si4-upstream-abl-herbie.py --start '${{ matrix.start }}' --end '${{ matrix.end }}' --fxx 24 --out "$out"; then
+              ok=1
+              break
+            fi
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt*30)); fi
+          done
+          test "$ok" -eq 1
+      - name: Verify fail-closed month contract
+        run: |
+          python - <<'PY'
+          import datetime as dt, json, math, os
+          m=os.environ['MONTH']; start=os.environ['START']; end=os.environ['END']
+          p=f'research/si4-upstream-abl-2024-{m}.json'; x=json.load(open(p))
+          assert x['status']=='RESEARCH_ONLY_2024_DEVELOPMENT'
+          assert x['candidate_family']=='upstream_abl_reservoir_v1'
+          assert x['forecast_lead_hours']==24
+          assert x['start']==start and x['end']==end
+          assert x['failure_count']==0, x.get('failures')
+          assert x['rules']['holdout_2025_loaded'] is False
+          assert x['rules']['production_change_authorized'] is False
+          assert x['rules']['future_observations_label_only'] is True
+          assert x['rules']['fire_association_outcome_only'] is True
+          assert list(x['points'])==['santa_ynez_valley','santa_barbara_lee','western_channel']
+          days=(dt.date.fromisoformat(end)-dt.date.fromisoformat(start)).days+1
+          assert len(x['rows'])==days*4*3, (len(x['rows']), days*12)
+          seen=set()
+          for row in x['rows']:
+              assert row['run_time'].startswith('2024-')
+              assert row['valid_time'].startswith('2024-')
+              assert row['forecast_lead_hours']==24
+              key=(row['run_time'],row['point'])
+              assert key not in seen; seen.add(key)
+              for k in ('temperature2mC','dewpoint2mC','dewpointDepressionC','u10Mps','v10Mps','wind10SpeedMph','wind10DirectionDeg'):
+                  assert math.isfinite(float(row[k])), (key,k,row[k])
+              pblh=row.get('pblHeightM')
+              if pblh is not None:
+                  assert math.isfinite(float(pblh)) and float(pblh)>=0, (key,'pblHeightM',pblh)
+          print({'month':m,'rows':len(x['rows']),'failures':0,'status':'PASS'})
+          PY
+        env:
+          MONTH: ${{ matrix.month }}
+          START: ${{ matrix.start }}
+          END: ${{ matrix.end }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-upstream-abl-2024-${{ matrix.month }}
+          path: research/si4-upstream-abl-2024-${{ matrix.month }}.json
+          if-no-files-found: error
+          retention-days: 30
+
+  combine-archive:
+    needs: archive-month
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: si4-upstream-abl-2024-??
+          path: monthly
+          merge-multiple: true
+      - name: Combine and verify immutable full-year archive
+        env:
+          RUN_ID: ${{ github.run_id }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          python - <<'PY'
+          import hashlib, json, math, os, pathlib
+          root=pathlib.Path('monthly')
+          files=[root/f'si4-upstream-abl-2024-{m:02d}.json' for m in range(1,13)]
+          assert all(p.exists() for p in files), [str(p) for p in files if not p.exists()]
+          rows=[]; seen=set(); monthly=[]; pblh_present=0; pblh_missing=0
+          for p in files:
+              raw=p.read_bytes(); x=json.loads(raw)
+              assert x['status']=='RESEARCH_ONLY_2024_DEVELOPMENT'
+              assert x['candidate_family']=='upstream_abl_reservoir_v1'
+              assert x['forecast_lead_hours']==24
+              assert x['failure_count']==0
+              assert x['rules']['holdout_2025_loaded'] is False
+              assert x['rules']['production_change_authorized'] is False
+              monthly.append({'file':p.name,'sha256':hashlib.sha256(raw).hexdigest(),'rows':len(x['rows']),'start':x['start'],'end':x['end']})
+              for r in x['rows']:
+                  assert str(r['run_time']).startswith('2024-') and str(r['valid_time']).startswith('2024-')
+                  key=(r['run_time'],r['point'])
+                  assert key not in seen, key
+                  seen.add(key)
+                  for k in ('temperature2mC','dewpoint2mC','dewpointDepressionC','u10Mps','v10Mps','wind10SpeedMph','wind10DirectionDeg'):
+                      assert math.isfinite(float(r[k])), (key,k,r[k])
+                  if r.get('pblHeightM') is None:
+                      pblh_missing+=1
+                  else:
+                      assert math.isfinite(float(r['pblHeightM'])) and float(r['pblHeightM'])>=0
+                      pblh_present+=1
+                  rows.append(r)
+          # 365 initialization days (Dec 31 excluded) x 4 cycles x 3 frozen points.
+          assert len(rows)==365*4*3, len(rows)
+          rows.sort(key=lambda r:(r['run_time'],r['point']))
+          out={
+            'status':'RESEARCH_ONLY_2024_DEVELOPMENT',
+            'candidate_family':'upstream_abl_reservoir_v1',
+            'forecast_lead_hours':24,
+            'initialization_start':'2024-01-01','initialization_end':'2024-12-30',
+            'valid_time_start':'2024-01-02','valid_time_end':'2024-12-31',
+            'points':['santa_ynez_valley','santa_barbara_lee','western_channel'],
+            'row_count':len(rows),
+            'failure_count':0,
+            'field_availability':{'pblHeightM_present':pblh_present,'pblHeightM_missing':pblh_missing},
+            'rules':{'holdout_2025_loaded':False,'production_change_authorized':False,'future_observations_label_only':True,'fire_association_outcome_only':True,'missing_values_stay_null':True},
+            'provenance':{'github_run_id':os.environ['RUN_ID'],'head_sha':os.environ['HEAD_SHA'],'monthly_artifacts':monthly},
+            'rows':rows
+          }
+          pathlib.Path('si4-upstream-abl-2024-full.json').write_text(json.dumps(out,separators=(',',':')))
+          pathlib.Path('si4-upstream-abl-2024-manifest.json').write_text(json.dumps(out['provenance'],indent=2))
+          print({'status':'PASS','rows':len(rows),'months':len(monthly),'pblh_present':pblh_present,'pblh_missing':pblh_missing,'head':os.environ['HEAD_SHA'],'run_id':os.environ['RUN_ID']})
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: si4-upstream-abl-2024-full
+          path: |
+            si4-upstream-abl-2024-full.json
+            si4-upstream-abl-2024-manifest.json
+          if-no-files-found: error
+          retention-days: 30

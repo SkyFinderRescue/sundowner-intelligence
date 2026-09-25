@@ -1,0 +1,50 @@
+name: SI-4 SWEX Acquisition Probe
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/probe-swex-downloads.js'
+      - 'tools/probe-swex-order-controls.js'
+      - 'tools/probe-swex-order-response.js'
+      - '.github/workflows/si4-swex-acquisition.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe-authoritative-swex-downloads:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Syntax checks
+        run: |
+          node --check tools/probe-swex-downloads.js
+          node --check tools/probe-swex-order-controls.js
+          node --check tools/probe-swex-order-response.js
+      - name: Resolve authoritative SWEX acquisition endpoints with bounded retry
+        run: node tools/probe-swex-downloads.js
+      - name: Inspect exact public CODIAC order controls without submitting an order
+        run: node tools/probe-swex-order-controls.js
+      - name: Probe CODIAC response with minimal selection and no contact information
+        run: node tools/probe-swex-order-response.js
+      - name: Record corrected order state without exposing contact information
+        run: |
+          echo 'NCAR/EOL Data Support verified on 2026-09-04 that no existing 600.034 order could be found.'
+          echo 'A resubmission is required and is no longer considered a duplicate.'
+          echo 'Do not hard-code an order email in this public repository or CI.'
+          echo 'Keep acquisition GET-only until a valid contact is supplied securely at submission time.'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-swex-download-probe
+          path: |
+            research/swex-download-probe.json
+            research/swex-order-controls.json
+            research/swex-order-response-probe.json
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,75 @@
+name: SI-4 Western Coupling Frozen 2025
+
+on:
+  push:
+    branches: [si4-research]
+    paths:
+      - 'research/SI4_WESTERN_COUPLING_2024_FROZEN_RULES.json'
+      - 'tools/score-si4-western-coupling-frozen-2025.js'
+      - '.github/workflows/si4-western-coupling-frozen-2025.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  frozen-2025-score:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TRAIN_START: '2024-01-01'
+      TRAIN_END: '2024-12-31'
+      TEST_START: '2025-01-01'
+      TEST_END: '2025-12-31'
+      FREEZE: research/SI4_WESTERN_COUPLING_2024_FROZEN_RULES.json
+      OUT: research/si4-western-coupling-frozen-2025.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check frozen scorer
+        run: node --check tools/score-si4-western-coupling-frozen-2025.js
+      - name: Verify frozen 2024 development decision
+        run: |
+          mkdir -p /tmp/si4-cv
+          gh run download 31995138187 --repo "$GITHUB_REPOSITORY" -n si4-western-hard-negative-cv -D /tmp/si4-cv
+          test -s /tmp/si4-cv/si4-western-hard-negative-cv.json
+          node - <<'NODE'
+          const x=require('/tmp/si4-cv/si4-western-hard-negative-cv.json');
+          const f=require('./research/SI4_WESTERN_COUPLING_2024_FROZEN_RULES.json');
+          if(x.rules.holdout_2025_touched!==false)process.exit(2);
+          if(x.decision!=='FREEZE_CANDIDATE_FOR_ONE_TIME_2025_HOLDOUT'||x.freeze_criteria.all!==true)process.exit(3);
+          if(f.source_cv_run_id!==31995138187||f.rules.holdout_2025_seen_when_rules_frozen!==false)process.exit(4);
+          if(JSON.stringify(x.design.predeclared_extra_features)!==JSON.stringify(f.frozen_extra_features))process.exit(5);
+          console.log({cv_decision:x.decision,weighted:x.weighted,frozen_features:f.frozen_extra_features});
+          NODE
+      - name: Download authoritative fixed-24h upper-air cache
+        run: |
+          mkdir -p /tmp/si4
+          gh run download 31925677059 --repo "$GITHUB_REPOSITORY" -n si4-all-season-frozen-holdout -D /tmp/si4
+          test -s /tmp/si4/hrrr-upper-fixed-lead-all-season.json
+          test -s /tmp/si4/si4-holdout-summary.json
+          node -e "const x=require('/tmp/si4/si4-holdout-summary.json');if(x.frozen_design.train.start!=='2024-01-01'||x.frozen_design.holdout.start!=='2025-01-01'||x.frozen_design.train.forecast_lead_hours!==24||x.frozen_design.holdout.forecast_lead_hours!==24)process.exit(2)"
+      - name: Run one-time frozen 2025 score
+        env:
+          UPPER_CACHE: /tmp/si4/hrrr-upper-fixed-lead-all-season.json
+        run: node tools/score-si4-western-coupling-frozen-2025.js
+      - name: Verify score-only integrity and report scientific decision
+        run: |
+          node - <<'NODE'
+          const x=require('./research/si4-western-coupling-frozen-2025.json');
+          if(x.status!=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION')process.exit(2);
+          if(x.rules.training_2024_only!==true||x.rules.holdout_2025_score_only!==true||x.rules.post_holdout_tuning!==false)process.exit(3);
+          if(x.rules.future_observations_are_labels_only!==true||x.rules.fire_association_used!==false||x.rules.production_change_authorized!==false)process.exit(4);
+          console.log(JSON.stringify({decision:x.decision,delta:x.delta,gate:x.gate,current:{brier:x.current.brier,auc:x.current.auc,hard_negative_brier:x.current.hard_negative_negative_brier},candidate:{brier:x.candidate.brier,auc:x.candidate.auc,hard_negative_brier:x.candidate.hard_negative_negative_brier}},null,2));
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-western-coupling-frozen-2025
+          path: research/si4-western-coupling-frozen-2025.json
+          if-no-files-found: warn
+          retention-days: 30
