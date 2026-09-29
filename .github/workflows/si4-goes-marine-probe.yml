@@ -1,0 +1,42 @@
+name: SI-4 GOES Marine Archive Probe
+
+on:
+  push:
+    branches: [si4-research]
+    paths:
+      - 'tools/probe-goes-marine-archive.js'
+      - '.github/workflows/si4-goes-marine-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  noaa-goes18-archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check GOES archive probe
+        run: node --check tools/probe-goes-marine-archive.js
+      - name: Verify archived GOES-18 ABI bands 7, 13, and 15
+        run: node tools/probe-goes-marine-archive.js
+      - name: Verify research-only and no-leakage contract
+        run: |
+          node - <<'NODE'
+          const x=require('./research/goes-marine-archive-probe.json');
+          if(x.status!=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION')process.exit(2);
+          if(x.rules.future_observation_leakage!==false||x.rules.fire_outcome_used!==false||x.rules.model_coefficients_changed!==false)process.exit(2);
+          if(x.failures.length)process.exit(2);
+          if(!x.rows.length||!x.rows.every(r=>r.bands.C07&&r.bands.C13&&r.bands.C15))process.exit(2);
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-goes-marine-archive-probe
+          path: research/goes-marine-archive-probe.json
+          if-no-files-found: warn
+          retention-days: 30

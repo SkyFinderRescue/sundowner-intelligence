@@ -1,0 +1,58 @@
+name: SI-4 Terrain Gust 2024 Chronological CV
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/evaluate-si4-terrain-gust-2024-cv.js'
+      - '.github/workflows/si4-terrain-gust-2024-cv.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  terrain-gust-2024-cv:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check
+        run: node --check tools/evaluate-si4-terrain-gust-2024-cv.js
+      - name: Download authoritative frozen all-season artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/si4-frozen
+          gh run download 31925677059 --repo SkyFinderRescue/sundowner-intelligence --name si4-all-season-frozen-holdout --dir /tmp/si4-frozen
+          test -s /tmp/si4-frozen/hrrr-upper-fixed-lead-all-season.json
+      - name: Verify 2024-only development guard
+        run: |
+          grep -q 'const START="2024-01-01", END="2024-12-31"' tools/evaluate-si4-terrain-gust-2024-cv.js
+          grep -q 'holdout_2025_loaded:false' tools/evaluate-si4-terrain-gust-2024-cv.js
+          grep -q 'event_probability_modified:false' tools/evaluate-si4-terrain-gust-2024-cv.js
+      - name: Run predeclared 2024 chronological terrain-gust CV
+        env:
+          UPPER_CACHE: /tmp/si4-frozen/hrrr-upper-fixed-lead-all-season.json
+          OUT: research/si4-terrain-gust-2024-cv.json
+        run: node tools/evaluate-si4-terrain-gust-2024-cv.js
+      - name: Verify development-only provenance and gates
+        run: |
+          node - <<'NODE'
+          const x=require('./research/si4-terrain-gust-2024-cv.json');
+          if(x.status!=='RESEARCH_ONLY_2024_DEVELOPMENT') process.exit(2);
+          if(x.rules.holdout_2025_loaded!==false||x.rules.chronological_validation!==true) process.exit(3);
+          if(x.rules.event_probability_modified!==false||x.rules.predeclared_gates!==true||x.rules.production_change_authorized!==false) process.exit(4);
+          console.log({rows:x.counts.rows,winner:x.winner_eligible_for_single_frozen_2025_score});
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-terrain-gust-2024-cv
+          path: research/si4-terrain-gust-2024-cv.json
+          if-no-files-found: warn
+          retention-days: 30

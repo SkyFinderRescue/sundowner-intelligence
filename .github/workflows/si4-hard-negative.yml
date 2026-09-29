@@ -1,0 +1,51 @@
+name: SI-4 Hard-Negative Promotion Gate
+
+on:
+  push:
+    branches: [si4-research]
+    paths:
+      - 'tools/analyze-si4-hard-negatives.js'
+      - '.github/workflows/si4-hard-negative.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  score-hard-negatives:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download newest successful all-season frozen-holdout evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_id=$(gh api "/repos/${GITHUB_REPOSITORY}/actions/workflows/si4-all-season.yml/runs?branch=si4-research&status=success&per_page=1" --jq '.workflow_runs[0].id')
+          test -n "$run_id" -a "$run_id" != "null"
+          artifact_id=$(gh api "/repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/artifacts" --jq '.artifacts[] | select(.name=="si4-all-season-frozen-holdout") | .id' | head -1)
+          test -n "$artifact_id"
+          gh api "/repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}/zip" > /tmp/allseason.zip
+          mkdir -p /tmp/allseason
+          unzip -q -o /tmp/allseason.zip -d /tmp/allseason
+          summary=$(find /tmp/allseason -name si4-holdout-summary.json -print -quit)
+          test -n "$summary"
+          cp "$summary" /tmp/si4-holdout-summary.json
+          echo "source_run_id=$run_id" >> "$GITHUB_ENV"
+      - name: Score frozen 2025 hard-negative gate without coefficient changes
+        env:
+          INPUT: /tmp/si4-holdout-summary.json
+          OUT: /tmp/si4-hard-negative-gate.json
+        run: node tools/analyze-si4-hard-negatives.js
+      - uses: actions/upload-artifact@v4
+        with:
+          name: si4-hard-negative-gate
+          path: /tmp/si4-hard-negative-gate.json
+          if-no-files-found: error
+          retention-days: 30

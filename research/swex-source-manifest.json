@@ -1,0 +1,147 @@
+{
+  "schema_version": "1.2",
+  "project": "SWEX 2022",
+  "status": "research_source_manifest",
+  "campaign_start": "2022-04-01T00:00:00Z",
+  "campaign_end": "2022-05-15T23:59:59Z",
+  "rules": {
+    "quality_controlled_only_for_quantitative_validation": true,
+    "fire_association_is_event_definition": false,
+    "missing_values_must_not_be_invented": true,
+    "future_observation_leakage_forbidden": true
+  },
+  "primary_publication": {
+    "title": "NSF NCAR's In Situ Sensing Facility Measurement System During the Sundowner Wind EXperiment (SWEX)",
+    "doi": "10.1002/gdj3.70074",
+    "published": "2026-04-27"
+  },
+  "datasets": [
+    {
+      "key": "swex_sounding_composite_5hpa",
+      "title": "Multi-Network 5mb Vertical Resolution Sounding Composite",
+      "doi": "10.26023/CM8F-TNHW-HX01",
+      "priority": "critical",
+      "coverage": "2022-03-17 through 2022-05-17",
+      "format": "EOL Sounding Composite columnar ASCII; 5 hPa vertical resolution",
+      "use": ["harmonized multi-network vertical-profile validation", "critical-level reconstruction", "stability", "cross-site event evolution", "matched non-event windows"],
+      "validation_role": "preferred harmonized sounding layer for independent SWEX event reconstruction; raw site products remain provenance/backstop sources"
+    },
+    {
+      "key": "swex_sounding_composite_highres",
+      "title": "Multi-Network Composite Highest Resolution Radiosonde Data",
+      "doi": "10.26023/TN83-Q6BW-AB0D",
+      "priority": "high",
+      "coverage": "2022-03-17 through 2022-05-17",
+      "format": "EOL Sounding Composite columnar ASCII; native/highest available vertical resolution",
+      "use": ["sensitivity check against 5 hPa composite", "fine critical-level structure", "inversion depth", "mountain-wave profile diagnostics"],
+      "validation_role": "high-resolution sensitivity layer; does not replace the 5 hPa harmonized composite for primary matched scoring"
+    },
+    {
+      "key": "avaps_dropsondes",
+      "title": "NCAR/EOL AVAPS Dropsonde Profiles",
+      "doi": "10.26023/AGME-MF19-NJ0A",
+      "priority": "secondary",
+      "use": ["cross-mountain thermodynamic transects", "wind profile", "stability", "marine-layer context"]
+    },
+    {
+      "key": "iss2_radiosondes",
+      "title": "ISS Radiosonde Data - Rancho Alegre Site",
+      "doi": "10.26023/J6P8-7SYD-XP0M",
+      "priority": "critical",
+      "coverage": "2022-03-17 through 2022-05-13",
+      "format": "final quality-controlled CF-1.6 netCDF",
+      "use": ["upstream wind profile", "critical-level height", "stability", "inversion"]
+    },
+    {
+      "key": "iss3_radiosondes",
+      "title": "ISS Radiosonde Data - Sedgwick Site",
+      "doi": "10.26023/H5TV-Y54J-R010",
+      "priority": "critical",
+      "coverage": "2022-03-17 through 2022-05-13",
+      "format": "final quality-controlled CF-1.6 netCDF",
+      "use": ["Santa Ynez Valley wind profile", "critical-level height", "stability", "inversion"]
+    },
+    {
+      "key": "isfs_surface_flux",
+      "title": "ISFS Surface Meteorology and Flux Products - georeferenced",
+      "doi": "10.26023/XDKV-QXC2-1Y0J",
+      "alternate_id": "600.016",
+      "priority": "critical",
+      "coverage": "2022-04-01 through 2022-05-15",
+      "resolution": "5-minute final QC product plus high-rate product",
+      "sites": 18,
+      "use": ["event surface truth", "temperature/RH response", "wind onset/peak/decay", "hard-negative windows"]
+    },
+    {
+      "key": "iss_surface_met",
+      "title": "ISS Surface Meteorology Products",
+      "doi": "10.26023/FHZJ-PF5C-W602",
+      "alternate_id": "600.005",
+      "priority": "critical",
+      "coverage": "2022-03-01 through 2022-05-31",
+      "resolution": "1-minute daily netCDF",
+      "use": ["ISS1/ISS2/ISS3 surface response", "pressure", "temperature", "RH", "wind"]
+    },
+    {
+      "key": "iss_lidar",
+      "title": "ISS Wind Lidar Data Products",
+      "doi": "10.26023/Q28P-EEBS-0Y0E",
+      "alternate_id": "600.014",
+      "priority": "critical",
+      "use": ["Santa Barbara lee-side wind profile", "vertical velocity", "jet lifting/lowering", "VAD winds", "mountain-wave timing"]
+    },
+    {
+      "key": "iss_profiler_915_final_winds",
+      "title": "ISS Radar Wind Profiler Products",
+      "doi": "10.26023/2659-AF70-3009",
+      "alternate_id": "600.034",
+      "priority": "critical",
+      "coverage": "2022-03-10 through 2022-05-20",
+      "asset_size_mb": 1150,
+      "products": [
+        "swex_iss2-ranchoalegre_prof915_moments_v1.tar.gz",
+        "swex_iss2-ranchoalegre_prof915_winds_v1.tar.gz",
+        "swex_iss3-sedgwick_prof915_moments_v1.tar.gz",
+        "swex_iss3-sedgwick_prof915_rass_v1.tar.gz",
+        "swex_iss3-sedgwick_prof915_winds_v1.tar.gz",
+        "swex_iss1-sbfiredept_prof449_moments_v1.tar.gz",
+        "swex_iss1-sbfiredept_prof449_winds_30min_v1.tar.gz",
+        "swex_iss1-sbfiredept_prof449_winds_5min_v1.tar.gz"
+      ],
+      "use": ["continuous vertical wind profile", "vertical velocity", "RASS virtual temperature", "boundary-layer depth", "critical-level evolution"],
+      "ingestion_authority": "current NSF NCAR/EOL SWEX dataset catalog; use the SWEX-specific filenames and alternate identifier 600.034"
+    },
+    {
+      "key": "ceilometer_cl31",
+      "title": "ISS Ceilometer CL31 Data Products",
+      "doi": "10.26023/RB11-0HZ1-QV0F",
+      "priority": "high",
+      "use": ["mixing-layer height", "marine-layer depth"]
+    },
+    {
+      "key": "ceilometer_cl51",
+      "title": "ISS Ceilometer CL51 Data Products",
+      "doi": "10.26023/VY3V-71AR-150A",
+      "priority": "high",
+      "use": ["mixing-layer height", "upstream boundary-layer depth"]
+    },
+    {
+      "key": "ceilometer_cl61",
+      "title": "ISS Ceilometer CL61 Data Products",
+      "doi": "10.26023/AP30-C79D-6T0G",
+      "priority": "high",
+      "use": ["mixing-layer height", "coastal marine-layer depth"]
+    }
+  ],
+  "provenance_warning": {
+    "issue": "Witte et al. (2026) lists DOI 10.26023/ZH7Z-GRWB-AV0F in its dataset-details block and cites it in the 449-MHz profiler discussion. The current NSF NCAR/DASH resolver identifies that DOI as the 2023 M2HATS profiler/RASS dataset (alternate identifier 636.008), not SWEX. In the same paper's 915-MHz section, the final NIMA wind products are explicitly linked to DOI 10.26023/2659-AF70-3009. The current NSF NCAR/DASH catalog resolves 10.26023/2659-AF70-3009 as the SWEX ISS Radar Wind Profiler Products, alternate identifier 600.034, with the expected SWEX filenames and 2022-03-10 through 2022-05-20 coverage.",
+    "resolution": "For SWEX ingestion, use current NSF NCAR/DASH catalog DOI 10.26023/2659-AF70-3009 / dataset 600.034 and require SWEX-specific filenames. Do not ingest DOI 10.26023/ZH7Z-GRWB-AV0F because its current authoritative metadata belongs to M2HATS 2023. Preserve this discrepancy as provenance rather than silently following the publication's dataset-details list.",
+    "checked": "2026-08-15"
+  },
+  "sounding_composite_provenance": {
+    "checked": "2026-08-15",
+    "authority": "NSF NCAR Earth Observing Laboratory / UCAR DASH dataset catalog",
+    "reason": "The SWEX multi-network composites harmonize NCAR/EOL, UCSB, San Jose State, NWS and aircraft sounding sources into one common format. The 5 hPa product is the primary cross-network validation layer; the native-resolution composite is retained for sensitivity analysis so vertical smoothing cannot silently determine the result.",
+    "independence_rule": "SWEX soundings are event-level observations and are never used as future predictors in fixed-24h HRRR holdout scoring."
+  }
+}

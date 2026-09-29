@@ -1,0 +1,58 @@
+name: SI-4 Western Hard-Negative CV
+
+on:
+  push:
+    branches: [si4-research]
+    paths:
+      - 'tools/cv-si4-western-hard-negative-features.js'
+      - '.github/workflows/si4-western-hard-negative-cv.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  western-cv:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TRAIN_START: '2024-01-01'
+      TRAIN_END: '2024-12-31'
+      TEST_START: '2024-01-01'
+      TEST_END: '2024-12-31'
+      OUT: research/si4-western-hard-negative-cv.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check
+        run: node --check tools/cv-si4-western-hard-negative-features.js
+      - name: Download authoritative frozen all-season artifact
+        run: |
+          mkdir -p /tmp/si4
+          gh run download 31925677059 --repo "$GITHUB_REPOSITORY" -n si4-all-season-frozen-holdout -D /tmp/si4
+          test -s /tmp/si4/hrrr-upper-fixed-lead-all-season.json
+          node -e "const x=require('/tmp/si4/si4-holdout-summary.json');if(x.frozen_design.train.start!=='2024-01-01'||x.frozen_design.holdout.start!=='2025-01-01')process.exit(2)"
+      - name: Run predeclared 2024-only expanding-window CV
+        env:
+          UPPER_CACHE: /tmp/si4/hrrr-upper-fixed-lead-all-season.json
+        run: node tools/cv-si4-western-hard-negative-features.js
+      - name: Verify no 2025 scoring occurred
+        run: |
+          node - <<'NODE'
+          const x=require('./research/si4-western-hard-negative-cv.json');
+          if(x.status!=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION')process.exit(2);
+          if(x.rules.holdout_2025_touched!==false)process.exit(3);
+          if(x.design.training_year!==2024)process.exit(4);
+          console.log({decision:x.decision,weighted:x.weighted,criteria:x.freeze_criteria});
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-western-hard-negative-cv
+          path: research/si4-western-hard-negative-cv.json
+          if-no-files-found: warn
+          retention-days: 30

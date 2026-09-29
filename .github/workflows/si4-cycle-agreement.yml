@@ -1,0 +1,61 @@
+name: SI-4 HRRR Cycle Agreement
+
+on:
+  push:
+    branches: [si4-research]
+    paths:
+      - 'tools/summarize-hrrr-cycle-agreement.js'
+      - '.github/workflows/si4-cycle-agreement.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cycle-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install indexed HRRR subset reader
+        run: python -m pip install --quiet 'herbie-data>=2025.7' 'cfgrib>=0.9.15' 'xarray>=2025.1' pandas numpy scikit-learn
+      - name: Extract four issuance cycles for identical valid-time matching
+        shell: bash
+        run: |
+          set -euo pipefail
+          for lead in 18 24 30 36; do
+            out="/tmp/hrrr-cycle-f${lead}.json"
+            ok=0
+            for attempt in 1 2 3; do
+              if python tools/extract-hrrr-upper-herbie.py --start 2025-04-14 --end 2025-04-16 --fxx "$lead" --out "$out"; then ok=1; break; fi
+              if [ "$attempt" -lt 3 ]; then sleep $((attempt*20)); fi
+            done
+            test "$ok" -eq 1
+          done
+      - name: Summarize forecast-cycle agreement without fitting
+        env:
+          INPUTS: /tmp/hrrr-cycle-f18.json,/tmp/hrrr-cycle-f24.json,/tmp/hrrr-cycle-f30.json,/tmp/hrrr-cycle-f36.json
+          OUT: /tmp/si4-hrrr-cycle-agreement.json
+        run: node tools/summarize-hrrr-cycle-agreement.js
+      - name: Verify research-only evidence contract
+        run: |
+          node - <<'NODE'
+          const x=require('/tmp/si4-hrrr-cycle-agreement.json');
+          if(x.status!=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION')process.exit(2);
+          if(!(x.summary.groups_with_at_least_3_cycles>0))process.exit(3);
+          if(!String(x.rule).includes('No verifying observations'))process.exit(4);
+          console.log(x.summary);
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-hrrr-cycle-agreement
+          path: /tmp/si4-hrrr-cycle-agreement.json
+          if-no-files-found: warn
+          retention-days: 30

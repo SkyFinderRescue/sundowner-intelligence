@@ -1,0 +1,74 @@
+name: SI-4 GOES Marine Numeric Pilot
+
+on:
+  push:
+    branches: [si4-research]
+    paths:
+      - 'research/GOES_MARINE_MASKS_V1.json'
+      - 'tools/extract-goes-marine-features.py'
+      - '.github/workflows/si4-goes-marine-numeric.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  numeric-2024-pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GOES_FEATURE_TIMES: '2024-04-01T00:00:00Z,2024-07-15T00:00:00Z'
+      OUT: research/goes-marine-numeric-pilot-2024.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install numerical GOES dependencies
+        run: python -m pip install --disable-pip-version-check numpy netCDF4 pyproj
+      - name: Syntax check and basic source-contract tests
+        run: |
+          python -m py_compile tools/extract-goes-marine-features.py
+          python - <<'PY'
+          import importlib.util, datetime as dt
+          spec=importlib.util.spec_from_file_location('g','tools/extract-goes-marine-features.py')
+          g=importlib.util.module_from_spec(spec); spec.loader.exec_module(g)
+          key='ABI-L1b-RadC/2024/092/00/OR_ABI-L1b-RadC-M6C13_G18_s20240920001172_e20240920003557_c20240920004031.nc'
+          p=g.parse_key(key)
+          assert p and p['band']==13 and p['end']>p['start']
+          assert p['start'].year==2024 and p['start'].timetuple().tm_yday==92
+          print({'parsed_band':p['band'],'start':p['start'].isoformat(),'end':p['end'].isoformat()})
+          PY
+      - name: Extract numerical ABI brightness-temperature features
+        run: python tools/extract-goes-marine-features.py
+      - name: Verify 2024-only no-future-imagery contract
+        run: |
+          python - <<'PY'
+          import json, math
+          x=json.load(open('research/goes-marine-numeric-pilot-2024.json'))
+          assert x['status']=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION'
+          assert x['rules']['development_year']==2024
+          assert x['rules']['future_imagery_used'] is False
+          assert x['rules']['verifying_winds_loaded'] is False
+          assert x['rules']['fire_outcome_used'] is False
+          assert len(x['rows'])==2
+          for r in x['rows']:
+            assert r['issuance_time'].startswith('2024-')
+            assert r['rules']['all_scan_end_times_lte_issuance'] is True
+            for d in ('south_coast_strip','santa_barbara_channel','western_sector','eastern_sector'):
+              assert r['domains'][d]['pixels']>0
+              for k in ('bt_c07_k','bt_c13_k','bt_c15_k','btd_c13_minus_c07_k','btd_c15_minus_c13_k'):
+                v=r['domains'][d][k]['median']
+                assert v is not None and math.isfinite(v)
+            for p in r['provenance'].values():
+              assert p['sha256'] and len(p['sha256'])==64
+              assert p['age_minutes_at_issue']>=0 and p['age_minutes_at_issue']<=25
+          print({'rows':len(x['rows']),'mask_version':x['mask_version'],'contrasts':[r['contrasts'] for r in x['rows']]})
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-goes-marine-numeric-pilot-2024
+          path: research/goes-marine-numeric-pilot-2024.json
+          if-no-files-found: warn
+          retention-days: 30

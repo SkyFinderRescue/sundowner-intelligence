@@ -1,0 +1,58 @@
+# Research plumbing only: expose latest frozen upstream archive run states without changing science.
+name: SI-4 Upstream Thermal Archive Run Probe
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/si4-upstream-thermal-run-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Resolve latest frozen upstream archive push runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh run list \
+            --repo SkyFinderRescue/sundowner-intelligence \
+            --workflow si4-upstream-thermal-2024-archive.yml \
+            --branch si4-research \
+            --event push \
+            --limit 5 \
+            --json databaseId,status,conclusion,headSha,createdAt,updatedAt,url \
+            > /tmp/upstream-thermal-runs.json
+          gh run list \
+            --repo SkyFinderRescue/sundowner-intelligence \
+            --workflow si4-upstream-abl-2024-archive.yml \
+            --branch si4-research \
+            --event push \
+            --limit 5 \
+            --json databaseId,status,conclusion,headSha,createdAt,updatedAt,url \
+            > /tmp/upstream-abl-runs.json
+          cat /tmp/upstream-thermal-runs.json
+          cat /tmp/upstream-abl-runs.json
+          python - <<'PY'
+          import json
+          for label,path in [('upstream_thermal','/tmp/upstream-thermal-runs.json'),('upstream_abl','/tmp/upstream-abl-runs.json')]:
+              x=json.load(open(path))
+              assert x, f'no {label} archive runs found'
+              r=x[0]
+              print({'archive':label,'latest_run_id':r['databaseId'],'status':r['status'],'conclusion':r['conclusion'],'headSha':r['headSha']})
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: si4-upstream-archive-run-probe
+          path: |
+            /tmp/upstream-thermal-runs.json
+            /tmp/upstream-abl-runs.json
+          if-no-files-found: error
+          retention-days: 7

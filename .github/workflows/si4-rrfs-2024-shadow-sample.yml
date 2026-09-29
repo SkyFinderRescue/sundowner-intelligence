@@ -1,0 +1,98 @@
+name: SI-4 RRFS 2024 Shadow Sample
+
+on:
+  push:
+    branches: [si4-research]
+    paths:
+      - 'tools/run-si4-rrfs-2024-shadow-sample.py'
+      - 'tools/extract-si4-rrfs-f24-range.py'
+      - 'tools/score-si4-rrfs-2024-shadow.js'
+      - '.github/workflows/si4-rrfs-2024-shadow-sample.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/run-si4-rrfs-2024-shadow-sample.py'
+      - 'tools/extract-si4-rrfs-f24-range.py'
+      - 'tools/score-si4-rrfs-2024-shadow.js'
+      - '.github/workflows/si4-rrfs-2024-shadow-sample.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  shadow-sample:
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install GRIB decoding dependencies
+        run: python -m pip install --disable-pip-version-check --quiet 'numpy<3' 'xarray>=2025.1' 'cfgrib>=0.9.15' 'eccodes>=2.44'
+      - name: Syntax checks
+        run: |
+          python -m py_compile tools/extract-si4-rrfs-f24-range.py
+          python -m py_compile tools/run-si4-rrfs-2024-shadow-sample.py
+          node --check tools/score-si4-rrfs-2024-shadow.js
+      - name: Extract sixteen predeclared 2024 RRFS F24 cases
+        run: python tools/run-si4-rrfs-2024-shadow-sample.py
+      - name: Verify 2024-only shadow provenance and completeness
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('research/si4-rrfs-f24-2024-shadow-sample.json'))
+          # May 1 12Z was replaced only because NOAA returned a source-file 404
+          # before any observation/skill scoring. May 2 availability was already
+          # established by the independent provenance probe.
+          expected=[('20240502','12')]+[(f'202405{day:02d}','12') for day in range(3,32,2)]
+          got=[(c['date'],c['cycle']) for c in x['cases']]
+          assert x['status']=='RESEARCH_ONLY_SHADOW_GUIDANCE'
+          assert x['rules']['development_year']==2024
+          assert x['rules']['holdout_2025_loaded'] is False
+          assert x['rules']['forecast_hour_fixed']==24
+          assert x['rules']['future_observations_label_only'] is True
+          assert x['rules']['fire_outcome_used'] is False
+          assert x['rules']['rrfs_shadow_only'] is True
+          assert x['rules']['model_tuning_from_2025_forbidden'] is True
+          assert x['rules']['production_change_authorized'] is False
+          assert x['failure_count']==0, x['failures']
+          assert got==expected, got
+          assert x['summary']['cases_completed']==16
+          assert x['summary']['rows']==128
+          assert x['summary']['max_grid_distance_km'] is not None and x['summary']['max_grid_distance_km'] <= 4.0
+          assert x['summary']['weighted_range_fraction'] is not None and x['summary']['weighted_range_fraction'] < 0.20
+          assert all(str(r['run_time']).startswith('2024-05-') for r in x['rows'])
+          assert all(r['forecast_lead_hours']==24 and len(r['profile'])==5 for r in x['rows'])
+          assert all(c['selected_message_count']==28 for c in x['cases'])
+          assert all(c['etag'] and c['idx_etag'] and len(c['idx_sha256'])==64 and len(c['subset_sha256'])==64 for c in x['cases'])
+          print(json.dumps(x['summary'],indent=2))
+          PY
+      - name: Score RRFS F24 against identical 2024 HADS observations and HRRR comparator
+        run: node tools/score-si4-rrfs-2024-shadow.js
+      - name: Verify shadow score leakage guards and usable evidence
+        run: |
+          node - <<'NODE'
+          const x=require('./research/si4-rrfs-f24-2024-shadow-score.json');
+          if(x.status!=='RESEARCH_ONLY_SHADOW_GUIDANCE') throw Error('shadow guard missing');
+          if(x.rules.development_year!==2024||x.rules.holdout_2025_loaded!==false) throw Error('2025 leakage guard failed');
+          if(x.rules.forecast_hour_fixed!==24||x.rules.future_observations_label_only!==true||x.rules.fire_outcome_used!==false) throw Error('provenance rules failed');
+          if(x.rules.missing_values_fabricated!==false||x.rules.probability_manufactured!==false||x.rules.rrfs_shadow_only!==true||x.rules.production_change_authorized!==false) throw Error('shadow policy failed');
+          if(x.counts.benchmark_zone_rows<60) throw Error(`expected expanded benchmark evidence, got ${x.counts.benchmark_zone_rows}`);
+          if(x.counts.rows_with_observation<40) throw Error(`insufficient independent observations: ${x.counts.rows_with_observation}`);
+          if(x.overall.rrfs.matched_gust_rows<40||x.overall.hrrr.matched_gust_rows<40) throw Error('insufficient matched gust evidence');
+          console.log(JSON.stringify({counts:x.counts,overall:x.overall},null,2));
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-rrfs-f24-2024-shadow-sample
+          path: |
+            research/si4-rrfs-f24-2024-shadow-sample.json
+            research/si4-rrfs-f24-2024-shadow-score.json
+          if-no-files-found: warn
+          retention-days: 30

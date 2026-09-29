@@ -1,0 +1,79 @@
+name: SI-4 Wave-Momentum Descent 2024 Chronological CV
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/evaluate-si4-wave-momentum-descent-2024-cv.js'
+      - 'research/SI4_WAVE_MOMENTUM_DESCENT_2024_CV_PLAN.md'
+      - '.github/workflows/si4-wave-momentum-descent-2024-cv.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  wave-momentum-descent-2024-cv:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and leakage guards
+        run: |
+          set -euo pipefail
+          node --check tools/evaluate-si4-wave-momentum-descent-2024-cv.js
+          grep -q 'const START="2024-01-01", END="2024-12-31"' tools/evaluate-si4-wave-momentum-descent-2024-cv.js
+          grep -q 'holdout_2025_loaded:false' tools/evaluate-si4-wave-momentum-descent-2024-cv.js
+          ! grep -q '2025-' tools/evaluate-si4-wave-momentum-descent-2024-cv.js
+          grep -q 'COEFS=\[0.00,0.02,0.04,0.06,0.08\]' tools/evaluate-si4-wave-momentum-descent-2024-cv.js
+          grep -q 'SUMMARIES=\["median","maximum"\]' tools/evaluate-si4-wave-momentum-descent-2024-cv.js
+      - name: Download authoritative frozen baseline upper-air artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/si4-frozen
+          gh run download 31925677059 --repo SkyFinderRescue/sundowner-intelligence --name si4-all-season-frozen-holdout --dir /tmp/si4-frozen
+          test -s /tmp/si4-frozen/hrrr-upper-fixed-lead-all-season.json
+      - name: Download immutable 2024 upstream archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/si4-upstream
+          gh run download 32552410978 --repo SkyFinderRescue/sundowner-intelligence --name si4-upstream-thermal-2024-full --dir /tmp/si4-upstream
+          test -s /tmp/si4-upstream/si4-upstream-thermal-2024-full.json
+          node - <<'NODE'
+          const x=require('/tmp/si4-upstream/si4-upstream-thermal-2024-full.json');
+          if(x.row_count!==7300||x.failure_count!==0||x.provenance.github_run_id!=='32552410978'||x.provenance.head_sha!=='ac2adebf2c29b045bfb6954e4c86ff2c0f30dd23') process.exit(2);
+          if(x.rules.holdout_2025_loaded!==false||x.rules.production_change_authorized!==false) process.exit(3);
+          for(const r of x.rows.slice(0,20)) for(const p of r.profile){ if(!Number.isFinite(Number(p.vvelPaS))) process.exit(4); }
+          console.log({rows:x.row_count,run:x.provenance.github_run_id,head:x.provenance.head_sha,vvel_field:'vvelPaS'});
+          NODE
+      - name: Run frozen 2024 chronological CV
+        env:
+          UPPER_CACHE: /tmp/si4-frozen/hrrr-upper-fixed-lead-all-season.json
+          UPSTREAM_CACHE: /tmp/si4-upstream/si4-upstream-thermal-2024-full.json
+          OUT: research/si4-wave-momentum-descent-2024-cv.json
+        run: node tools/evaluate-si4-wave-momentum-descent-2024-cv.js
+      - name: Verify fail-closed scientific decision
+        run: |
+          node - <<'NODE'
+          const x=require('./research/si4-wave-momentum-descent-2024-cv.json');
+          if(x.status!=='RESEARCH_ONLY_2024_DEVELOPMENT'||x.rules.holdout_2025_loaded!==false||x.rules.production_change_authorized!==false) process.exit(2);
+          if(x.candidate_family!=='wave_momentum_descent_v1'||x.rules.exact_f24!==true) process.exit(3);
+          if(typeof x.passes_all!=='boolean'||!x.gates||x.counts.feature_coverage<0.90) process.exit(4);
+          if(x.passes_all!==Boolean(x.winner_eligible_for_single_frozen_2025_score)) process.exit(5);
+          console.log({rows:x.counts.rows,events:x.counts.events,coverage:x.counts.feature_coverage,selectors:x.selectors,passes_all:x.passes_all,eligible:x.winner_eligible_for_single_frozen_2025_score});
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-wave-momentum-descent-2024-cv
+          path: research/si4-wave-momentum-descent-2024-cv.json
+          if-no-files-found: warn
+          retention-days: 30

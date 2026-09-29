@@ -1,0 +1,50 @@
+name: SI-4 Training Hard-Negative Diagnostic
+
+on:
+  push:
+    branches: [si4-research]
+    paths:
+      - 'tools/analyze-si4-training-hard-negative-features.js'
+      - '.github/workflows/si4-training-hard-negative-diagnostic.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  western-training-diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TRAIN_START: '2024-01-01'
+      TRAIN_END: '2024-12-31'
+      TEST_START: '2024-01-01'
+      TEST_END: '2024-12-31'
+      OUT: research/si4-training-hard-negative-feature-diagnostic.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check diagnostic
+        run: node --check tools/analyze-si4-training-hard-negative-features.js
+      - name: Download authoritative frozen all-season artifact
+        run: |
+          mkdir -p /tmp/si4
+          gh run download 31925677059 --repo "$GITHUB_REPOSITORY" -n si4-all-season-frozen-holdout -D /tmp/si4
+          test -s /tmp/si4/hrrr-upper-fixed-lead-all-season.json
+          test -s /tmp/si4/si4-holdout-summary.json
+          node -e "const x=require('/tmp/si4/si4-holdout-summary.json'); if(x.status!=='RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION'||x.frozen_design.train.start!=='2024-01-01'||x.frozen_design.holdout.start!=='2025-01-01') process.exit(2)"
+      - name: Run 2024-only western hard-negative feature diagnostic
+        env:
+          UPPER_CACHE: /tmp/si4/hrrr-upper-fixed-lead-all-season.json
+        run: node tools/analyze-si4-training-hard-negative-features.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: si4-training-hard-negative-feature-diagnostic
+          path: research/si4-training-hard-negative-feature-diagnostic.json
+          if-no-files-found: warn
+          retention-days: 30

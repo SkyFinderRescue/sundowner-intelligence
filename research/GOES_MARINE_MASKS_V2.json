@@ -1,0 +1,26 @@
+{
+  "status": "RESEARCH_ONLY_DO_NOT_LOAD_IN_PRODUCTION",
+  "version": "goes-marine-masks-v2-2026-08-16",
+  "purpose": "Geographically predeclared 2024-only GOES-18 marine-layer masks. V2 adds Gaviota/Refugio coast-vs-Channel local domains before any 2025 satellite scoring; boundaries are derived from the application's existing western zone geography, not from event labels.",
+  "coordinate_system": "EPSG:4326",
+  "geometry_type": "axis-aligned bounding boxes",
+  "domains": {
+    "south_coast_strip": {"lat_min":34.34,"lat_max":34.53,"lon_min":-120.30,"lon_max":-119.40,"role":"South-coast foothill/coastal marine-layer domain"},
+    "santa_barbara_channel": {"lat_min":34.10,"lat_max":34.34,"lon_min":-120.35,"lon_max":-119.40,"role":"Immediate offshore Channel marine reservoir"},
+    "western_sector": {"lat_min":34.22,"lat_max":34.58,"lon_min":-120.50,"lon_max":-119.88,"role":"Point Conception/Gaviota/Refugio western marine and coastal-jet sector"},
+    "eastern_sector": {"lat_min":34.22,"lat_max":34.55,"lon_min":-119.78,"lon_max":-119.34,"role":"Santa Barbara/Montecito/Carpinteria eastern marine sector"},
+    "gaviota_coast": {"lat_min":34.38,"lat_max":34.53,"lon_min":-120.38,"lon_max":-120.15,"role":"Gaviota coastal/foothill surface-coupling domain aligned to existing Gaviota zone geography"},
+    "gaviota_channel": {"lat_min":34.18,"lat_max":34.34,"lon_min":-120.38,"lon_max":-120.15,"role":"Offshore marine reservoir immediately south of Gaviota"},
+    "refugio_coast": {"lat_min":34.38,"lat_max":34.53,"lon_min":-120.15,"lon_max":-119.96,"role":"Refugio coastal/foothill surface-coupling domain aligned to existing Refugio zone geography"},
+    "refugio_channel": {"lat_min":34.18,"lat_max":34.34,"lon_min":-120.15,"lon_max":-119.96,"role":"Offshore marine reservoir immediately south of Refugio"}
+  },
+  "rules": {
+    "development_year": 2024,
+    "2025_satellite_data_used_to_define_masks": false,
+    "event_labels_used_to_move_boundaries": false,
+    "future_imagery_allowed": false,
+    "fire_outcome_used": false,
+    "production_change_authorized": false,
+    "mask_changes_after_first_2025_satellite_score_allowed": false
+  }
+}
