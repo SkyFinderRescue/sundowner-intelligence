@@ -1,8 +1,8 @@
 {
-  "verified_at": "2026-09-11T06:37:37.847Z",
-  "commit": "1bbcaffc3353e95612e0f8cfe80b47cd6c4d7277",
-  "code_and_live_api_qa": "success",
-  "browser_ui_qa": "success",
+  "verified_at": "2026-09-29T13:53:27.976Z",
+  "commit": "43c45672b365b9073247abe49e95864cf7c5122e",
+  "code_and_live_api_qa": "cancelled",
+  "browser_ui_qa": "cancelled",
   "pages_probe": "success",
   "tested_viewports": [
     "desktop 1440x1000",
