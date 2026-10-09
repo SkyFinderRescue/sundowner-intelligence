@@ -1,0 +1,43 @@
+{
+  "event_id": "2026-09-12-14-sba-western-sundowner",
+  "date": "2026-09-12",
+  "end_date": "2026-09-14",
+  "status": "staged_not_promoted",
+  "regime": "western",
+  "confirmed_observed_zone": "western Santa Barbara South Coast",
+  "observed_gust_lower_bound_mph": 40,
+  "observed_gust_relation": ">",
+  "observed_time_local": "2026-09-12T19:00:00-07:00",
+  "observed_peak_gust_mph": null,
+  "observed_peak_station": null,
+  "observed_temperature_f": null,
+  "observed_rh_percent": null,
+  "observed_sba_bfl_mb": null,
+  "observed_sba_smx_mb": null,
+  "upstream": {
+    "cuyama": null,
+    "santa_ynez": null,
+    "southern_kern": null
+  },
+  "upper_air": null,
+  "exact_onset": null,
+  "exact_end": null,
+  "duration_hours": null,
+  "fire_associated": null,
+  "forecast_context_only": "NWS anticipated additional Sunday-night Sundowners and possible eastern Santa Ynez Range extension; not verified as an observed gust.",
+  "sources": [
+    {
+      "organization": "NWS Los Angeles/Oxnard",
+      "issued": "2026-09-12T20:11:00-07:00",
+      "product": "FXUS66 KLOX 130311 AFDLOX",
+      "url": "https://mesonet.agron.iastate.edu/wx/afos/p.php?e=202609130311&pil=AFDLOX"
+    },
+    {
+      "organization": "NWS Los Angeles/Oxnard",
+      "issued": "2026-09-13T15:30:00-07:00",
+      "product": "FNUS86 KLOX 132230 FWLLOX",
+      "url": "https://mesonet.agron.iastate.edu/wx/afos/p.php?e=202609132230&pil=FWLLOX"
+    }
+  ],
+  "notes": "No forecast values back-applied as observations; no proven fire outcome. Not eligible for model promotion without independent validation."
+}
