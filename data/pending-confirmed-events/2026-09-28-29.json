@@ -1,0 +1,31 @@
+{
+  "event_id": "2026-09-28-29-sba-sundowner",
+  "date": "2026-09-28",
+  "end_date": "2026-09-29",
+  "status": "staged_not_promoted",
+  "observed_peak_gust_mph": 64,
+  "observed_peak_station": null,
+  "observed_peak_zone": null,
+  "observed_lax_bfl_offshore_gradient_magnitude_mb": 3.6,
+  "observed_sba_bfl_mb": null,
+  "observed_sba_smx_mb": null,
+  "observed_temperature_f": null,
+  "observed_rh_percent": null,
+  "upstream": {
+    "cuyama": null,
+    "santa_ynez": null,
+    "southern_kern": null
+  },
+  "upper_air": null,
+  "exact_onset": null,
+  "exact_end": null,
+  "duration_hours": null,
+  "fire_associated": null,
+  "source": {
+    "organization": "NWS Los Angeles/Oxnard",
+    "issued": "2026-09-29T23:02:00-07:00",
+    "product": "FXUS66 KLOX 300602 AFDLOX",
+    "url": "https://marine.weather.gov/product.php?format=txt&glossary=1&issuedby=LOX&product=AFD&site=IWX&version=30"
+  },
+  "notes": "NWS confirmed overnight peak Sundowner gust 64 mph but did not identify station. LAX-BFL 3.6 mb is not an SBA gradient. Do not use for pre-event forecast calibration."
+}
