@@ -1,0 +1,28 @@
+{
+  "status": "confirmed_observed_pending_catalog_merge",
+  "date": "2026-09-12",
+  "end_date": "2026-09-14",
+  "regime": "western",
+  "observed": {
+    "western_south_coast_gust_lower_bound_mph": 40,
+    "lower_bound_exclusive": true,
+    "observed_time": "2026-09-12 19:00 PDT",
+    "western_range_advisory_criteria_confirmed": "2026-09-13 20:24 PDT",
+    "eastern_range_below_advisory_criteria": "2026-09-13 20:24 PDT"
+  },
+  "observed_temp_f": null,
+  "observed_rh_percent": null,
+  "observed_sba_bfl_mb": null,
+  "observed_sba_smx_mb": null,
+  "cuyama": null,
+  "santa_ynez_valley": null,
+  "southern_kern": null,
+  "upper_air": null,
+  "duration_hours": null,
+  "fire_associated": null,
+  "source_urls": [
+    "https://marine.weather.gov/product.php?format=TXT&glossary=0&issuedby=LOX&product=AFD&site=AFG&version=2",
+    "https://mesonet.agron.iastate.edu/wx/afos/p.php?e=202609140339&pil=AFDLOX"
+  ],
+  "notes": "Forecast eastern expansion is not an observed advisory-strength impact. Do not infer peak station or duration."
+}
