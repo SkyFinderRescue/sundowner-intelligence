@@ -1,0 +1,27 @@
+{
+  "status": "confirmed_observed_pending_catalog_merge",
+  "date": "2026-09-28",
+  "end_date": "2026-09-29",
+  "regime": "northerly offshore Sundowner",
+  "observed": {
+    "peak_gust_mph": 64,
+    "peak_station": null,
+    "peak_local": "night of 2026-09-28",
+    "lax_bfl_offshore_gradient_magnitude_mb": 3.6,
+    "lax_bfl_signed_mb": null
+  },
+  "observed_temp_f": null,
+  "observed_rh_percent": null,
+  "observed_sba_bfl_mb": null,
+  "observed_sba_smx_mb": null,
+  "cuyama": null,
+  "santa_ynez_valley": null,
+  "southern_kern": null,
+  "upper_air": null,
+  "duration_hours": null,
+  "fire_associated": null,
+  "source_urls": [
+    "https://marine.weather.gov/product.php?format=TXT&glossary=0&issuedby=LOX&product=AFD&site=GRR&version=10"
+  ],
+  "notes": "Observed 64 mph peak station not identified; do not assign to individual zone. NWS 80s-90s Santa Barbara South Coast highs on Sep 29 are regional, not event-station values. No archived pre-event model snapshot."
+}
