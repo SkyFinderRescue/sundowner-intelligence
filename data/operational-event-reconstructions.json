@@ -641,15 +641,15 @@
     {
       "event_id": "2026-09-12-western-sba-sundowner",
       "date": "2026-09-12",
-      "end_date": null,
+      "end_date": "2026-09-14",
       "tier": "B-operational-confirmed",
       "regime": "western",
       "fire_associated": null,
       "fire_name": null,
-      "analysis_window_local": "Sep 12 evening; end unobserved",
+      "analysis_window_local": "Sep 12 evening through Sep 13 evening; observed end unknown",
       "timing": {
         "onset_local": null,
-        "confirmed_active_local": "2026-09-12 19:00 PDT",
+        "confirmed_active_local": "2026-09-12 19:00 PDT; 2026-09-13 20:24 PDT",
         "peak_local": null,
         "end_local": null,
         "duration_hours_estimate": null
@@ -685,6 +685,21 @@
           "peak_station": null,
           "observed_temperature_f": null,
           "observed_min_rh_percent": null
+        },
+        "western_Santa_Ynez_Range": {
+          "affected": true,
+          "observed_peak_gust_mph": null,
+          "observed_temperature_f": null,
+          "observed_min_rh_percent": null,
+          "advisory_criteria_met_as_of": "2026-09-13 20:24 PDT"
+        },
+        "eastern_Santa_Ynez_Range": {
+          "affected": null,
+          "observed_peak_gust_mph": null,
+          "observed_temperature_f": null,
+          "observed_min_rh_percent": null,
+          "advisory_criteria_met_as_of_2026_09_13_2024_PDT": false,
+          "notes": "Below advisory threshold at 20:24 PDT Sep 13, not evidence of a full-night non-event."
         }
       },
       "observed_thermodynamics": {
@@ -702,10 +717,17 @@
           "issued": "2026-09-12T20:11:00-07:00",
           "url": "https://mesonet.agron.iastate.edu/wx/afos/p.php?e=202609130311&pil=AFDLOX",
           "evidence": "NWS observed NW-N Sundowners affecting western Santa Barbara South Coast with gusts exceeding 40 mph at 7 PM Sep 12. Eastern advisory winds and strengthening SBA-BFL gradient were forecast, not observed."
+        },
+        {
+          "organization": "National Weather Service Los Angeles/Oxnard",
+          "product": "Area Forecast Discussion FXUS66 KLOX 140339",
+          "issued": "2026-09-13T20:39:00-07:00",
+          "url": "https://mesonet.agron.iastate.edu/wx/afos/p.php?e=202609140339&pil=AFDLOX",
+          "evidence": "NWS 8:24 PM update Sep 13 reports winds across western SBA South Coast and western Santa Ynez Range within advisory criteria; eastern range remained below advisory thresholds at that time. Gusts up to 45 mph above Mission Canyon were possible, not observed."
         }
       ],
       "reconstruction_status": "complete_with_explicit_nulls",
-      "notes": "Western occurrence confirmed; eastern advisory-strength winds not established; exact duration and station maxima unavailable."
+      "notes": "Observed >40 mph western South Coast Sep 12; western South Coast and western Santa Ynez Range advisory criteria confirmed Sep 13. Eastern Santa Ynez Range remained below advisory criteria at 20:24 Sep 13; later peak not verified. Exact end unknown."
     },
     {
       "event_id": "2026-09-28-29-sba-sundowner",
